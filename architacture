@@ -1,0 +1,7 @@
+server:
+    1. users 
+    2. data
+
+
+db:
+    mongoDB
