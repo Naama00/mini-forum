@@ -1,9 +1,21 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { initializeDatabase } = require('./DB/data');
-const dataRetrieval = require('./data-retrieval');
-const authRoutes = require('./auth');
+const { initializeDatabase } = require('./models');
+const errorMiddleware = require('./middleware/errorMiddleware');
+const { authLimiter, topicLimiter, postLimiter, commentLimiter, searchLimiter, generalLimiter } = require('./middleware/rateLimitMiddleware');
+
+// Routes
+const authRoutes = require('./routes/authRoutes');
+const articleRoutes = require('./routes/articleRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const jobRoutes = require('./routes/jobRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const searchRoutes = require('./routes/searchRoutes');
+const dataRoutes = require('./routes/dataRoutes');
+const topicRoutes = require('./routes/topicRoutes');
+const postRoutes = require('./routes/postRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,6 +24,9 @@ const url = 'mongodb://127.0.0.1:27017/forumDB';
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply general rate limiter to all routes
+app.use(generalLimiter);
 
 mongoose.connect(url)
     .then(async () => {
@@ -23,22 +38,31 @@ mongoose.connect(url)
         process.exit(1);
     });
 
-// Routes
-app.use('/api', dataRetrieval);
-app.use('/api/auth', authRoutes);  // ← חדש
+// Routes with rate limiting
+app.use('/api/search', searchLimiter, searchRoutes);
+app.use('/api', dataRoutes);
+app.use('/api/auth', authLimiter, authRoutes);  
 
 app.get('/health', (req, res) => {
     res.json({ status: 'Server is running ✓' });
 });
 
+app.use('/api/articles', articleRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/topics', topicLimiter, topicRoutes);
+app.use('/api/posts', postLimiter, postRoutes);
+app.use('/api/users', userRoutes);
+
+app.use('/api/notifications', notificationRoutes);
+
+// 404 handler
 app.use((req, res) => {
     res.status(404).json({ success: false, message: 'Endpoint לא נמצא' });
 });
 
-app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'שגיאת שרת', error: err.message });
-});
+// Centralized error handler middleware (MUST be last)
+app.use(errorMiddleware);
 
 app.listen(PORT, () => {
     console.log(`\n🚀 שרת הפורום פעיל ב-http://localhost:${PORT}`);

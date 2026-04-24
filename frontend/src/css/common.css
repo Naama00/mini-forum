@@ -1,0 +1,492 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   COMMON.CSS - משתנים גלובליים וסגנונות בסיסיים למימוש בכל הקבצים
+   ───────────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+/* ✨ CSS VARIABLES - צבעים, אנימציות, משתנים */
+:root {
+    /* צבעים ע קו - DARK MODE (DEFAULT) */
+    --accent: #00e5ff;
+    --accent-glow: rgba(0, 229, 255, 0.25);
+    --accent-dim: rgba(0, 229, 255, 0.15);
+    --accent-muted: rgba(0, 229, 255, 0.6);
+    --bg-dark: #080b12;
+    --bg-overlay: rgba(8, 11, 18, 0.9);
+    --text-main: #e2e8f0;
+    --text-muted: rgba(226, 232, 240, 0.4);
+    --text-dim: rgba(226, 232, 240, 0.25);
+    --text-muted-alt: rgba(226, 232, 240, 0.35);
+    --border-dark: rgba(0, 229, 255, 0.08);
+    --border-light: rgba(0, 229, 255, 0.15);
+    
+    /* צבעי גלאס (Glassmorphism) - DARK */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-bg-light: rgba(255, 255, 255, 0.05);
+    --glass-bg-lighter: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    
+    /* צבעים פונקציונאליים */
+    --error: #ff4081;
+    --success: #00e676;
+    
+    /* אנימציות */
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease;
+    --transition-slow: all 0.4s ease;
+}
+
+/* LIGHT MODE */
+[data-theme="light"] {
+    /* צבעים ע קו - LIGHT MODE */
+    --accent: #0091bc;
+    --accent-glow: rgba(0, 145, 188, 0.15);
+    --accent-dim: rgba(0, 145, 188, 0.12);
+    --accent-muted: rgba(0, 145, 188, 0.65);
+    --bg-dark: #f5f7fa;
+    --bg-overlay: rgba(245, 247, 250, 0.95);
+    --text-main: #1a1f2e;
+    --text-muted: rgba(26, 31, 46, 0.55);
+    --text-dim: rgba(26, 31, 46, 0.35);
+    --text-muted-alt: rgba(26, 31, 46, 0.45);
+    --border-dark: rgba(0, 145, 188, 0.08);
+    --border-light: rgba(0, 145, 188, 0.18);
+    
+    /* צבעי גלאס (Glassmorphism) - LIGHT */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-bg-light: rgba(255, 255, 255, 0.8);
+    --glass-bg-lighter: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(26, 31, 46, 0.08);
+    
+    /* צבעים פונקציונאליים */
+    --error: #d93a52;
+    --success: #1fb47d;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* RESET & BASE STYLES */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh;
+    width: 100%;
+    color: var(--text-main);
+    font-family: 'Assistant', sans-serif;
+    background-color: var(--bg-dark);
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* BACKGROUND & GRID EFFECTS */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+body::before {
+    content: "";
+    position: fixed;
+    top: -5%;
+    left: -5%;
+    width: 115%;
+    height: 115%;
+    background-image: linear-gradient(rgba(8, 11, 18, 0.6), rgba(8, 11, 18, 0.7)),
+                      url('/src/images/3d-render-modern-network-communications-low-poly-plexus-design.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+    display: block;
+    animation: cyberMove 15s infinite alternate ease-in-out;
+    will-change: transform;
+    transition: opacity 0.5s ease;
+}
+
+[data-theme="light"] body::before {
+    background-image: linear-gradient(rgba(245, 247, 250, 0.7), rgba(200, 220, 240, 0.6)),
+                      url('/src/images/3d-render-modern-network-communications-low-poly-plexus-design.jpg');
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+}
+
+@keyframes cyberMove {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-2%, -2%) scale(1.08); }
+}
+
+.grid-overlay {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+    transition: background-image 0.5s ease;
+}
+
+[data-theme="light"] .grid-overlay {
+    background-image:
+        linear-gradient(rgba(0, 145, 188, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 145, 188, 0.04) 1px, transparent 1px);
+}
+
+.glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.glow-1 {
+    width: 600px;
+    height: 600px;
+    background: rgba(0, 229, 255, 0.06);
+    top: -200px;
+    left: -200px;
+}
+
+.glow-2 {
+    width: 500px;
+    height: 500px;
+    background: rgba(124, 77, 255, 0.08);
+    bottom: 0;
+    right: -100px;
+}
+
+[data-theme="light"] .glow-1 {
+    background: rgba(0, 145, 188, 0.04);
+}
+
+[data-theme="light"] .glow-2 {
+    background: rgba(100, 150, 255, 0.05);
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* LAYOUT CONTAINERS */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+#app,
+.app-main-wrapper,
+.forum-root,
+main,
+.page-container,
+.app-content-layout {
+    background: transparent !important;
+    background-color: transparent !important;
+    position: relative;
+    z-index: 1;
+}
+
+.forum-root {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.app-main-wrapper {
+    min-height: 100vh;
+}
+
+.app-content-layout {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row-reverse;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-container {
+    flex: 1;
+    min-width: 0;
+    overflow-x: hidden;
+    padding: 40px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* CONTAINER */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.app-content-layout .header .container {
+    max-width: 100% !important;
+    padding: 0 16px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* TYPOGRAPHY & COMMON ELEMENTS */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+input, textarea, button, select {
+    font-family: inherit;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* PAGE HEADER PATTERNS (Articles, Events, Jobs, etc.) */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.page-header {
+    padding: 52px 0 40px;
+    position: relative;
+    z-index: 1;
+    direction: rtl;
+}
+
+.page-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.page-title {
+    font-family: 'Assistant', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 8px;
+    line-height: 1.2;
+}
+
+.page-title span {
+    color: var(--accent);
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.7;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* BUTTONS & CTAs */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.cta-btn, .write-btn, .header-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Assistant', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+    border-radius: 8px;
+}
+
+.cta-btn:hover, .write-btn:hover, .header-cta:hover {
+    background: var(--accent);
+    color: var(--bg-dark);
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* DIVIDERS & SEPARATORS */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--accent-dim);
+}
+
+.divider-text {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent-muted);
+    direction: rtl;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* CARDS & GLASS EFFECT */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(0, 229, 255, 0.01) 100%);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.35s;
+}
+
+.card:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 229, 255, 0.02) 100%);
+    border-color: var(--border-light);
+    box-shadow: 0 8px 28px var(--accent-glow), 0 4px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+[data-theme="light"] .card {
+    background: linear-gradient(135deg, rgba(0, 145, 188, 0.03) 0%, rgba(255, 255, 255, 0.5) 100%);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .card:hover {
+    background: linear-gradient(135deg, rgba(0, 145, 188, 0.05) 0%, rgba(255, 255, 255, 0.6) 100%);
+    box-shadow: 0 8px 28px rgba(0, 145, 188, 0.12), 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* TAGS */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    background: var(--accent-dim);
+    border: 1px solid var(--border-light);
+    color: var(--accent-muted);
+    letter-spacing: 0.05em;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+
+.tag:hover {
+    background: var(--accent);
+    color: var(--bg-dark);
+    cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* ANIMATIONS */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.slide-in {
+    opacity: 0;
+    animation: slideInRight 0.5s ease forwards;
+}
+
+.slide-in:nth-child(1) { animation-delay: 0.1s; }
+.slide-in:nth-child(2) { animation-delay: 0.2s; }
+.slide-in:nth-child(3) { animation-delay: 0.3s; }
+
+/* ─────────────────────────────────────────────────────────────────────---- */
+/* RESPONSIVE */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    .app-content-layout {
+        flex-direction: column;
+    }
+    
+    .page-container {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 32px 0 24px;
+    }
+    
+    .page-header-top {
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+}

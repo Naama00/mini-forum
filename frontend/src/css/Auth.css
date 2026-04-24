@@ -1,3 +1,4 @@
+
 /* ─── AUTH PAGE ────────────────────────────────────────────────────────────── */
 
 .auth-root {
@@ -62,7 +63,7 @@
 }
 
 .auth-side-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: clamp(36px, 4vw, 56px);
     font-weight: 800;
     color: #fff;
@@ -81,7 +82,7 @@
 
 .auth-side-stat { text-align: center; }
 .auth-side-num {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: 24px;
     font-weight: 700;
     color: #fff;
@@ -161,7 +162,7 @@
 .auth-card-inner { display: flex; flex-direction: column; }
 
 .auth-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: 26px;
     font-weight: 800;
     color: #fff;
@@ -256,7 +257,7 @@
     color: #080b12;
     border: none;
     padding: 13px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-weight: 700;
     font-size: 15px;
     cursor: pointer;
@@ -601,7 +602,7 @@
 .vote-btn.vote-down.voted { color: #ff4081; }
 
 .vote-count {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: 13px;
     font-weight: 700;
     color: rgba(226, 232, 240, 0.5);
@@ -659,7 +660,7 @@
     border: 3px solid #00e5ff;
     object-fit: cover;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: 32px; font-weight: 800;
     color: #00e5ff;
     background: rgba(0,229,255,0.08);
@@ -687,7 +688,7 @@
 }
 
 .profile-name {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: clamp(28px, 4vw, 44px);
     font-weight: 800;
     color: #fff;
@@ -753,7 +754,7 @@
 .profile-stat { text-align: center; padding: 0 24px; }
 
 .profile-stat-num {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: 28px; font-weight: 800;
     color: #fff;
     display: block; line-height: 1;
@@ -946,7 +947,7 @@
     border: 1px solid #00e5ff;
     color: #00e5ff;
     padding: 7px 18px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Assistant', sans-serif;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
