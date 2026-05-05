@@ -21,14 +21,21 @@ function formatPublicUserData(user) {
  * Get all categories with sub-categories
  */
 async function getCategories() {
-    const categories = await Category.find()
-        .populate('subCategories', 'name description icon')
-        .select('-__v');
-    return {
-        success: true,
-        data: categories,
-        count: categories.length
-    };
+    console.log('[DEBUG] getCategories called');
+    try {
+        const categories = await Category.find()
+            .populate('subCategories', 'name description icon')
+            .select('-__v');
+        console.log('[DEBUG] Found categories:', categories.length);
+        return {
+            success: true,
+            data: categories,
+            count: categories.length
+        };
+    } catch (error) {
+        console.error('[DEBUG] Error in getCategories:', error.message);
+        throw error;
+    }
 }
 
 /**

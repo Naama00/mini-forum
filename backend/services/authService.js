@@ -65,7 +65,7 @@ async function loginUser(email, password) {
 
     const user = await User.findOne({ email });
     if (!user) {
-        throw new Error('המייל או הסיסמה שגויים');
+        throw new Error('המייל אינו קיים במערכת');
     }
 
     if (!user.password) {
@@ -74,7 +74,7 @@ async function loginUser(email, password) {
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-        throw new Error('המייל או הסיסמה שגויים');
+        throw new Error('הסיסמה שגויה');
     }
 
     user.lastLogin = new Date();

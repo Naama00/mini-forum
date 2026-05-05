@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import "../css/EditJob.css";
 import MarkdownEditor from "./MarkdownEditor";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -101,53 +100,53 @@ export default function EditJob() {
   );
 
   return (
-    <div className="main" dir="rtl">
-      <Link to={`/jobs/${id}`} className="edit-back">← חזרה למשרה</Link>
+    <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 py-8 rtl" dir="rtl">
+      <Link to={`/jobs/${id}`} className="text-cyan-500 hover:text-cyan-400 text-sm mb-4 inline-block">← חזרה למשרה</Link>
 
-      <div className="edit-page-header">
-        <p className="edit-section-label">// עריכת משרה</p>
-        <h1 className="edit-title">עריכת <span>משרה</span></h1>
+      <div className="mb-8">
+        <p className="text-slate-400 text-xs font-mono uppercase tracking-widest mb-2">// עריכת משרה</p>
+        <h1 className="text-4xl font-bold text-white mb-2">עריכת <span className="text-cyan-500">משרה</span></h1>
       </div>
 
-      {error && <div className="error-box">{error}</div>}
+      {error && <div className="bg-rose-500/15 border border-rose-500/40 text-rose-400 px-5 py-3 rounded-lg mb-6">{error}</div>}
 
-      <form onSubmit={submit} className="edit-form">
-        <div className="edit-main">
+      <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        <div>
 
-          <div className="form-card">
-            <p className="form-card-title">פרטי המשרה</p>
-            <div className="form-row">
-              <div className="form-field">
-                <label className="form-label">כותרת המשרה <span>*</span></label>
-                <input name="title" value={form.title} onChange={handle} required className="form-input" placeholder="Senior React Developer" />
+          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
+            <p className="font-bold text-white mb-6 text-lg">פרטי המשרה</p>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="text-slate-300 text-sm font-medium mb-2 block">כותרת המשרה <span className="text-rose-500">*</span></label>
+                <input name="title" value={form.title} onChange={handle} required className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30" placeholder="Senior React Developer" />
               </div>
-              <div className="form-field">
-                <label className="form-label">חברה <span>*</span></label>
-                <input name="company" value={form.company} onChange={handle} required className="form-input" placeholder="Google, Microsoft..." />
+              <div>
+                <label className="text-slate-300 text-sm font-medium mb-2 block">חברה <span className="text-rose-500">*</span></label>
+                <input name="company" value={form.company} onChange={handle} required className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30" placeholder="Google, Microsoft..." />
               </div>
             </div>
-            <div className="form-row">
-              <div className="form-field">
-                <label className="form-label">מיקום</label>
-                <input name="location" value={form.location} onChange={handle} className="form-input" placeholder="תל אביב, ירושלים..." />
+            <div className="grid grid-cols-2 gap-4 mb-0">
+              <div>
+                <label className="text-slate-300 text-sm font-medium mb-2 block">מיקום</label>
+                <input name="location" value={form.location} onChange={handle} className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30" placeholder="תל אביב, ירושלים..." />
               </div>
-              <div className="form-field">
-                <label className="form-label">שכר</label>
-                <input name="salary" value={form.salary} onChange={handle} className="form-input" placeholder="20,000–25,000 ₪" />
+              <div>
+                <label className="text-slate-300 text-sm font-medium mb-2 block">שכר</label>
+                <input name="salary" value={form.salary} onChange={handle} className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30" placeholder="20,000–25,000 ₪" />
               </div>
             </div>
-            <div className="form-field">
-              <label className="form-label">קישור להגשת מועמדות</label>
-              <input name="applyLink" value={form.applyLink} onChange={handle} className="form-input" placeholder="https://..." />
+            <div className="mt-6">
+              <label className="text-slate-300 text-sm font-medium mb-2 block">קישור להגשת מועמדות</label>
+              <input name="applyLink" value={form.applyLink} onChange={handle} className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30" placeholder="https://..." />
             </div>
           </div>
 
-          <div className="form-card">
-            <p className="form-card-title">סוג משרה</p>
-            <div className="type-selector">
+          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
+            <p className="font-bold text-white mb-6 text-lg">סוג משרה</p>
+            <div className="grid grid-cols-2 gap-2">
               {JOB_TYPES.map((t) => (
                 <button key={t} type="button"
-                  className={`type-option${form.type === t ? " selected" : ""}`}
+                  className={`px-4 py-2.5 rounded text-sm font-medium transition-colors ${form.type === t ? "bg-cyan-500 text-gray-950 font-bold" : "bg-white/3 border border-white/8 text-slate-200 hover:bg-white/5"}`}
                   onClick={() => setForm((p) => ({ ...p, type: t }))}>
                   {JOB_TYPE_LABELS[t]}
                 </button>
@@ -155,9 +154,9 @@ export default function EditJob() {
             </div>
           </div>
 
-          <div className="form-card">
-            <p className="form-card-title">תיאור המשרה</p>
-            <div className="form-field">
+          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
+            <p className="font-bold text-white mb-6 text-lg">תיאור המשרה</p>
+            <div>
                 <MarkdownEditor
                   value={form.description}
                   onChange={(v) => setForm(p => ({ ...p, description: v }))}
@@ -167,47 +166,47 @@ export default function EditJob() {
             </div>
           </div>
 
-          <div className="form-card">
-            <p className="form-card-title">דרישות</p>
-            <div className="requirements-list">
+          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
+            <p className="font-bold text-white mb-6 text-lg">דרישות</p>
+            <div className="space-y-2 mb-4">
               {form.requirements.map((r, i) => (
-                <div key={i} className="requirement-item">
-                  <input value={r} readOnly className="form-input" />
-                  <button type="button" onClick={() => removeReq(i)} className="req-remove-btn">×</button>
+                <div key={i} className="flex gap-2 items-center">
+                  <input value={r} readOnly className="flex-1 bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded" />
+                  <button type="button" onClick={() => removeReq(i)} className="px-3 py-2.75 bg-rose-500/15 text-rose-400 rounded hover:bg-rose-500/25 font-bold">×</button>
                 </div>
               ))}
             </div>
-            <div className="requirement-item">
+            <div className="flex gap-2 items-center">
               <input value={reqInput}
                 onChange={(e) => setReqInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addReq())}
-                className="form-input" placeholder="הוסף דרישה ולחץ Enter" />
-              <button type="button" onClick={addReq} className="req-add-inline">+</button>
+                className="flex-1 bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30" placeholder="הוסף דרישה ולחץ Enter" />
+              <button type="button" onClick={addReq} className="px-4 py-2.75 bg-cyan-500 text-gray-950 rounded font-bold hover:shadow-lg hover:shadow-cyan-500/35">+</button>
             </div>
           </div>
 
         </div>
 
         {/* Sidebar */}
-        <div className="edit-sidebar">
-          <div className="form-card">
-            <p className="form-card-title">תגיות</p>
-            <div className="tags-input-wrapper">
+        <div className="flex flex-col gap-6">
+          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg sticky top-20">
+            <p className="font-bold text-white mb-6 text-lg">תגיות</p>
+            <div className="flex flex-wrap gap-2 bg-white/3 border border-white/8 px-3.5 py-2.5 min-h-12 items-center rounded rtl mb-4">
               {form.tags.map((t) => (
-                <span key={t} className="tag-pill">
+                <span key={t} className="bg-cyan-500/20 text-cyan-300 px-2.5 py-1.5 rounded text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
                   {t}
-                  <button type="button" onClick={() => removeTag(t)} className="tag-pill-remove">×</button>
+                  <button type="button" onClick={() => removeTag(t)} className="font-bold hover:text-cyan-200">×</button>
                 </span>
               ))}
               <input value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-                className="tags-input" placeholder="React, Node.js..." />
+                className="flex-1 bg-transparent text-slate-200 outline-none placeholder-slate-400 text-sm min-w-16" placeholder="React, Node.js..." />
             </div>
-            <div className="quick-tags">
+            <div className="grid grid-cols-2 gap-2">
               {["React", "Node.js", "Python", "TypeScript", "AWS"].map((t) => (
                 <button key={t} type="button"
-                  className={`quick-tag-btn${form.tags.includes(t) ? " selected" : ""}`}
+                  className={`px-3 py-2 rounded text-xs font-medium transition-colors ${form.tags.includes(t) ? "bg-cyan-500 text-gray-950 font-bold" : "bg-white/3 border border-white/8 text-slate-200 hover:bg-white/5"}`}
                   onClick={() => form.tags.includes(t) ? removeTag(t) : setForm(p => ({ ...p, tags: [...p.tags, t] }))}>
                   {t}
                 </button>
@@ -215,19 +214,21 @@ export default function EditJob() {
             </div>
           </div>
 
-          <div className="form-card">
-            <p className="form-card-title">סיכום</p>
-            <div className="edit-summary-row"><span className="edit-summary-label">סוג</span><span className="edit-summary-val">{JOB_TYPE_LABELS[form.type]}</span></div>
-            <div className="edit-summary-row"><span className="edit-summary-label">מיקום</span><span className="edit-summary-val">{form.location || "—"}</span></div>
-            <div className="edit-summary-row"><span className="edit-summary-label">שכר</span><span className="edit-summary-val">{form.salary || "—"}</span></div>
-            <div className="edit-summary-row"><span className="edit-summary-label">דרישות</span><span className="edit-summary-val">{form.requirements.length}</span></div>
+          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
+            <p className="font-bold text-white mb-4 text-lg">סיכום</p>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm text-slate-300"><span>סוג</span><span>{JOB_TYPE_LABELS[form.type]}</span></div>
+              <div className="flex justify-between text-sm text-slate-300"><span>מיקום</span><span>{form.location || "—"}</span></div>
+              <div className="flex justify-between text-sm text-slate-300"><span>שכר</span><span>{form.salary || "—"}</span></div>
+              <div className="flex justify-between text-sm text-slate-300"><span>דרישות</span><span>{form.requirements.length}</span></div>
+            </div>
           </div>
 
-          <div className="edit-actions">
-            <button type="submit" disabled={saving} className="submit-btn">
+          <div className="flex flex-col gap-3">
+            <button type="submit" disabled={saving} className="w-full px-6 py-2.75 bg-cyan-500 text-gray-950 font-sans font-bold uppercase tracking-widest rounded hover:shadow-lg hover:shadow-cyan-500/35 disabled:opacity-50 disabled:cursor-not-allowed">
               {saving ? "שומר..." : "שמור שינויים"}
             </button>
-            <Link to={`/jobs/${id}`} className="cancel-btn">ביטול</Link>
+            <Link to={`/jobs/${id}`} className="w-full px-6 py-2.75 bg-white/3 border border-white/8 text-slate-200 font-sans font-bold uppercase tracking-widest rounded text-center hover:bg-white/5">ביטול</Link>
           </div>
         </div>
       </form>

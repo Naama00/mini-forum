@@ -40,7 +40,7 @@ mongoose.connect(url)
 
 // Routes with rate limiting
 app.use('/api/search', searchLimiter, searchRoutes);
-app.use('/api', dataRoutes);
+
 app.use('/api/auth', authLimiter, authRoutes);  
 
 app.get('/health', (req, res) => {
@@ -55,7 +55,7 @@ app.use('/api/posts', postLimiter, postRoutes);
 app.use('/api/users', userRoutes);
 
 app.use('/api/notifications', notificationRoutes);
-
+app.use('/api', dataRoutes);
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ success: false, message: 'Endpoint לא נמצא' });

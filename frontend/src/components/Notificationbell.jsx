@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../css/NotificationBell.css";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -119,56 +118,56 @@ export default function NotificationBell() {
     if (!token) return null;
 
     return (
-        <div className="notif-bell-wrap" ref={dropRef} dir="rtl">
-            <button className="notif-bell-btn" onClick={openDropdown} aria-label="התראות">
-                <span className="notif-bell-icon">🔔</span>
+        <div className="relative z-50 rtl" ref={dropRef} dir="rtl">
+            <button className="bg-none border-none cursor-pointer relative p-1.5 flex items-center transition-transform hover:scale-110" onClick={openDropdown} aria-label="התראות">
+                <span className="text-5xl leading-none">🔔</span>
                 {unread > 0 && (
-                    <span className="notif-badge">{unread > 9 ? "9+" : unread}</span>
+                    <span className="absolute top-0 left-0 bg-rose-500 text-white font-sans text-xs font-bold min-w-4.5 h-4.5 rounded-full flex items-center justify-center px-1 border-2 border-gray-900 animate-bounce">{unread > 9 ? "9+" : unread}</span>
                 )}
             </button>
 
             {open && (
-                <div className="notif-dropdown">
-                    <div className="notif-drop-header">
-                        <span className="notif-drop-title">// התראות</span>
+                <div className="absolute top-12 right-0 w-80 bg-gray-950/95 border border-white/10 rounded-lg shadow-2xl animate-fade-in rtl" style={{ backdropFilter: 'blur(10px)' }}>
+                    <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/6">
+                        <span className="font-mono text-xs tracking-widest text-cyan-500/60 uppercase">// התראות</span>
                         {unread > 0 && (
-                            <button className="notif-mark-all" onClick={markAllRead}>
+                            <button className="bg-none border-none text-cyan-500/50 font-sans text-xs cursor-pointer transition-colors hover:text-cyan-500" onClick={markAllRead}>
                                 סמן הכל כנקרא
                             </button>
                         )}
                     </div>
 
-                    <div className="notif-drop-list">
+                    <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-500/20">
                         {loading ? (
-                            <div className="notif-drop-empty"><div className="spinner" />טוען...</div>
+                            <div className="flex flex-col items-center justify-center px-4 py-7 text-center text-slate-200/25 text-sm"><div className="text-2xl animate-spin mb-2">⏳</div>טוען...</div>
                         ) : notifications.length === 0 ? (
-                            <div className="notif-drop-empty">אין התראות חדשות</div>
+                            <div className="px-4 py-7 text-center text-slate-200/25 text-sm">אין התראות חדשות</div>
                         ) : (
                             notifications.map((n) => (
                                 <Link
                                     key={n._id}
                                     to={notifLink(n)}
-                                    className={`notif-drop-item${n.read ? "" : " unread"}`}
+                                    className={`flex items-start gap-2.5 px-4 py-3 text-inherit no-underline border-b border-white/4 transition-all ${n.read ? "hover:bg-white/3" : "bg-cyan-500/4 hover:bg-cyan-500/7"}`}
                                     onClick={() => { markRead(n._id); setOpen(false); }}
                                 >
-                                    <span className="notif-drop-type-icon">{TYPE_ICON[n.type]}</span>
-                                    <div className="notif-drop-body">
-                                        <span className="notif-drop-sender">
-                                            {n.sender?.firstName || n.sender?.username}
-                                        </span>
-                                        {" "}{TYPE_TEXT[n.type]}
-                                        {n.text && (
-                                            <span className="notif-drop-text"> — {n.text.slice(0, 40)}{n.text.length > 40 ? "..." : ""}</span>
-                                        )}
-                                        <div className="notif-drop-time">{timeAgo(n.createdAt)}</div>
+                                    <span className="text-4.5 flex-shrink-0 mt-0.5">{TYPE_ICON[n.type]}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm text-slate-200/70 leading-relaxed">
+                                            <strong className="text-white">{n.sender?.firstName || n.sender?.username}</strong>
+                                            {" "}{TYPE_TEXT[n.type]}
+                                            {n.text && (
+                                                <span className="text-slate-200/45 text-xs"> — {n.text.slice(0, 40)}{n.text.length > 40 ? "..." : ""}</span>
+                                            )}
+                                            <div className="text-xs text-slate-200/25 font-mono mt-0.75">{timeAgo(n.createdAt)}</div>
+                                        </div>
                                     </div>
-                                    {!n.read && <span className="notif-drop-dot" />}
+                                    {!n.read && <span className="w-1.75 h-1.75 rounded-full bg-cyan-500 flex-shrink-0 mt-1.25 shadow-lg shadow-cyan-500/60" />}
                                 </Link>
                             ))
                         )}
                     </div>
 
-                    <Link to="/notifications" className="notif-drop-footer" onClick={() => setOpen(false)}>
+                    <Link to="/notifications" className="block text-center px-4 py-3 border-t border-white/6 font-sans text-xs text-cyan-500/60 no-underline transition-all hover:text-cyan-500 hover:bg-cyan-500/4 tracking-wide">
                         כל ההתראות ←
                     </Link>
                 </div>

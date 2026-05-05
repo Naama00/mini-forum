@@ -38,19 +38,19 @@ export default function Breadcrumb({ customNames = {} }) {
   if (crumbs.length <= 1) return null;
 
   return (
-    <nav className="breadcrumb" dir="rtl">
+    <nav className="flex items-center gap-1.5 text-xs text-slate-300/35 rtl mb-6 flex-wrap" dir="rtl">
       {crumbs.map((crumb, i) => {
         const isLast = i === crumbs.length - 1;
         return (
-          <span key={crumb.to} className="breadcrumb-item">
+          <span key={crumb.to} className="flex items-center gap-1.5">
             {isLast ? (
-              <span className="breadcrumb-current">{crumb.label}</span>
+              <span className="text-slate-300/50 font-mono text-xs tracking-wide">{crumb.label}</span>
             ) : (
               <>
-                <Link to={crumb.to} className="breadcrumb-link">
+                <Link to={crumb.to} className="text-cyan-500/60 no-underline font-mono text-xs tracking-wide transition-colors hover:text-cyan-500">
                   {crumb.label}
                 </Link>
-                <span className="breadcrumb-sep">›</span>
+                <span className="text-slate-300/20 text-sm leading-tight">›</span>
               </>
             )}
           </span>

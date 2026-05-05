@@ -1,0 +1,71 @@
+/* Responsive Design */
+
+/* Mobile First Approach */
+@media (max-width: 576px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    width: auto;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+}
+
+/* Tablets */
+@media (min-width: 577px) and (max-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+/* Large Screens */
+@media (min-width: 993px) {
+  .container {
+    max-width: 1200px;
+  }
+}
+
+/* High DPI Displays */
+@media (min-device-pixel-ratio: 2) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background-color: white;
+    color: black;
+  }
+
+  .modal-overlay {
+    display: none;
+  }
+}
+
+/* Dark Mode Media Query (System Preference) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,8 +1,8 @@
 const rateLimit = require('express-rate-limit');
-const RedisStore = require('rate-limit-redis');
-const redis = require('redis');
 
-// Optional: Use Redis for distributed rate limiting (comment out if Redis not available)
+// Redis is optional - uncomment if you have Redis set up for distributed rate limiting
+// const RedisStore = require('rate-limit-redis');
+// const redis = require('redis');
 // const redisClient = redis.createClient();
 
 /**

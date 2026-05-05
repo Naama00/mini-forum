@@ -92,4 +92,3 @@ module.exports = {
   addComment,
   deleteComment
 };
-};

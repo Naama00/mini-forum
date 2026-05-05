@@ -4,10 +4,13 @@ const dataService = require('../services/dataService');
  * GET /api/categories
  */
 async function getCategories(req, res, next) {
+    console.log('[DEBUG] dataController.getCategories called');
     try {
         const result = await dataService.getCategories();
+        console.log('[DEBUG] Sending response:', result);
         res.json(result);
     } catch (error) {
+        console.error('[DEBUG] Error in getCategories:', error);
         next(error);
     }
 }

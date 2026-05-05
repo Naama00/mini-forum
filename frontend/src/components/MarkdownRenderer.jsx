@@ -18,7 +18,6 @@ import cssLang from 'react-syntax-highlighter/dist/esm/languages/prism/css';
 import php from 'react-syntax-highlighter/dist/esm/languages/prism/php';
 import go from 'react-syntax-highlighter/dist/esm/languages/prism/go';
 import ruby from 'react-syntax-highlighter/dist/esm/languages/prism/ruby';
-import "../css/MarkdownEditor.css";
 
 export default function MarkdownRenderer({ source }) {
   if (!source) return null;
@@ -53,13 +52,13 @@ export default function MarkdownRenderer({ source }) {
       }
 
       return (
-        <div className="code-block-wrapper" style={{ direction: 'ltr', textAlign: 'left' }}>
+        <div className="ltr" style={{ direction: 'ltr', textAlign: 'left' }}>
           <SyntaxHighlighter
-            language={match ? match[1] : 'javascript'} // ברירת מחדל JS אם לא צוין
+            language={match ? match[1] : 'javascript'}
             style={vscDarkPlus}
-            useInlineStyles={false} // חשוב מאוד! כדי שישתמש ב-CSS שכתבת
+            useInlineStyles={false}
             PreTag="div"
-            className="md-syntax" // ה-class שכתבת ב-CSS
+            className="md-syntax"
           >
             {codeString}
           </SyntaxHighlighter>
@@ -69,7 +68,32 @@ export default function MarkdownRenderer({ source }) {
   };
 
   return (
-    <div className="md-renderer" dir="rtl">
+    <div className="text-slate-200/95 leading-relaxed rtl" dir="rtl">
+      <style>{`
+        .md-renderer h1, .md-renderer h2, .md-renderer h3 { margin: 12px 0; }
+        .md-renderer p { margin: 8px 0; }
+        .md-renderer pre { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 6px; overflow: auto; }
+        .md-renderer code { background: rgba(0,0,0,0.45); padding: 2px 6px; border-radius: 4px; }
+        .md-syntax .token.keyword { color: #569CD6 !important; }
+        .md-syntax .token.function { color: #DCDCAA !important; }
+        .md-syntax .token.class-name { color: #4EC9B0 !important; }
+        .md-syntax .token.tag { color: #569CD6 !important; }
+        .md-syntax .token.punctuation { color: #d4d4d4 !important; }
+        .md-syntax .token.property, .md-syntax .token.attr-name, .md-syntax .token.variable, .md-syntax .token.parameter { color: #9CDCFE !important; }
+        .md-syntax .token.string { color: #CE9178 !important; }
+        .md-syntax .token.number { color: #B5CEA8 !important; }
+        .md-syntax .token.boolean { color: #B5CEA8 !important; }
+        .md-syntax .token.comment { color: #6A9955 !important; font-style: italic !important; }
+        .md-syntax .token.operator { color: #d4d4d4 !important; }
+        .md-syntax .token.constant { color: #4FC1FF !important; }
+        .md-syntax .token.selector { color: #DCDCAA !important; }
+        .md-syntax .token.url { color: #4EC9B0 !important; }
+        .md-syntax .token.regex { color: #D16969 !important; }
+        .md-syntax .token.bold { font-weight: 700 !important; }
+        .md-syntax .token.italic { font-style: italic !important; }
+        .md-syntax code { color: inherit !important; background: transparent !important; padding: 0 !important; }
+        .md-renderer .md-syntax pre { background: transparent !important; margin: 0 !important; padding: 0 !important; }
+      `}</style>
       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]} components={components}>{source}</ReactMarkdown>
     </div>
   );

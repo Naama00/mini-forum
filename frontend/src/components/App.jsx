@@ -21,7 +21,6 @@ import EditJob from './EditJob';
 import Notifications from './Notifications';
 import SearchResults from './SearchResults';
 import ThemeToggle from './ThemeToggle';
-import "../css/style.css";
 
 // ← מחוץ ל-App
 function AppRoutes() {
@@ -69,14 +68,13 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="app-main-wrapper">
-        <div className="app-content-layout">
-          <Sidebar currentUser={currentUser} />
-          <div className="page-container">
+      <div className="min-h-screen bg-gray-900/95 text-slate-100 rtl">
+        <div className="flex max-w-full">
+          <div className="flex-1 px-10 py-10 min-w-0">
             <ThemeToggle />
-            {/* <Breadcrumb /> */}
             <AppRoutes />
           </div>
+          <Sidebar currentUser={currentUser} />
         </div>
       </div>
     </BrowserRouter>

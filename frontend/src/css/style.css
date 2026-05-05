@@ -343,8 +343,9 @@ body {
 
 /* HERO */
 .hero {
-    padding: 80px 0 60px;
+    padding: 80px 24px 60px;
     text-align: center;
+    margin: 0;
 }
 
 .hero-label {
@@ -353,9 +354,18 @@ body {
     color: var(--accent);
     font-size: 11px;
     letter-spacing: 0.2em;
-    padding: 6px 16px;
+    padding: 8px 16px;
     margin-bottom: 28px;
     animation: fadeInDown 0.6s ease both;
+    border-radius: 20px;
+    background: rgba(0, 229, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.hero-label:hover {
+    background: rgba(0, 229, 255, 0.1);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
 }
 
 .hero-title {
@@ -364,21 +374,25 @@ body {
     font-weight: 800;
     line-height: 1.05;
     color: var(--text-main);
-    margin-bottom: 20px;
+    margin: 0 0 20px 0;
+    padding: 0;
     animation: fadeInDown 0.6s 0.1s ease both;
     direction: rtl;
+    letter-spacing: -0.8px;
 }
 
 .hero-title .accent {
     color: var(--accent);
+    text-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
 }
 
 .hero-sub {
     color: var(--text-muted);
     font-size: 15px;
-    max-width: 480px;
-    margin: 0 auto 48px;
-    line-height: 1.7;
+    max-width: 540px;
+    margin: 0 auto 48px auto;
+    padding: 0;
+    line-height: 1.8;
     animation: fadeInDown 0.6s 0.2s ease both;
     direction: rtl;
 }
@@ -386,26 +400,35 @@ body {
 .stats-row {
     display: flex;
     justify-content: center;
-    gap: 48px;
+    gap: 32px;
     animation: fadeInDown 0.6s 0.3s ease both;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
 }
 
 .stat {
     text-align: center;
+    padding: 16px;
+    flex: 1;
+    min-width: 100px;
 }
 
 .stat-num {
     font-family: 'Assistant', sans-serif;
     font-size: 28px;
     font-weight: 700;
-    color: var(--text-main);
+    color: var(--accent);
     display: block;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
 }
 
 .stat-label {
     font-size: 11px;
     color: var(--text-muted);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
+    margin: 0;
 }
 
 /* DIVIDER */

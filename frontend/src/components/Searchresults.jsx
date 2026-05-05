@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import "../css/SearchResults.css";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -53,23 +52,23 @@ export default function SearchResults() {
     : [];
 
   return (
-    <div className="main" dir="rtl">
+    <div className="max-w-7xl mx-auto px-6 rtl" dir="rtl">
       {/* Header */}
-      <div className="search-page-header">
-        <p className="search-section-label">// חיפוש גלובלי</p>
-        <h1 className="search-page-title">
-          תוצאות עבור <span>"{q}"</span>
+      <div className="mb-7 rtl animate-fade-in">
+        <p className="font-mono text-xs tracking-widest text-cyan-500 uppercase mb-2.5">// חיפוש גלובלי</p>
+        <h1 className="text-3xl font-black text-white mb-1.5">
+          תוצאות עבור <span className="text-cyan-500">"{q}"</span>
         </h1>
         {!loading && results && (
-          <p className="search-page-sub">נמצאו {total} תוצאות</p>
+          <p className="text-xs text-slate-200/35 font-mono">נמצאו {total} תוצאות</p>
         )}
       </div>
 
       {/* Filter tabs */}
       {results && (
-        <div className="search-filters">
+        <div className="flex gap-1.5 flex-wrap mb-5 rtl">
           <button
-            className={`search-filter-btn${activeType === "all" ? " active" : ""}`}
+            className={`px-3.5 py-1.5 bg-white/3 border border-white/8 text-slate-200/45 font-sans text-xs font-semibold cursor-pointer transition-all ${activeType === "all" ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500/30 hover:text-slate-200/80"}`}
             onClick={() => setActiveType("all")}
           >
             הכל ({total})
@@ -80,7 +79,7 @@ export default function SearchResults() {
             return (
               <button
                 key={key}
-                className={`search-filter-btn${activeType === key ? " active" : ""}`}
+                className={`px-3.5 py-1.5 bg-white/3 border border-white/8 text-slate-200/45 font-sans text-xs font-semibold cursor-pointer transition-all ${activeType === key ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500/30 hover:text-slate-200/80"}`}
                 onClick={() => setActiveType(key)}
               >
                 {config.icon} {config.label} ({count})
@@ -90,65 +89,63 @@ export default function SearchResults() {
         </div>
       )}
 
-      <div className="search-divider">
-        <div className="search-divider-line" />
-        <span className="search-divider-text">// תוצאות</span>
-        <div className="search-divider-line" />
+      <div className="flex items-center gap-3 mb-5 rtl">
+        <div className="flex-1 h-px bg-cyan-500/10" />
+        <span className="font-mono text-xs tracking-wide text-cyan-500/50">// תוצאות</span>
+        <div className="flex-1 h-px bg-cyan-500/10" />
       </div>
 
       {loading ? (
-        <div className="state-center"><div className="big-spinner" /></div>
+        <div className="text-center py-20"><div className="text-4xl animate-spin">⏳</div></div>
       ) : !hasResults ? (
-        <div className="empty-box">
-          <div className="empty-icon">🔍</div>
-          לא נמצאו תוצאות עבור "{q}"
-        </div>
+        <div className="text-center py-20 text-gray-600 text-sm"><div className="text-4xl mb-3 opacity-30">🔍</div>לא נמצאו תוצאות עבור "{q}"</div>
       ) : (
-        <div className="search-results">
+        <div className="flex flex-col gap-6">
           {filteredSections.map(([key, config]) => {
             const items = results[key];
             if (!items?.length) return null;
             return (
-              <div key={key} className="search-section">
-                <div className="search-section-header">
-                  <span className="search-section-icon">{config.icon}</span>
-                  <span className="search-section-label-text">{config.label}</span>
-                  <span className="search-section-count">{items.length}</span>
+              <div key={key} className="animate-fade-in">
+                <div className="flex items-center gap-2 mb-2 rtl">
+                  <span className="text-base">{config.icon}</span>
+                  <span className="font-mono text-xs tracking-wide text-cyan-500/60 uppercase">{config.label}</span>
+                  <span className="text-xs bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 px-2 py-0.5 font-mono">{items.length}</span>
                 </div>
 
-                <div className="search-section-list">
+                <div className="flex flex-col gap-0.5">
                   {items.map((item) => (
-                    <Link key={item._id} to={config.path(item)} className="search-result-row">
+                    <Link key={item._id} to={config.path(item)} className="flex items-center gap-3.5 px-4.5 py-3.5 bg-white/2 border border-white/5 no-underline text-inherit transition-all relative rtl hover:bg-white/4 hover:border-white/9 group">
+                      <div className="absolute right-0 top-0 bottom-0 w-0.75 bg-cyan-500 scale-y-0 transition-transform group-hover:scale-y-100" />
                       {key === "users" ? (
                         <>
-                          <div className="search-user-avatar">
+                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                             {item.icon || item.avatar
-                              ? <img src={item.icon || item.avatar} alt="" className="avatar-img" style={{ width: 40, height: 40 }} />
-                              : <div className="avatar-initials" style={{ width: 40, height: 40, fontSize: 16, background: "rgba(0,229,255,0.1)", color: "#00e5ff", border: "1px solid rgba(0,229,255,0.3)" }}>
+                              ? <img src={item.icon || item.avatar} alt="" className="w-full h-full object-cover" />
+                              : <div className="w-full h-full text-sm bg-cyan-500/10 text-cyan-500 border border-cyan-500/30 flex items-center justify-center font-bold">
                                   {item.firstName?.[0] || item.username?.[0] || "?"}
                                 </div>
                             }
                           </div>
-                          <div className="search-result-body">
-                            <span className="search-result-title">{item.firstName} {item.lastName}</span>
-                            <span className="search-result-sub">@{item.username}</span>
+                          <div className="flex-1 min-w-0 rtl">
+                            <span className="block text-sm font-semibold text-white mb-1 truncate">{item.firstName} {item.lastName}</span>
+                            <span className="text-xs text-slate-200/40">@{item.username}</span>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="search-result-body">
-                            <span className="search-result-title">{item.title}</span>
-                            <div className="search-result-meta">
-                              {item.company && <span className="search-meta-tag">🏢 {item.company}</span>}
-                              {item.location && <span className="search-meta-tag">📍 {item.location}</span>}
-                              {item.category && <span className="search-meta-tag">#{item.category}</span>}
+                          <div className="flex-1 min-w-0 rtl">
+                            <span className="block text-sm font-semibold text-white mb-1 truncate group-hover:text-cyan-500">{item.title}</span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {item.company && <span className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">🏢 {item.company}</span>}
+                              {item.location && <span className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">📍 {item.location}</span>}
+                              {item.category && <span className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">#{item.category}</span>}
                               {item.tags?.slice(0, 2).map(t => (
-                                <span key={t} className="search-meta-tag">#{t}</span>
+                                <span key={t} className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">#{t}</span>
                               ))}
-                              {item.createdAt && <span className="search-meta-time">{timeAgo(item.createdAt)}</span>}
+                              {item.createdAt && <span className="text-xs text-slate-200/25 font-mono mr-auto">{timeAgo(item.createdAt)}</span>}
                             </div>
                           </div>
-                          <span className="search-result-arrow">←</span>
+                          <span className="text-slate-200/20 text-base transition-all flex-shrink-0 group-hover:text-cyan-500 group-hover:-translate-x-0.75">←</span>
                         </>
                       )}
                     </Link>

@@ -76,29 +76,28 @@ function TopicRow({ topic, index }) {
   const accent = AVATAR_COLORS[index % AVATAR_COLORS.length];
   return (
     <div
-      className="topic-row"
-      style={{ "--accent": accent, animationDelay: `${index * 0.04}s`, cursor: "pointer" }}
+      className="bg-white/2 border border-white/7 px-6 py-4 rounded hover:bg-white/3 transition-colors cursor-pointer flex items-start justify-between"
+      style={{ animationDelay: `${index * 0.04}s`, borderColor: `${accent}40` }}
       onClick={() => navigate(`/category?topicId=${topic.id || topic._id}`)}
     >
-      <div className="topic-row-left">
-        <Avatar user={author} size={40} />
-        <div className="topic-row-body">
-          <div className="topic-title">{topic.title || topic.name || "ללא כותרת"}</div>
-          <div className="topic-meta">
-            <span className="topic-author">{authorName}</span>
+      <div className="flex-1 flex gap-4">
+        <div className="flex-shrink-0">
+          <Avatar user={author} size={40} />
+        </div>
+        <div className="flex-1">
+          <div className="font-bold text-white text-lg mb-2">{topic.title || topic.name || "ללא כותרת"}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-300 text-sm">{authorName}</span>
             {topic.tags?.slice(0, 3).map((t) => (
-              <span key={t} className="topic-tag">{t}</span>
+              <span key={t} className="text-xs px-2 py-1 rounded" style={{ backgroundColor: `${accent}20`, color: accent }}>{t}</span>
             ))}
           </div>
         </div>
       </div>
-      <div className="topic-row-right">
-        <div className="topic-stat">
-          <span className="topic-stat-num">{topic.posts?.length ?? topic.replyCount ?? "—"}</span>
-          <span className="topic-stat-label">תגובות</span>
-        </div>
-        <div className="topic-time">{timeAgo(topic.createdAt || topic.created_at)}</div>
-        <span className="topic-arrow">›</span>
+      <div className="flex-shrink-0 text-right">
+        <div className="text-cyan-500 font-bold">{topic.posts?.length ?? topic.replyCount ?? "—"}</div>
+        <div className="text-xs text-slate-400">תגובות</div>
+        <div className="text-xs text-slate-400 mt-2">{timeAgo(topic.createdAt || topic.created_at)}</div>
       </div>
     </div>
   );
@@ -142,13 +141,13 @@ function VoteButtons({ postId, initialVotes, isLoggedIn, onNavigateAuth }) {
   };
 
   return (
-    <div className="vote-buttons">
-      <button className={`vote-btn vote-up${voted === "up" ? " voted" : ""}`}
+    <div className="flex flex-col items-center gap-1">
+      <button className={`text-slate-400 hover:text-cyan-500 transition ${voted === "up" ? "text-cyan-500" : ""}`}
         onClick={() => handleVote("up")} title="הצבע בעד">▲</button>
-      <span className={`vote-count${votes > 0 ? " positive" : votes < 0 ? " negative" : ""}`}>
+      <span className={`text-xs font-mono font-bold ${votes > 0 ? "text-cyan-500" : votes < 0 ? "text-rose-500" : "text-slate-400"}`}>
         {votes}
       </span>
-      <button className={`vote-btn vote-down${voted === "down" ? " voted" : ""}`}
+      <button className={`text-slate-400 hover:text-rose-500 transition ${voted === "down" ? "text-rose-500" : ""}`}
         onClick={() => handleVote("down")} title="הצבע נגד">▼</button>
     </div>
   );
@@ -211,23 +210,23 @@ function PostRow({ post, index, isLoggedIn, onNavigateAuth, onPostUpdated, onPos
   };
 
   return (
-    <div className={`post-card${isFirst ? " post-card-first" : ""}`}
+    <div className={`bg-white/2 border border-white/7 px-6 py-5 rounded ${isFirst ? "border-cyan-500/30" : ""}`}
       style={{ animationDelay: `${index * 0.05}s` }}>
-      <div className="post-card-header">
-        <div className="post-author-block">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start gap-4">
           <Avatar user={author} size={44} />
           <div>
-            <div className="post-author-name">{authorName}</div>
-            <div className="post-author-time">{timeAgo(post.createdAt || post.created_at)}</div>
+            <div className="font-semibold text-white">{authorName}</div>
+            <div className="text-xs text-slate-400">{timeAgo(post.createdAt || post.created_at)}</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {isFirst && <span className="post-op-badge">OP</span>}
+        <div className="flex items-center gap-3">
+          {isFirst && <span className="px-2 py-1 bg-cyan-500/20 text-cyan-300 text-xs font-mono">OP</span>}
           {isOwner && !editing && (
-            <div className="post-actions">
-              <button className="post-action-btn edit" onClick={() => { setEditing(true); setEditContent(post.content || ""); }}
+            <div className="flex gap-1">
+              <button className="p-2 text-slate-400 hover:text-cyan-500 transition" onClick={() => { setEditing(true); setEditContent(post.content || ""); }}
                 title="ערוך">✎</button>
-              <button className="post-action-btn delete" onClick={() => setConfirmDelete(true)}
+              <button className="p-2 text-slate-400 hover:text-rose-500 transition" onClick={() => setConfirmDelete(true)}
                 title="מחק">✕</button>
             </div>
           )}
@@ -240,36 +239,36 @@ function PostRow({ post, index, isLoggedIn, onNavigateAuth, onPostUpdated, onPos
         </div>
       </div>
 
-      {/* תוכן — עריכה inline */}
       {editing ? (
-        <div className="post-edit-box">
+        <div className="bg-white/3 border border-white/10 p-4 rounded mb-4">
           <MarkdownEditor
             value={editContent}
             onChange={(v) => { setEditContent(v); setEditError(null); }}
             rows={6}
           />
-          {editError && <div className="post-edit-error">{editError}</div>}
-          <div className="post-edit-actions">
-            <button className="post-edit-save" onClick={handleSave} disabled={saving}>
-              {saving ? <span className="auth-spinner" /> : "שמור"}
+          {editError && <div className="text-rose-500 text-sm mt-2">{editError}</div>}
+          <div className="flex gap-3 mt-3">
+            <button className="px-4 py-2 bg-cyan-500 text-gray-950 font-bold rounded hover:shadow-lg hover:shadow-cyan-500/35 disabled:opacity-50" onClick={handleSave} disabled={saving}>
+              {saving ? <span className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" /> : "שמור"}
             </button>
-            <button className="post-edit-cancel" onClick={() => { setEditing(false); setEditError(null); }}>
+            <button className="px-4 py-2 bg-white/3 text-slate-200 font-bold rounded hover:bg-white/5" onClick={() => { setEditing(false); setEditError(null); }}>
               ביטול
             </button>
           </div>
         </div>
       ) : (
-        <div className="post-content"><MarkdownRenderer source={post.content || post.body || post.text || ""} /></div>
+        <div className="text-slate-300 mb-4"><MarkdownRenderer source={post.content || post.body || post.text || ""} /></div>
       )}
 
-      {/* אישור מחיקה */}
       {confirmDelete && (
-        <div className="post-delete-confirm">
-          <span>למחוק את הפוסט הזה?</span>
-          <button className="post-delete-yes" onClick={handleDelete} disabled={deleting}>
-            {deleting ? <span className="auth-spinner" /> : "מחק"}
-          </button>
-          <button className="post-delete-no" onClick={() => setConfirmDelete(false)}>ביטול</button>
+        <div className="bg-rose-500/15 border border-rose-500/40 p-3 rounded flex items-center justify-between gap-4">
+          <span className="text-rose-400">למחוק את הפוסט הזה?</span>
+          <div className="flex gap-2">
+            <button className="px-3 py-1.5 bg-rose-500 text-white font-bold rounded text-sm hover:shadow-lg hover:shadow-rose-500/35 disabled:opacity-50" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "מחק"}
+            </button>
+            <button className="px-3 py-1.5 bg-white/3 text-slate-200 font-bold rounded text-sm hover:bg-white/5" onClick={() => setConfirmDelete(false)}>ביטול</button>
+          </div>
         </div>
       )}
     </div>
@@ -285,10 +284,12 @@ function ReplyBox({ topicId, onReplyAdded }) {
 
   if (!user) {
     return (
-      <div className="reply-box reply-box-locked">
-        <span className="reply-locked-icon">◆</span>
-        <span>יש להתחבר כדי להגיב</span>
-        <button className="reply-login-btn" onClick={() => navigate("/auth")}>התחבר / הירשם</button>
+      <div className="bg-white/2 border border-white/7 px-6 py-4 rounded flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-cyan-500">◆</span>
+          <span className="text-slate-400">יש להתחבר כדי להגיב</span>
+        </div>
+        <button className="px-6 py-2.75 bg-cyan-500 text-gray-950 font-bold uppercase tracking-widest rounded hover:shadow-lg hover:shadow-cyan-500/35" onClick={() => navigate("/auth")}>התחבר / הירשם</button>
       </div>
     );
   }
@@ -316,9 +317,11 @@ function ReplyBox({ topicId, onReplyAdded }) {
   };
 
   return (
-    <div className="reply-box" style={{ direction: "rtl" }}>
-      <div className="reply-box-header">
-        <span className="divider-text">// הוסף תגובה</span>
+    <div className="bg-white/2 border border-white/7 px-6 py-5 rounded" dir="rtl">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-slate-400 text-xs font-mono uppercase tracking-widest">// הוסף תגובה</span>
+        <div className="flex-1 h-px bg-white/10" />
       </div>
       <MarkdownEditor
         value={content}
@@ -326,12 +329,12 @@ function ReplyBox({ topicId, onReplyAdded }) {
         placeholder="כתוב את תגובתך כאן..."
         rows={4}
       />
-      {error && <div className="auth-error">{error}</div>}
-      <div className="reply-actions">
-        <span className="reply-char-count">{content.length} תווים</span>
-        <button className={`auth-submit reply-submit${loading ? " loading" : ""}`}
+      {error && <div className="text-rose-500 text-sm mt-3">{error}</div>}
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-slate-400 text-xs">{content.length} תווים</span>
+        <button className={`px-6 py-2.75 bg-cyan-500 text-gray-950 font-bold uppercase tracking-widest rounded hover:shadow-lg hover:shadow-cyan-500/35 disabled:opacity-50 flex items-center gap-2 ${loading ? "opacity-60" : ""}`}
           onClick={handleSubmit} disabled={loading}>
-          {loading ? <span className="auth-spinner" /> : "פרסם תגובה ›"}
+          {loading ? <span className="w-4 h-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" /> : "פרסם תגובה ›"}
         </button>
       </div>
     </div>
@@ -404,37 +407,34 @@ export default function CategoryPage() {
   const topicAuthorId = posts[0]?.author?._id;
 
   return (
-    <div className="forum-root">
-      <div className="grid-overlay" />
-      <div className="glow-orb glow-1" />
-      <div className="glow-orb glow-2" />
-
-      <header className="header">
-        <div className="container">
-          <div className="header-inner">
-            <a href="/" className="logo">
-              <div className="logo-mark" />
-              <span className="logo-text">Dev<span>Hub</span></span>
+    <div className="w-full min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 rtl" dir="rtl">
+      {/* Header */}
+      <header className="border-b border-white/8 bg-gray-950/50">
+        <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <a href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-cyan-500 rounded" />
+              <span className="text-white font-bold">Dev<span className="text-cyan-500">Hub</span></span>
             </a>
-            <nav className="breadcrumb">
-              <a href="/">בית</a>
-              <span className="breadcrumb-sep">/</span>
+            <nav className="flex items-center gap-2 text-sm text-slate-400">
+              <a href="/" className="hover:text-cyan-500">בית</a>
+              <span className="text-white/30">/</span>
 
               {mode === "topic" && data?.category && (
                 <>
-                  <a href={`/category?categoryId=${data.category?._id}`}>
+                  <a href={`/category?categoryId=${data.category?._id}`} className="hover:text-cyan-500">
                     {data.category?.name || "קטגוריה"}
                   </a>
-                  <span className="breadcrumb-sep">/</span>
+                  <span className="text-white/30">/</span>
                 </>
               )}
 
-              <span style={{ color: "rgba(226,232,240,0.7)" }}>
+              <span className="text-slate-400">
                 {data?.name || data?.title || (mode === "topic" ? "נושא" : "קטגוריה")}
               </span>
             </nav>
             {!user && (
-              <button className="header-cta" onClick={() => navigate("/auth")}>
+              <button className="px-6 py-2.75 bg-cyan-500 text-gray-950 font-bold uppercase tracking-widest rounded hover:shadow-lg hover:shadow-cyan-500/35" onClick={() => navigate("/auth")}>
                 הרשמה / כניסה
               </button>
             )}
@@ -442,30 +442,30 @@ export default function CategoryPage() {
         </div>
       </header>
 
-      <main className="main">
-        {loading && <div className="state-center"><div className="big-spinner" /><span>טוען נתונים...</span></div>}
-        {error && <div className="state-center"><div className="error-box">{error}</div></div>}
+      <main className="max-w-[1200px] mx-auto px-6 md:px-8 py-8">
+        {loading && <div className="flex flex-col items-center justify-center py-12"><div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-3" /><span className="text-slate-400">טוען נתונים...</span></div>}
+        {error && <div className="bg-rose-500/15 border border-rose-500/40 text-rose-400 px-5 py-3 rounded-lg">{error}</div>}
 
         {!loading && !error && data && (
           <>
-            <div className="page-header">
-              <div className="page-header-top">
+            <div className="mb-12">
+              <div className="flex items-start justify-between gap-8">
                 <div>
-                  <div className="page-category-label">{mode === "topic" ? "// נושא" : "// קטגוריה"}</div>
-                  <h1 className="page-title">{catName}</h1>
-                  {data.description && <p className="page-desc">{data.description}</p>}
+                  <div className="text-slate-400 text-xs font-mono uppercase tracking-widest mb-2">{mode === "topic" ? "// נושא" : "// קטגוריה"}</div>
+                  <h1 className="text-4xl font-bold text-white mb-2">{catName}</h1>
+                  {data.description && <p className="text-slate-400 text-sm">{data.description}</p>}
                 </div>
-                <div className="page-stats">
+                <div className="flex-shrink-0">
                   {mode === "category" && (
-                    <div className="pstat">
-                      <span className="pstat-num">{topics.length}</span>
-                      <span className="pstat-label">נושאים</span>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-cyan-500">{topics.length}</div>
+                      <div className="text-xs uppercase tracking-widest text-slate-400 mt-1">נושאים</div>
                     </div>
                   )}
                   {mode === "topic" && (
-                    <div className="pstat">
-                      <span className="pstat-num">{Math.max(0, posts.length - 1)}</span>
-                      <span className="pstat-label">תגובות</span>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-cyan-500">{Math.max(0, posts.length - 1)}</div>
+                      <div className="text-xs uppercase tracking-widest text-slate-400 mt-1">תגובות</div>
                     </div>
                   )}
                 </div>
@@ -474,26 +474,26 @@ export default function CategoryPage() {
 
             {mode === "category" && (
               <>
-                <div className="toolbar">
-                  <div className="search-box">
-                    <span className="search-icon">⌕</span>
-                    <input placeholder="חיפוש בנושאים..."
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="flex-1 flex items-center gap-2 bg-white/3 border border-white/8 px-3.5 py-2.5 rounded">
+                    <span className="text-slate-400">⌕</span>
+                    <input placeholder="חיפוש בנושאים..." className="flex-1 bg-transparent text-slate-200 outline-none placeholder-slate-400"
                       value={search} onChange={(e) => setSearch(e.target.value)} />
                   </div>
-                  <span className="results-count">{filteredTopics.length} נושאים</span>
-                  <button className="new-topic-btn" onClick={() => navigate(`/new-topic?categoryId=${id}`)}>
+                  <span className="text-slate-400 text-sm">{filteredTopics.length} נושאים</span>
+                  <button className="px-6 py-2.75 bg-cyan-500 text-gray-950 font-bold uppercase tracking-widest rounded hover:shadow-lg hover:shadow-cyan-500/35" onClick={() => navigate(`/new-topic?categoryId=${id}`)}>
                     + נושא חדש
                   </button>
                 </div>
-                <div className="divider">
-                  <div className="divider-line" />
-                  <span className="divider-text">// נושאים</span>
-                  <div className="divider-line" />
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="flex-1 h-px bg-white/10" />
+                  <span className="text-slate-400 text-xs font-mono uppercase tracking-widest">// נושאים</span>
+                  <div className="flex-1 h-px bg-white/10" />
                 </div>
                 {filteredTopics.length === 0 ? (
-                  <div className="empty-box"><div className="empty-icon">◈</div><div>אין נושאים להצגה</div></div>
+                  <div className="text-center py-12"><div className="text-4xl mb-3">◈</div><div className="text-slate-400">אין נושאים להצגה</div></div>
                 ) : (
-                  <div className="topics-list">
+                  <div className="space-y-1">
                     {filteredTopics.map((t, i) => <TopicRow key={t.id || t._id || i} topic={t} index={i} />)}
                   </div>
                 )}
@@ -504,10 +504,10 @@ export default function CategoryPage() {
               <>
                 {posts.length > 0 && (
                   <>
-                    <div className="divider">
-                      <div className="divider-line" />
-                      <span className="divider-text">// פוסט מקורי</span>
-                      <div className="divider-line" />
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="flex-1 h-px bg-white/10" />
+                      <span className="text-slate-400 text-xs font-mono uppercase tracking-widest">// פוסט מקורי</span>
+                      <div className="flex-1 h-px bg-white/10" />
                     </div>
                     <PostRow post={posts[0]} index={0} isLoggedIn={isLoggedIn}
                       onNavigateAuth={() => navigate("/auth")}
@@ -517,19 +517,19 @@ export default function CategoryPage() {
                   </>
                 )}
 
-                <div className="divider" style={{ marginTop: 24 }}>
-                  <div className="divider-line" />
-                  <span className="divider-text">// תגובות ({Math.max(0, posts.length - 1)})</span>
-                  <div className="divider-line" />
+                <div className="flex items-center gap-4 my-8">
+                  <div className="flex-1 h-px bg-white/10" />
+                  <span className="text-slate-400 text-xs font-mono uppercase tracking-widest">// תגובות ({Math.max(0, posts.length - 1)})</span>
+                  <div className="flex-1 h-px bg-white/10" />
                 </div>
 
                 {posts.length <= 1 ? (
-                  <div className="empty-box" style={{ paddingBottom: 24 }}>
-                    <div className="empty-icon">◇</div>
-                    <div>אין תגובות עדיין — היה הראשון להגיב</div>
+                  <div className="text-center py-12 mb-12">
+                    <div className="text-4xl mb-3">◇</div>
+                    <div className="text-slate-400">אין תגובות עדיין — היה הראשון להגיב</div>
                   </div>
                 ) : (
-                  <div className="posts-list">
+                  <div className="space-y-4 mb-12">
                     {posts.slice(1).map((p, i) => (
                       <PostRow key={p.id || p._id || i} post={p} index={i + 1}
                         isLoggedIn={isLoggedIn} onNavigateAuth={() => navigate("/auth")}

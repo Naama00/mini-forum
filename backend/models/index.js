@@ -20,6 +20,24 @@ async function initializeDatabase() {
         await Topic.collection.createIndex({ createdAt: -1 });
         await Upload.collection.createIndex({ uploadedAt: -1 });
         
+        // Seed categories if empty
+        const categoriesCount = await Category.countDocuments();
+        if (categoriesCount === 0) {
+            const defaultCategories = [
+                { name: 'Frontend Development', description: 'React, Vue, Angular וכל הנושאים של Web Frontend', icon: '◇' },
+                { name: 'Backend Development', description: 'Node.js, Express, Python וכל הנושאים של Server Side', icon: '◉' },
+                { name: 'Mobile Development', description: 'React Native, Flutter, Kotlin וכל הנושאים של Mobile', icon: '◎' },
+                { name: 'Cybersecurity', description: 'אבטחה, Penetration Testing, Encryption וכו\'', icon: '◆' },
+                { name: 'DevOps & Cloud', description: 'Docker, Kubernetes, AWS, Azure וכו\'', icon: '◈' },
+                { name: 'Artificial Intelligence', description: 'Machine Learning, Deep Learning, NLP וכו\'', icon: '◉' },
+                { name: 'Data Science', description: 'Data Analysis, BigData, Databases וכו\'', icon: '◑' },
+                { name: 'Career & Jobs', description: 'משרות, טיפים לראיון עבודה וקידום קריירה', icon: '◍' }
+            ];
+            
+            await Category.insertMany(defaultCategories);
+            console.log(`✓ ${defaultCategories.length} קטגוריות ברירת מחדל נוצרו`);
+        }
+        
         console.log('✓ בסיס הנתונים אותחל בהצלחה!');
         console.log('✓ כל כולקציות והאינדקסים נוצרו בהצלחה');
     } catch (error) {
