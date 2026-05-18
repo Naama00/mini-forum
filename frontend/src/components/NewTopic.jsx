@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import MarkdownEditor from "./MarkdownEditor";
+import { useAuth } from "../hooks";
+import { getToken } from "../utils/storage";
 const API_BASE = "http://localhost:5000";
 
 const TOPIC_TYPES = [
@@ -25,22 +27,18 @@ export default function NewTopic() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
 
-  // בדיקת משתמש מחובר
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/auth");
-      return;
-    }
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      setUser(payload);
-    } catch {
-      navigate("/auth");
-    }
-  }, []);
+    if (!user) navigate('/auth');
+  }, [user]);
+
+  const NEWTOPIC_STYLES = `
+    @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;700;800&display=swap');
+    :root{ --bg-dark:#0a0a0c; --accent:#ccff00; --glass: rgba(255,255,255,0.03); --border-glass: rgba(204,255,0,0.12)}
+    .glass-card{ background:var(--glass); backdrop-filter: blur(12px); border:1px solid var(--border-glass); }
+    .dh-grid-bg{ position:fixed; inset:0; background-image: radial-gradient(circle at 2px 2px, rgba(204,255,0,0.03) 1px, transparent 0); background-size:40px 40px; z-index:-1 }
+  `;
 
   // טעינת קטגוריות
   useEffect(() => {
@@ -81,7 +79,7 @@ export default function NewTopic() {
     setError(null);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const res = await fetch(`${API_BASE}/api/topics`, {
         method: "POST",
         headers: {
@@ -111,14 +109,19 @@ export default function NewTopic() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 rtl" dir="rtl">
+    <>
+      <style>{NEWTOPIC_STYLES}</style>
+      <div className="dh-grid-bg" />
+      <div className="w-full min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 rtl" dir="rtl">
       {/* Header */}
       <header className="border-b border-white/8 bg-gray-950/50">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-4">
-          <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4">
             <a href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-cyan-500 rounded" />
-              <span className="text-white font-bold">Dev<span className="text-cyan-500">Hub</span></span>
+              <div className="w-8 h-8 rounded" style={{background:'#0a0a0c', border:'1px solid rgba(204,255,0,0.12)'}}>
+                <div className="w-full h-full flex items-center justify-center text-sm font-black text-[#ccff00]">DH</div>
+              </div>
+              <span className="text-white font-bold">Dev<span className="text-[#ccff00]">Hub</span></span>
             </a>
             <nav className="flex items-center gap-2 text-sm text-slate-400">
               <a href="/" className="hover:text-cyan-500">בית</a>
@@ -152,7 +155,7 @@ export default function NewTopic() {
                 {TOPIC_TYPES.map((t) => (
                   <button
                     key={t.value}
-                    className={`px-4 py-3 rounded border-2 font-medium transition-colors ${form.type === t.value ? "bg-cyan-500 text-gray-950 border-cyan-500" : "bg-white/3 border-white/8 text-slate-300 hover:bg-white/5"}`}
+                    className={`px-4 py-3 rounded border-2 font-medium transition-colors ${form.type === t.value ? "bg-[#ccff00]/10 text-[#ccff00] border-[#ccff00]/30" : "bg-white/3 border-white/8 text-slate-300 hover:bg-white/5"}`}
                     onClick={() => setForm((p) => ({ ...p, type: t.value }))}
                     type="button"
                   >
@@ -167,7 +170,7 @@ export default function NewTopic() {
             <div className="mb-8">
               <label className="text-slate-300 text-sm font-medium mb-2 block">קטגוריה <span className="text-rose-500">*</span></label>
               <select
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30"
+                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00]/30"
                 name="categoryId"
                 value={form.categoryId}
                 onChange={handleChange}
@@ -183,7 +186,7 @@ export default function NewTopic() {
             <div className="mb-8">
               <label className="text-slate-300 text-sm font-medium mb-2 block">כותרת <span className="text-rose-500">*</span></label>
               <input
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30"
+                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00]/30"
                 name="title"
                 placeholder="מה השאלה או הנושא שלך?"
                 value={form.title}
@@ -196,12 +199,14 @@ export default function NewTopic() {
             {/* CONTENT */}
             <div className="mb-8">
               <label className="text-slate-300 text-sm font-medium mb-2 block">תוכן <span className="text-rose-500">*</span></label>
+              <div className="glass-card p-3 rounded">
               <MarkdownEditor
                 value={form.content}
                 onChange={(v) => setForm(p => ({ ...p, content: v }))}
                 placeholder="פרט את השאלה או הנושא שלך בצורה מלאה..."
                 rows={10}
               />
+              </div>
               <div className="text-slate-400 text-xs mt-2">{form.content.length} תווים</div>
             </div>
 
@@ -210,7 +215,7 @@ export default function NewTopic() {
               <label className="text-slate-300 text-sm font-medium mb-2 block">תגיות <span className="text-slate-500 text-xs font-normal">(עד 5, לחץ Enter להוספה)</span></label>
               <div className="flex flex-wrap gap-2 bg-white/3 border border-white/8 px-3.5 py-2.5 min-h-12 items-center rounded rtl">
                 {form.tags.map((tag) => (
-                  <span key={tag} className="bg-cyan-500/20 text-cyan-300 px-2.5 py-1.5 rounded text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
+                  <span key={tag} className="bg-[#ccff00]/20 text-[#ccff00] px-2.5 py-1.5 rounded text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
                     {tag}
                     <button className="font-bold hover:text-cyan-200" onClick={() => removeTag(tag)}>×</button>
                   </span>
@@ -238,7 +243,7 @@ export default function NewTopic() {
                 ביטול
               </button>
               <button
-                className={`px-6 py-2.75 bg-cyan-500 text-gray-950 font-sans font-bold uppercase tracking-widest rounded hover:shadow-lg hover:shadow-cyan-500/35 disabled:opacity-50 disabled:cursor-not-allowed ${loading ? "opacity-50" : ""}`}
+                className={`px-6 py-2.75 bg-[#ccff00] text-black font-sans font-bold uppercase tracking-widest rounded hover:bg-[#bfff00] disabled:opacity-50 disabled:cursor-not-allowed ${loading ? "opacity-50" : ""}`}
                 onClick={handleSubmit}
                 disabled={loading}
                 type="button"
@@ -289,5 +294,6 @@ export default function NewTopic() {
         </div>
       </main>
     </div>
+    </>
   );
 }

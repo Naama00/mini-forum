@@ -12,6 +12,7 @@ const SECTION_CONFIG = {
 };
 
 function timeAgo(dateStr) {
+  if (!dateStr) return "";
   const diff = Date.now() - new Date(dateStr);
   const days = Math.floor(diff / 86400000);
   if (days === 0) return "היום";
@@ -20,142 +21,180 @@ function timeAgo(dateStr) {
 }
 
 export default function SearchResults() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [results, setResults]   = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const [total, setTotal]       = useState(0);
-  const [activeType, setActiveType] = useState("all");
-  const q = searchParams.get("q") || "";
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
-    if (q.trim().length < 2) return;
-    fetchResults();
-  }, [q]);
-
-  const fetchResults = async () => {
+    if (!query) return;
     setLoading(true);
-    try {
-      const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=20`);
-      const data = await res.json();
-      setResults(data.results || {});
-      setTotal(data.total || 0);
-    } catch {}
-    setLoading(false);
-  };
+    fetch(`${API}/search?q=${encodeURIComponent(query)}`)
+      .then((r) => r.json())
+      .then((data) => setResults(data.results || {}))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [query]);
 
-  const hasResults = results && Object.values(results).some((arr) => arr?.length > 0);
+  if (!query) {
+    return (
+      <div className="max-w-4xl mx-auto p-12 text-center text-slate-400 font-sans" style={{ direction: "rtl" }}>
+        <div className="text-4xl mb-4">🔍</div>
+        <p className="text-lg">אנא הזן מילת מפתח בשורת החיפוש כדי להציג תוצאות.</p>
+      </div>
+    );
+  }
 
-  const filteredSections = results
-    ? Object.entries(SECTION_CONFIG).filter(([key]) =>
-        activeType === "all" || activeType === key
-      )
-    : [];
+  // Calculate total hits
+  const totalCount = results
+    ? Object.values(results).reduce((acc, curr) => acc + (curr?.length || 0), 0)
+    : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 rtl" dir="rtl">
-      {/* Header */}
-      <div className="mb-7 rtl animate-fade-in">
-        <p className="font-mono text-xs tracking-widest text-cyan-500 uppercase mb-2.5">// חיפוש גלובלי</p>
-        <h1 className="text-3xl font-black text-white mb-1.5">
-          תוצאות עבור <span className="text-cyan-500">"{q}"</span>
-        </h1>
-        {!loading && results && (
-          <p className="text-xs text-slate-200/35 font-mono">נמצאו {total} תוצאות</p>
-        )}
-      </div>
-
-      {/* Filter tabs */}
-      {results && (
-        <div className="flex gap-1.5 flex-wrap mb-5 rtl">
-          <button
-            className={`px-3.5 py-1.5 bg-white/3 border border-white/8 text-slate-200/45 font-sans text-xs font-semibold cursor-pointer transition-all ${activeType === "all" ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500/30 hover:text-slate-200/80"}`}
-            onClick={() => setActiveType("all")}
-          >
-            הכל ({total})
-          </button>
-          {Object.entries(SECTION_CONFIG).map(([key, config]) => {
-            const count = results[key]?.length || 0;
-            if (!count) return null;
-            return (
-              <button
-                key={key}
-                className={`px-3.5 py-1.5 bg-white/3 border border-white/8 text-slate-200/45 font-sans text-xs font-semibold cursor-pointer transition-all ${activeType === key ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500/30 hover:text-slate-200/80"}`}
-                onClick={() => setActiveType(key)}
-              >
-                {config.icon} {config.label} ({count})
-              </button>
-            );
-          })}
+    <div className="min-h-screen bg-[#080b12] text-slate-100 p-6 md:p-10 font-sans selection:bg-cyan-500/30" style={{ direction: "rtl" }}>
+      <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
+        
+        {/* Header Section */}
+        <div className="border-b border-white/[0.06] pb-6">
+          <p className="font-mono text-xs tracking-widest text-cyan-400/60 uppercase mb-2">// תוצאות סריקה גלובלית</p>
+          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mb-2">
+            תוצאות חיפוש עבור: <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">"{query}"</span>
+          </h1>
+          <p className="text-sm text-slate-400">
+            נמצאו <span className="font-mono text-cyan-400 font-bold">{totalCount}</span> רשומות רלוונטיות בשרתי הקהילה.
+          </p>
         </div>
-      )}
 
-      <div className="flex items-center gap-3 mb-5 rtl">
-        <div className="flex-1 h-px bg-cyan-500/10" />
-        <span className="font-mono text-xs tracking-wide text-cyan-500/50">// תוצאות</span>
-        <div className="flex-1 h-px bg-cyan-500/10" />
-      </div>
+        {/* Tab Filters */}
+        {results && totalCount > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar border-b border-white/[0.03]">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap border ${
+                activeTab === "all"
+                  ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
+                  : "bg-transparent border-white/[0.05] text-slate-400 hover:text-slate-200 hover:border-white/20"
+              }`}
+            >
+              הכל ({totalCount})
+            </button>
+            {Object.keys(results).map((key) => {
+              const count = results[key]?.length || 0;
+              if (count === 0) return null;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap border ${
+                    activeTab === key
+                      ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
+                      : "bg-transparent border-white/[0.05] text-slate-400 hover:text-slate-200 hover:border-white/20"
+                  }`}
+                >
+                  {SECTION_CONFIG[key]?.label || key} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-      {loading ? (
-        <div className="text-center py-20"><div className="text-4xl animate-spin">⏳</div></div>
-      ) : !hasResults ? (
-        <div className="text-center py-20 text-gray-600 text-sm"><div className="text-4xl mb-3 opacity-30">🔍</div>לא נמצאו תוצאות עבור "{q}"</div>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {filteredSections.map(([key, config]) => {
-            const items = results[key];
-            if (!items?.length) return null;
-            return (
-              <div key={key} className="animate-fade-in">
-                <div className="flex items-center gap-2 mb-2 rtl">
-                  <span className="text-base">{config.icon}</span>
-                  <span className="font-mono text-xs tracking-wide text-cyan-500/60 uppercase">{config.label}</span>
-                  <span className="text-xs bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 px-2 py-0.5 font-mono">{items.length}</span>
-                </div>
+        {/* Loading Spinner */}
+        {loading ? (
+          <div className="py-24 text-center space-y-4">
+            <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin mx-auto" />
+            <p className="text-slate-500 text-sm font-mono">// מעבד רשומות ומבצע אינדקס...</p>
+          </div>
+        ) : totalCount === 0 ? (
+          /* Empty State */
+          <div className="py-20 text-center border border-dashed border-white/[0.05] rounded-2xl bg-white/[0.01]">
+            <div className="text-5xl mb-4 opacity-40">📭</div>
+            <h3 className="text-lg font-bold text-slate-300 mb-1">אין תוצאות תואמות</h3>
+            <p className="text-sm text-slate-500 max-w-sm mx-auto">
+              לא הצלחנו למצוא מידע תואם. נסה לחפש מונח רחב יותר או ביטויים חלופיים באנגלית/עברית.
+            </p>
+          </div>
+        ) : (
+          /* Main List Wrapper */
+          <div className="space-y-8">
+            {Object.keys(results).map((section) => {
+              const list = results[section] || [];
+              if (list.length === 0) return null;
+              if (activeTab !== "all" && activeTab !== section) return null;
+              const config = SECTION_CONFIG[section] || { label: section, icon: "•", path: () => "/" };
 
-                <div className="flex flex-col gap-0.5">
-                  {items.map((item) => (
-                    <Link key={item._id} to={config.path(item)} className="flex items-center gap-3.5 px-4.5 py-3.5 bg-white/2 border border-white/5 no-underline text-inherit transition-all relative rtl hover:bg-white/4 hover:border-white/9 group">
-                      <div className="absolute right-0 top-0 bottom-0 w-0.75 bg-cyan-500 scale-y-0 transition-transform group-hover:scale-y-100" />
-                      {key === "users" ? (
-                        <>
-                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                            {item.icon || item.avatar
-                              ? <img src={item.icon || item.avatar} alt="" className="w-full h-full object-cover" />
-                              : <div className="w-full h-full text-sm bg-cyan-500/10 text-cyan-500 border border-cyan-500/30 flex items-center justify-center font-bold">
-                                  {item.firstName?.[0] || item.username?.[0] || "?"}
-                                </div>
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0 rtl">
-                            <span className="block text-sm font-semibold text-white mb-1 truncate">{item.firstName} {item.lastName}</span>
-                            <span className="text-xs text-slate-200/40">@{item.username}</span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex-1 min-w-0 rtl">
-                            <span className="block text-sm font-semibold text-white mb-1 truncate group-hover:text-cyan-500">{item.title}</span>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {item.company && <span className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">🏢 {item.company}</span>}
-                              {item.location && <span className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">📍 {item.location}</span>}
-                              {item.category && <span className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">#{item.category}</span>}
-                              {item.tags?.slice(0, 2).map(t => (
-                                <span key={t} className="text-xs text-slate-200/40 bg-white/4 border border-white/7 px-1.75 py-0.5">#{t}</span>
+              return (
+                <div key={section} className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
+                  {/* Category Section Header */}
+                  <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-cyan-400/70 font-bold">
+                    <span>{config.icon}</span>
+                    <span>{config.label} ({list.length})</span>
+                    <span className="flex-1 h-px bg-gradient-to-l from-cyan-500/20 via-white/5 to-transparent" />
+                  </div>
+
+                  {/* Grid Layout of Items */}
+                  <div className="grid grid-cols-1 gap-3">
+                    {list.map((item) => (
+                      <Link
+                        key={item._id}
+                        to={config.path(item)}
+                        className="group flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-br from-white/[0.02] to-transparent border border-white/[0.06] hover:border-cyan-500/30 hover:from-white/[0.04] transition-all duration-300 hover:shadow-[0_4px_25px_rgba(0,0,0,0.4),_0_0_15px_rgba(0,229,255,0.04)]"
+                      >
+                        <div className="flex items-start gap-4 min-w-0">
+                          {section === "users" ? (
+                            <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-sm font-bold text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-all duration-300 shadow-md">
+                              {item.firstName?.[0]?.toUpperCase() || "👤"}
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-base text-slate-400 group-hover:text-cyan-400 group-hover:border-cyan-500/20 transition-all">
+                              {config.icon}
+                            </div>
+                          )}
+
+                          <div className="space-y-1 min-w-0">
+                            {section === "users" ? (
+                              <div className="text-base font-bold text-white group-hover:text-cyan-400 transition-colors">
+                                {item.firstName} {item.lastName || ""}{" "}
+                                <span className="font-mono text-xs text-slate-500 mr-1">@{item.username}</span>
+                              </div>
+                            ) : (
+                              <h4 className="text-base font-bold text-slate-200 group-hover:text-cyan-400 transition-colors truncate">
+                                {item.title || item.username}
+                              </h4>
+                            )}
+
+                            {/* Badges/Meta */}
+                            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
+                              {item.company && <span className="bg-white/[0.03] border border-white/[0.06] px-2 py-0.5 rounded text-slate-400">🏢 {item.company}</span>}
+                              {item.location && <span className="bg-white/[0.03] border border-white/[0.06] px-2 py-0.5 rounded text-slate-400">📍 {item.location}</span>}
+                              {item.category && <span className="text-cyan-400/70 font-mono font-semibold">#{item.category}</span>}
+                              {item.tags?.slice(0, 3).map((t) => (
+                                <span key={t} className="text-slate-500 font-mono">#{t}</span>
                               ))}
-                              {item.createdAt && <span className="text-xs text-slate-200/25 font-mono mr-auto">{timeAgo(item.createdAt)}</span>}
                             </div>
                           </div>
-                          <span className="text-slate-200/20 text-base transition-all flex-shrink-0 group-hover:text-cyan-500 group-hover:-translate-x-0.75">←</span>
-                        </>
-                      )}
-                    </Link>
-                  ))}
+                        </div>
+
+                        {/* Left Side Status/Arrow */}
+                        <div className="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-white/[0.04] pt-2 md:pt-0">
+                          {item.createdAt && (
+                            <span className="font-mono text-[11px] text-slate-500">
+                              {timeAgo(item.createdAt)}
+                            </span>
+                          )}
+                          <span className="text-slate-600 text-sm group-hover:text-cyan-400 group-hover:-translate-x-1 transition-all font-mono hidden md:inline">
+                            ←
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

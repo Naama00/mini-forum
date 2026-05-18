@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getToken } from "../utils/storage";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -35,10 +36,10 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread]       = useState(0);
   const [loading, setLoading]     = useState(true);
-  const [filter, setFilter]       = useState("all"); // all | unread | comment | like | attend | message
+  const [filter, setFilter]       = useState("all");
   const [page, setPage]           = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const token   = localStorage.getItem("token");
+  const token   = getToken();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -116,112 +117,124 @@ export default function NotificationsPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-6 rtl" dir="rtl">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-4 mb-8 rtl animate-fade-in">
-        <div>
-          <p className="font-mono text-xs tracking-widest text-cyan-500 uppercase mb-2.5">// התראות</p>
-          <h1 className="text-3xl font-black text-white flex items-center gap-3.5 flex-wrap">
-            ההתראות <span className="text-cyan-500">שלך</span>
-            {unread > 0 && <span className="text-xs font-semibold bg-rose-500/15 border border-rose-500/40 text-rose-500 px-3 py-0.75 tracking-wide">{unread} חדשות</span>}
-          </h1>
+    <div className="relative min-h-screen overflow-hidden text-[#e2e8f0] pb-20" dir="rtl">
+      {/* Background Layers */}
+      <div className="dh-grid-bg" />
+      <div className="ambient-glow -top-20 -left-20" />
+      <div className="ambient-glow bottom-0 right-0 opacity-50" />
+
+      <div className="max-w-5xl mx-auto px-6 pt-12 relative z-10">
+        {/* Header */}
+        <div className="flex items-start justify-between flex-wrap gap-4 mb-10">
+          <div>
+            <p className="font-mono text-[10px] tracking-[3px] text-[#ccff00] uppercase mb-2">// TERMINAL NOTIFICATIONS</p>
+            <h1 className="text-3xl font-black text-white flex items-center gap-3 flex-wrap">
+              ההתראות <span className="text-[#ccff00] italic">שלך</span>
+              {unread > 0 && (
+                <span className="text-[10px] font-bold bg-[#ccff00]/10 border border-[#ccff00]/30 text-[#ccff00] px-3 py-1 rounded-full uppercase tracking-wider live-pulse">
+                  {unread} NEW_DATA
+                </span>
+              )}
+            </h1>
+          </div>
+          <div className="flex gap-3 items-center flex-wrap">
+            {unread > 0 && (
+              <button className="px-4 py-2 border border-white/5 bg-white/5 rounded-xl text-xs font-bold text-slate-300 hover:text-[#ccff00] hover:border-[#ccff00]/30 transition-all" onClick={markAllRead}>
+                ✓ סמן הכל כנקרא
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button className="px-4 py-2 border border-white/5 bg-white/5 rounded-xl text-xs font-bold text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-all" onClick={deleteAll}>
+                🗑 מחק הכל
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex gap-2.5 items-center flex-wrap">
-          {unread > 0 && (
-            <button className="bg-transparent border border-white/10 text-slate-200/50 font-sans text-xs font-semibold px-4 py-2 cursor-pointer transition-all whitespace-nowrap hover:border-cyan-500/40 hover:text-cyan-500" onClick={markAllRead}>
-              ✓ סמן הכל כנקרא
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button className="bg-transparent border border-white/10 text-slate-200/50 font-sans text-xs font-semibold px-4 py-2 cursor-pointer transition-all whitespace-nowrap hover:border-rose-500/40 hover:text-rose-500" onClick={deleteAll}>
-              🗑 מחק הכל
-            </button>
-          )}
-        </div>
-      </div>
 
-      {/* Filters */}
-      <div className="flex gap-1.5 flex-wrap mb-5 rtl">
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            className={`flex items-center gap-1 px-3.5 py-1.5 bg-white/3 border border-white/8 text-slate-200/45 font-sans text-xs font-semibold cursor-pointer transition-all ${filter === f ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500/30 hover:text-slate-200/80"}`}
-            onClick={() => setFilter(f)}
-          >
-            {f !== "all" && f !== "unread" && <span>{TYPE_ICON[f]}</span>}
-            {FILTER_LABELS[f]}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-3 mb-5 rtl">
-        <div className="flex-1 h-px bg-cyan-500/10" />
-        <span className="font-mono text-xs tracking-wide text-cyan-500/50">// {filtered.length} התראות</span>
-        <div className="flex-1 h-px bg-cyan-500/10" />
-      </div>
-
-      {/* List */}
-      {loading ? (
-        <div className="text-center py-20"><div className="text-4xl animate-spin">⏳</div></div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-gray-600 text-sm"><div className="text-4xl mb-3 opacity-30">🔔</div>אין התראות להצגה</div>
-      ) : (
-        <div className="flex flex-col gap-0.5">
-          {filtered.map((n, i) => (
-            <Link
-              key={n._id}
-              to={notifLink(n)}
-              className={`flex items-center gap-4 px-5 py-4 bg-white/2 border border-white/5 no-underline text-inherit transition-all relative animate-fade-in rtl group ${n.read ? "" : "bg-cyan-500/3 border-cyan-500/10"}`}
-              style={{ animationDelay: `${i * 0.05}s` }}
-              onClick={() => !n.read && markRead(n._id)}
+        {/* Filters */}
+        <div className="flex gap-2 flex-wrap mb-6">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-sans text-xs font-bold transition-all ${filter === f ? "bg-[#ccff00]/10 border-[#ccff00] text-[#ccff00]" : "bg-white/3 border-white/5 text-slate-400 hover:border-white/20 hover:text-white"}`}
+              onClick={() => setFilter(f)}
             >
-              <div className="absolute right-0 top-0 bottom-0 w-0.75 bg-cyan-500 scale-y-0 transition-transform group-hover:scale-y-100" />
-              {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                {n.sender?.avatar || n.sender?.icon ? (
-                  <img src={n.sender.avatar || n.sender.icon} alt="" className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full text-sm bg-cyan-500/10 text-cyan-500 border border-cyan-500/30 flex items-center justify-center font-bold">
-                    {n.sender?.firstName?.[0]?.toUpperCase() || n.sender?.username?.[0]?.toUpperCase() || "?"}
-                  </div>
-                )}
-                <span className="absolute -bottom-1 -left-1 w-5 h-5 bg-gray-900 border border-white/10 rounded-full flex items-center justify-center text-xs leading-none">{TYPE_ICON[n.type]}</span>
-              </div>
+              {f !== "all" && f !== "unread" && <span>{TYPE_ICON[f]}</span>}
+              {FILTER_LABELS[f]}
+            </button>
+          ))}
+        </div>
 
-              {/* Body */}
-              <div className="flex-1 min-w-0 rtl">
-                <div className="text-sm text-white mb-1">
-                  <strong>{n.sender?.firstName || n.sender?.username}</strong>
-                  {" "}{TYPE_TEXT[n.type]}
-                  {n.text && (
-                    <span className="text-gray-400"> — "{n.text.slice(0, 60)}{n.text.length > 60 ? "..." : ""}"</span>
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#ccff001a] to-transparent" />
+          <span className="font-mono text-[10px] tracking-widest text-slate-500">// {filtered.length} LOGS FOUND</span>
+          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#ccff001a] to-transparent" />
+        </div>
+
+        {/* List */}
+        {loading ? (
+          <div className="text-center py-20 text-[#ccff00] animate-pulse font-mono uppercase tracking-tighter text-sm">Querying Database...</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-24 glass-card rounded-3xl text-slate-500 text-sm">
+            <div className="text-3xl mb-3 opacity-40">🔔</div>
+            <span className="font-mono uppercase tracking-wider">No stream notifications active</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {filtered.map((n, i) => (
+              <Link
+                key={n._id}
+                to={notifLink(n)}
+                className={`glass-card flex items-center gap-5 px-6 py-4 rounded-2xl no-underline text-inherit transition-all relative group ${!n.read ? "ring-1 ring-[#ccff00]/30 bg-[#ccff00]/3" : ""}`}
+                onClick={() => !n.read && markRead(n._id)}
+              >
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  {n.sender?.avatar || n.sender?.icon ? (
+                    <img src={n.sender.avatar || n.sender.icon} alt="" className="w-11 h-11 rounded-xl object-cover border border-white/10" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-xl text-sm bg-white/5 text-white border border-white/10 flex items-center justify-center font-bold group-hover:border-[#ccff00]/40 group-hover:text-[#ccff00] transition-colors">
+                      {n.sender?.firstName?.[0]?.toUpperCase() || n.sender?.username?.[0]?.toUpperCase() || "?"}
+                    </div>
                   )}
+                  <span className="absolute -bottom-1 -left-1 w-5 h-5 bg-[#0a0a0c] border border-white/10 rounded-md flex items-center justify-center text-xs shadow-md">{TYPE_ICON[n.type]}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono px-2 py-0.5 bg-white/4 border border-white/6 text-gray-400">{TYPE_LABEL[n.type]}</span>
-                  <span className="text-xs text-gray-600 font-mono">{timeAgo(n.createdAt)}</span>
+
+                {/* Body */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-slate-300 mb-1 leading-relaxed">
+                    <strong className="text-white font-bold">{n.sender?.firstName || n.sender?.username}</strong>
+                    {" "}{TYPE_TEXT[n.type]}
+                    {n.text && (
+                      <span className="text-slate-500 font-light italic"> — "{n.text.slice(0, 60)}{n.text.length > 60 ? "..." : ""}"</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-white/5 border border-white/5 text-slate-400 uppercase rounded">{TYPE_LABEL[n.type]}</span>
+                    <span className="text-xs text-slate-500 font-mono">{timeAgo(n.createdAt)}</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {!n.read && <span className="w-2 h-2 rounded-full bg-cyan-500" />}
-                <button className="bg-none border-none text-gray-400 cursor-pointer text-lg leading-none transition-colors hover:text-rose-500" onClick={(e) => deleteOne(n._id, e)} title="מחק">×</button>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+                {/* Actions */}
+                <div className="flex items-center gap-4 flex-shrink-0">
+                  {!n.read && <span className="w-2 h-2 rounded-full bg-[#ccff00] live-pulse" />}
+                  <button className="bg-transparent border-none text-slate-600 hover:text-rose-400 cursor-pointer text-xl font-light transition-colors p-1" onClick={(e) => deleteOne(n._id, e)} title="מחק">×</button>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-10 rtl">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button key={p} onClick={() => setPage(p)}
-              className={`w-9 h-9 bg-white/3 border border-white/8 text-gray-400 font-sans text-sm font-semibold cursor-pointer transition-all ${p === page ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500 hover:text-cyan-500"}`}>{p}</button>
-          ))}
-        </div>
-      )}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-12">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button key={p} onClick={() => setPage(p)}
+                className={`w-10 h-10 rounded-xl border text-xs font-mono font-bold transition-all ${p === page ? "bg-[#ccff00]/10 border-[#ccff00] text-[#ccff00]" : "bg-white/3 border-white/5 text-slate-500 hover:border-[#ccff00]/30 hover:text-[#ccff00]"}`}>{p}</button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

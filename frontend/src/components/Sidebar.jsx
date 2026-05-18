@@ -1,171 +1,222 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-const API_BASE = "http://localhost:5000";
+import { useAuth } from '../hooks';
 
-function getUser() {
-    try {
-        const token = localStorage.getItem("token");
-        if (!token) return null;
-        return JSON.parse(atob(token.split(".")[1]));
-    } catch { return null; }
-}
+const API_BASE = 'http://localhost:5000';
+
+const NAV = [
+  { to: '/',              icon: '⌂',  label: 'דף הבית'  },
+  { to: '/articles',      icon: '◎',  label: 'מאמרים'   },
+  { to: '/events',        icon: '◆',  label: 'אירועים'  },
+  { to: '/jobs',          icon: '◇',  label: 'משרות'    },
+  { to: '/notifications', icon: '◐',  label: 'התראות'   },
+];
+
+const TAGS = ['React', 'Node.js', 'Cyber', 'AI', 'Career', 'DevOps'];
+
+/* CSS — עיצובים משלימים השומרים על קו הניאון וה-Glassmorphic */
+const SIDEBAR_STYLES = `
+  /* glow pulse on active nav item */
+  .nav-active-glow {
+    box-shadow: inset -2px 0 0 #ccff00, 0 0 16px rgba(204, 255, 0, 0.06);
+  }
+
+  /* custom scrollbar for sidebar */
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 3px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(204, 255, 0, 0.1);
+    border-radius: 10px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #ccff00;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(226, 232, 240, 0.25);
+    font-weight: 700;
+  }
+`;
 
 export default function Sidebar() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [trending, setTrending] = useState([]);
-    const [profile, setProfile] = useState(null);
-    const [imgErr, setImgErr] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const isLoggedIn = !!user;
 
-    useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-        const fetchData = async () => {
-            try {
-                // שליפת נושאים חמים
-                const trendingRes = await fetch(`${API_BASE}/api/trending`, { signal: controller.signal });
-                if (trendingRes.ok) {
-                    const data = await trendingRes.json();
-                    if (isMounted) setTrending(Array.isArray(data.data) ? data.data.slice(0, 5) : []);
-                }
+  useEffect(() => {
+    fetch(`${API_BASE}/api/categories`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setCategories(res.data || []);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-                // שליפת פרטי משתמש
-                const tokenUser = getUser();
-                if (tokenUser?.userId) {
-                    const userRes = await fetch(`${API_BASE}/api/users/${tokenUser.userId}`, { signal: controller.signal });
-                    if (userRes.ok) {
-                        const res = await userRes.json();
-                        if (res.success && isMounted) {
-                            setProfile(res.data);
-                        }
-                    }
-                }
-            } catch (err) {
-                if (err.name !== 'AbortError' && isMounted) {
-                    console.error('Sidebar fetch error:', err);
-                }
-            }
-        };
+  const handleLogout = () => {
+    if (logout) logout();
+    navigate('/auth');
+  };
 
-        fetchData();
-
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
-    }, []);
-
-    const isActive = (path) => location.pathname === path;
-    const tokenUser = getUser();
-
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        window.location.href = "/";
-    };
-
-    const initials = profile?.firstName
-        ? `${profile.firstName[0]}${profile.lastName?.[0] || ""}`.toUpperCase()
-        : "?";
-
-    return (
-        <aside className="fixed right-0 top-0 w-52 h-screen max-h-screen bg-gray-950/85 backdrop-blur-2xl border-r border-cyan-500/10 py-6 flex flex-col gap-0 z-50 rtl overflow-y-auto overflow-x-hidden scrollbar-hide">
-            <div className="absolute -top-16 -right-32 w-72 h-72 bg-cyan-500/4 rounded-full blur-3xl pointer-events-none" />
-
-            {/* משתמש */}
-           {profile ? (
-    <div className="bg-cyan-500/3 border border-cyan-500/12 p-4 relative overflow-hidden flex-shrink-0 cursor-pointer" onClick={() => navigate(`/profile/${tokenUser.userId}`)} style={{ backgroundImage: 'linear-gradient(180deg, rgba(0,229,255,0.02) 0%, transparent 100%)' }}>
-        <div className="before:absolute before:top-0 before:right-0 before:left-0 before:h-0.5 before:bg-gradient-to-r before:from-transparent before:via-cyan-500 before:to-transparent before:opacity-50" />
-        <div className="flex items-center gap-3 mb-3.5 rtl">
-            <div className="relative flex-shrink-0">
-                {profile.icon && !imgErr ? (
-                    <img src={profile.icon} alt={initials} className="w-12 h-12 rounded-full border-2 border-cyan-500 object-cover flex items-center justify-center shadow-lg shadow-cyan-500/20 relative z-2" onError={() => setImgErr(true)} />
-                ) : (
-                    <div className="w-12 h-12 rounded-full border-2 border-cyan-500 bg-cyan-500/8 text-cyan-500 font-sans text-lg font-black flex items-center justify-center shadow-lg shadow-cyan-500/20 relative z-2">{initials}</div>
-                )}
-                <div className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-950 shadow-lg shadow-green-500/60 z-3" />
-            </div>
-            <div className="min-w-0">
-                <span className="block font-sans text-sm font-black text-white text-shadow shadow-cyan-500/30 whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-cyan-500 transition-colors">{profile.firstName} {profile.lastName}</span>
-                <span className="inline-flex items-center gap-1.25 text-xs tracking-wide text-cyan-500 bg-cyan-500/8 border border-cyan-500/20 px-2 py-0.5 rounded-full">
-                    <span className="w-1.25 h-1.25 bg-green-500 rounded-full shadow-lg shadow-green-500" />
-                    {profile.isAdmin ? "Admin" : "חבר פעיל"}
-                </span>
-            </div>
-            <button className="mr-auto flex-shrink-0 bg-transparent border border-rose-500/25 text-rose-500/70 px-2 py-1.5 font-sans text-xs cursor-pointer transition-all hover:bg-rose-500/8 hover:text-rose-500" onClick={(e) => { e.stopPropagation(); handleLogout(); }}>
-                התנתק
-            </button>
+  return (
+    <>
+      <style>{SIDEBAR_STYLES}</style>
+      
+      <div 
+        className="sidebar-scroll modern-sidebar sticky top-0 flex h-screen w-[280px] shrink-0 flex-col border-l border-white/[0.04] bg-[#0a0a0c] py-6 text-slate-300 pointer-events-auto z-50"
+        dir="rtl"
+        style={{
+          boxShadow: 'inset -10px 0 30px rgba(0, 0, 0, 0.2)'
+        }}
+      >
+        {/* ── LOGO BRANDING ── */}
+        <div className="relative z-10 mb-8 px-6">
+          <Link to="/" className="group flex items-center gap-2.5 text-xl font-black tracking-tight text-white focus:outline-none">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ccff00]/10 font-mono text-sm text-[#ccff00] border border-[#ccff00]/20 transition-all group-hover:scale-105 group-hover:shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+              ⬡
+            </span>
+            <span className="transition-colors group-hover:text-slate-100">
+              Dev<span className="text-[#ccff00] transition-all group-hover:text-[#bfff00]">Hub</span>
+            </span>
+          </Link>
+          <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-slate-600">// COMMUNITY TERMINAL v2.6</div>
         </div>
-    </div>
-) : (
-    <div className="text-center px-3 py-5 border border-dashed border-white/8 flex-shrink-0">
-        <div className="text-3xl text-cyan-500/40 mb-2.5">◈</div>
-        <p className="text-xs text-slate-300/35 leading-relaxed mb-3.5">הצטרף לקהילה</p>
-        <Link to="/auth" className="block bg-cyan-500 text-gray-950 px-2.5 py-1.5 no-underline font-sans font-bold text-xs transition-all hover:bg-white hover:shadow-lg hover:shadow-cyan-500/30">כניסה / הרשמה</Link>
-    </div>
-)}
 
-            <div className="h-px bg-white/5 my-4 flex-shrink-0" />
+        {/* ── MAIN NAV LINKS ── */}
+        <div className="relative z-10 mb-6 px-3">
+          <ul className="space-y-1 list-none p-0 m-0">
+            {NAV.map((item) => {
+              const isActive = location.pathname === item.to;
+              return (
+                <li key={item.to} className="p-0 m-0">
+                  <Link
+                    to={item.to}
+                    className={`block w-full flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none ${
+                      isActive
+                        ? 'nav-active-glow bg-white/[0.02] text-white font-bold'
+                        : 'text-slate-400 hover:bg-white/[0.01] hover:text-slate-200'
+                    }`}
+                  >
+                    <span 
+                      className={`font-mono text-base transition-colors ${isActive ? 'text-[#ccff00]' : 'text-slate-600'}`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="flex-1">{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-            {/* ניווט */}
-            <nav className="mb-1">
-                <div className="text-xs tracking-widest text-cyan-500/55 mb-3 font-bold">// ניווט</div>
-                <ul className="list-none flex flex-col gap-0.5">
-                    {[
-                        { to: "/", icon: "◉", label: "דף הבית" },
-                        { to: "/articles", icon: "◎", label: "מאמרים" },
-                        { to: "/events", icon: "◆", label: "אירועים" },
-                        { to: "/jobs", icon: "◇", label: "משרות" },
-                        { to: "/notifications", icon: "◐", label: "התראות" },
-                    ].map(({ to, icon, label }) => (
-                        <li key={to}>
-                            <Link to={to} className={`flex items-center gap-2.5 px-3 py-2.25 text-slate-300/45 no-underline text-sm transition-all border-r-2 border-transparent ${isActive(to) ? "bg-cyan-500/5 text-cyan-500 border-cyan-500 pr-4" : "hover:bg-white/3 hover:text-slate-300/80 hover:border-cyan-500/40 hover:pr-4"}`}>
-                                <span className="text-sm flex-shrink-0">{icon}</span>
-                                {label}
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
+        {/* divider */}
+        <div className="mx-4 my-2 h-px bg-gradient-to-l from-transparent via-white/[0.04] to-transparent" />
 
-            <div className="h-px bg-white/5 my-4 flex-shrink-0" />
+        {/* ── CATEGORIES ── */}
+        <div className="relative z-10 mb-6 flex-1 overflow-y-auto px-3">
+          <div className="mb-2 px-4">
+            <p className="sidebar-label">ערוצי פיתוח</p>
+          </div>
 
-            {/* נושאים חמים */}
-            <div className="mb-1">
-                <div className="text-xs tracking-widest text-cyan-500/55 mb-3 font-bold">// חם עכשיו</div>
-                <ul className="list-none flex flex-col gap-0.5">
-                    {trending.length === 0 ? (
-                        <li className="text-xs text-slate-300/20 px-3 py-2">אין נושאים כרגע</li>
-                    ) : trending.map((t) => (
-                        <li key={t._id}>
-                            <Link to={`/category?topicId=${t._id}`} className="flex items-center gap-2 px-2.5 py-2 no-underline text-slate-300/50 text-xs transition-all border-r-2 border-transparent hover:text-slate-300/85 hover:bg-white/2 hover:border-cyan-500/30">
-                                <span className="w-1.25 h-1.25 bg-cyan-500 rounded-full opacity-50 flex-shrink-0" />
-                                <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{t.title}</span>
-                                <span className="text-cyan-500/50 flex-shrink-0">↑{t.votes ?? 0}</span>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
+          {loading ? (
+            <div className="px-4 py-3 font-mono text-[10px] tracking-widest text-slate-600 animate-pulse uppercase">
+              // FETCHING CORES...
+            </div>
+          ) : (
+            <ul className="space-y-0.5 list-none p-0 m-0">
+              {categories.map((cat) => {
+                const catId = cat.id || cat._id;
+                const searchParams = new URLSearchParams(location.search);
+                const isSelected = location.pathname === '/category' && searchParams.get('categoryId') === catId;
+
+                return (
+                  <li key={catId} className="p-0 m-0">
+                    <Link
+                      to={`/category?categoryId=${catId}`}
+                      className={`block w-full flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 cursor-pointer focus:outline-none ${
+                        isSelected
+                          ? 'bg-[#ccff00]/5 text-white font-semibold border border-[#ccff00]/10'
+                          : 'text-slate-400 hover:bg-white/[0.01] hover:text-slate-200'
+                      }`}
+                    >
+                      <span className={`font-mono text-xs ${isSelected ? 'text-[#ccff00]' : 'text-slate-600'}`}>◈</span>
+                      <span className="flex-1 truncate">{cat.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* divider */}
+        <div className="mx-4 my-3 h-px bg-gradient-to-l from-transparent via-white/[0.04] to-transparent" />
+
+        {/* ── TAGS ── */}
+        <div className="relative z-10 mb-4 px-4">
+          <p className="sidebar-label mb-3">תגיות חמות</p>
+          <div className="flex flex-wrap gap-1.5">
+            {TAGS.map((tag) => (
+              <Link
+                key={tag}
+                to={`/search?tag=${encodeURIComponent(tag)}`}
+                className="sidebar-tag block cursor-pointer rounded-lg border border-white/[0.04] px-2.5 py-1 text-[11px] font-mono text-slate-500 transition-all duration-200 hover:border-[#ccff00]/20 hover:text-[#ccff00] hover:bg-[#ccff00]/5"
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
+                #{tag}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* ── FOOTER USER STATUS ── */}
+        <div className="relative z-10 border-t border-white/[0.04] px-4 pt-4 bg-black/10">
+          <button
+            onClick={() => isLoggedIn ? navigate(`/profile/${user._id}`) : navigate('/auth')}
+            className="w-full text-right flex items-center gap-3 rounded-xl p-2 bg-white/[0.01] border border-white/[0.03]"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 border border-white/10 font-bold font-mono text-xs text-slate-400">
+              {isLoggedIn ? user.name?.slice(0, 2).toUpperCase() : '??'}
             </div>
 
-            <div className="h-px bg-white/5 my-4 flex-shrink-0" />
-
-            {/* תגיות */}
-            <div className="mb-1">
-                <div className="text-xs tracking-widest text-cyan-500/55 mb-3 font-bold">// תגיות נפוצות</div>
-                <div className="flex flex-wrap gap-1.5">
-                    {["React", "Node.js", "Cyber", "AI", "Career", "DevOps"].map(tag => (
-                        <span key={tag} className="text-xs bg-white/3 border border-white/7 text-slate-300/40 px-2.25 py-0.75 cursor-pointer transition-all hover:text-cyan-500 hover:border-cyan-500/30 hover:bg-cyan-500/5"># {tag}</span>
-                    ))}
-                </div>
+            <div className="flex-1 min-w-0">
+              {isLoggedIn ? (
+                <>
+                  <p className="truncate text-xs font-bold text-slate-200">{user.name}</p>
+                  <p className="mt-0.5 text-[10px] text-slate-400">מחובר — לחץ לפרופיל / התנתק</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-medium text-slate-500">מצב אורח</p>
+                  <p className="mt-0.5 text-[10px] text-[#ccff00]">לחץ להתחבר / הרשמה</p>
+                </>
+              )}
             </div>
 
-            {/* פוטר */}
-            <div className="mt-auto pt-4 flex items-center gap-2 text-xs text-slate-300/30">
-                <span className="w-1.75 h-1.75 bg-green-500 rounded-full shadow-lg shadow-green-500 flex-shrink-0 animate-pulse" />
-                <span className="text-white font-bold">14</span>
-                <span>משתמשים אונליין</span>
+            <div className="flex items-center px-1">
+              <span className="inline-flex rounded-full h-2 w-2" style={{ backgroundColor: '#ccff00' }} />
             </div>
-        </aside>
-    );
+          </button>
+        </div>
+
+      </div>
+    </>
+  );
 }

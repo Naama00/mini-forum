@@ -1,42 +1,54 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Breadcrumb from './Breadcrumb';
+import { useAuth } from "../hooks";
+import { getToken } from "../utils/storage";
 
 const API = "http://localhost:5000/api";
 
 function timeAgo(dateStr) {
+  if (!dateStr) return "עכשיו";
   const diff = Date.now() - new Date(dateStr);
   const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `לפני ${mins} דקות`;
+  if (mins < 1) return "עכשיו";
+  if (mins < 60) return `לפני ${mins} דק'`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} שעות`;
+  if (hours < 24) return `לפני ${hours} שע'`;
   return `לפני ${Math.floor(hours / 24)} ימים`;
 }
 
+const ARTICLES_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;700;800&display=swap');
+  :root { --bg-dark: #0a0a0c; --accent-glow: #ccff00; --glass-bg: rgba(255,255,255,0.03); --border-glass: rgba(204,255,0,0.15); }
+  .dh-grid-bg{ position:fixed; inset:0; background-image: radial-gradient(circle at 2px 2px, rgba(204,255,0,0.03) 1px, transparent 0); background-size:40px 40px; z-index:-1 }
+  .ambient-glow{ position:fixed; width:500px;height:500px; background:radial-gradient(circle, rgba(204,255,0,0.08), transparent 70%); filter:blur(80px); z-index:-1 }
+  .glass-card{ background:var(--glass-bg); backdrop-filter: blur(12px); border:1px solid var(--border-glass); transition:all .25s ease }
+  .glass-card:hover{ box-shadow:0 8px 30px rgba(204,255,0,0.06); transform:translateY(-3px); }
+`;
+
 export default function ArticlesPage() {
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeTag, setActiveTag] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
   const TAGS = ["AI", "React", "Node.js", "Cyber", "Career", "DevOps"];
 
-  const fetchArticles = async () => {
+  const fetchArticles = async (opts = {}) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, limit: 9 });
-      if (search) params.append("search", search);
-      if (activeTag) params.append("tag", activeTag);
-
-      const res = await fetch(`${API}/articles?${params}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      });
-      const data = await res.json();
-      setArticles(data.articles || []);
-      setTotalPages(data.pages || 1);
+      const params = new URLSearchParams({ page, limit: 12 });
+      if (search) params.append("q", search);
+      if (opts.tag) params.append("tag", opts.tag);
+      const res = await fetch(`${API}/articles?${params.toString()}`);
+      const r = await res.json();
+      const data = r.data ? r.data : r;
+      setArticles(data.articles || data || []);
+      setTotalPages(data.pagination?.totalPages || 1);
     } catch (err) {
       console.error(err);
     } finally {
@@ -44,121 +56,77 @@ export default function ArticlesPage() {
     }
   };
 
-  useEffect(() => { fetchArticles(); }, [page, activeTag]);
+  useEffect(() => { fetchArticles(); }, [page]);
 
-  const handleSearch = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
     fetchArticles();
   };
 
   const handleLike = async (id) => {
-    const token = localStorage.getItem("token");
-    if (!token) return navigate("/login");
-    const res = await fetch(`${API}/articles/${id}/like`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    setArticles(prev =>
-      prev.map(a => a._id === id ? { ...a, likes: Array(data.likes).fill(null), _liked: data.liked } : a)
-    );
+    const token = getToken();
+    if (!token) return navigate('/auth');
+    try {
+      // optimistic update
+      setArticles(prev => prev.map(a => a._id === id ? ({ ...a, _liked: !a._liked, likes: a._liked ? (a.likes || []).slice(0,-1) : [...(a.likes||[]), 'me'] }) : a));
+      await fetch(`${API}/articles/${id}/like`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+    } catch (e) {
+      console.error(e);
+      fetchArticles();
+    }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6">
-      <Breadcrumb />
-      <div className="py-13 relative z-1 rtl">
-        <div className="flex items-start justify-between gap-6 flex-wrap mb-7">
-          <div>
-            <p className="font-mono text-xs tracking-widest text-cyan-500 uppercase mb-2.5">// מאמרים</p>
-            <h1 className="text-4xl font-black text-white mb-2 leading-tight">ידע שנכתב <span className="text-cyan-500">בשביל מפתחים</span></h1>
-            <p className="text-sm text-gray-400 leading-relaxed">מאמרים טכניים, מדריכים ותובנות מהקהילה</p>
-          </div>
-          <Link to="/articles/new" className="inline-flex items-center gap-2 px-5.5 py-2.75 bg-transparent border border-cyan-500 text-cyan-500 font-sans text-xs font-bold no-underline uppercase tracking-widest cursor-pointer transition-all hover:bg-cyan-500 hover:text-gray-900 hover:shadow-lg hover:shadow-cyan-500/50 whitespace-nowrap">+ כתוב מאמר</Link>
-        </div>
-        <form onSubmit={handleSearch} className="flex items-center gap-3 flex-wrap mb-5 rtl">
-          <div className="flex items-center gap-2.5 bg-white/3 border border-white/8 px-4 py-2.5 flex-1 min-w-56 max-w-96 transition-all focus-within:border-cyan-500 focus-within:shadow-lg focus-within:shadow-cyan-500/50 focus-within:bg-white/5">
-            <span className="text-cyan-500/50 text-base flex-shrink-0">🔍</span>
-            <input className="bg-none border-none outline-none text-gray-100 font-sans text-sm w-full rtl placeholder:text-gray-600" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש מאמרים..." />
-          </div>
-          <button type="submit" className="px-5 py-2.5 bg-cyan-500 text-gray-900 border-none font-sans text-xs font-bold cursor-pointer transition-all hover:shadow-lg hover:shadow-cyan-500/50 flex-shrink-0">חפש</button>
-        </form>
-      </div>
+    <>
+      <style>{ARTICLES_STYLES}</style>
+      <div className="dh-grid-bg" />
+      <div className="ambient-glow" style={{ right: -120, top: -80 }} />
 
-      <div className="flex gap-2 flex-wrap mb-7 rtl">
-        <button className={`px-3.5 py-1.25 bg-white/3 border border-white/8 text-gray-400 font-sans text-xs font-semibold cursor-pointer transition-all tracking-wide ${!activeTag ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500 hover:text-cyan-500"}`} onClick={() => { setActiveTag(""); setPage(1); }}>הכל</button>
-        {TAGS.map(tag => (
-          <button key={tag} className={`px-3.5 py-1.25 bg-white/3 border border-white/8 text-gray-400 font-sans text-xs font-semibold cursor-pointer transition-all tracking-wide ${activeTag === tag ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500 hover:text-cyan-500"}`} onClick={() => { setActiveTag(tag); setPage(1); }}>#{tag}</button>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-3 mb-5 rtl">
-        <div className="flex-1 h-px bg-cyan-500/10" />
-        <span className="font-mono text-xs tracking-wide text-cyan-500/50">// {articles.length} מאמרים</span>
-        <div className="flex-1 h-px bg-cyan-500/10" />
-      </div>
-
-      {loading ? (
-        <div className="text-center py-20 text-gray-400 text-sm font-mono">טוען מאמרים...</div>
-      ) : articles.length === 0 ? (
-        <div className="text-center py-20 text-gray-600 text-sm"><div className="text-4xl mb-3 opacity-30">📝</div>אין מאמרים עדיין</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 rtl">
-          {articles.map(article => <ArticleCard key={article._id} article={article} onLike={handleLike} />)}
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-10 rtl">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-            <button key={p} onClick={() => setPage(p)} className={`w-9 h-9 bg-white/3 border border-white/8 text-gray-400 font-sans text-sm font-semibold cursor-pointer transition-all ${p === page ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500 hover:text-cyan-500"}`}>{p}</button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ArticleCard({ article, onLike }) {
-  // חילוץ הנתונים בצורה בטוחה
-  const authorName = article.author?.firstName || "אנונימי";
-  const authorIcon = article.author?.icon || "👤";
-
-  return (
-    <div className="bg-gradient-to-br from-white/2 to-cyan-500/1 border border-cyan-500/8 rounded-3xl relative overflow-hidden transition-all duration-350 animate-fade-in flex flex-col shadow-lg hover:border-cyan-500/15 hover:bg-gradient-to-br hover:from-white/5 hover:to-cyan-500/2 hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-500/8 group">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full" />
-      {article.image && (
-        <img src={article.image} alt={article.title} className="w-full h-40 object-cover display-block border-b border-cyan-500/10" />
-      )}
-      <div className="px-5.5 py-5 flex-1 flex flex-col">
-        <div className="flex gap-1.5 flex-wrap mb-3 rtl">
-          {article.tags?.slice(0, 3).map(tag => (
-            <span key={tag} className="font-mono text-xs px-2.25 py-0.5 bg-cyan-500/7 border border-cyan-500/15 text-cyan-500/70 tracking-wide">#{tag}</span>
-          ))}
-        </div>
-        <Link to={`/articles/${article._id}`} className="font-sans text-base font-bold text-white no-underline mb-2.5 leading-relaxed block transition-colors hover:text-cyan-500">{article.title}</Link>
-        {article.summary && (
-          <p className="text-sm text-gray-400 leading-relaxed mb-4 flex-1">{article.summary.slice(0, 100)}...</p>
-        )}
-        <div className="flex items-center justify-between pt-3.5 border-t border-white/5 rtl">
-          <div className="flex items-center gap-2">
-            <div className="w-6.5 h-6.5 rounded-full bg-cyan-500/15 border border-cyan-500 flex items-center justify-center text-xs font-bold text-cyan-500 flex-shrink-0 shadow-lg shadow-cyan-500">{authorIcon}</div>
-            <div>
-              <div className="text-xs text-gray-400 font-semibold">{authorName}</div>
-              <div className="text-xs text-gray-600">{timeAgo(article.createdAt)}</div>
-            </div>
-          </div>
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-6">
+          <Breadcrumb path={[{label:'דפים',to:'/'},{label:'מאמרים'}]} />
           <div className="flex items-center gap-3">
-            <button className={`bg-none border-none cursor-pointer text-gray-400 text-xs flex items-center gap-1 px-0 transition-colors hover:text-cyan-500 font-sans ${article._liked ? "text-rose-500 hover:text-rose-500" : ""}`} onClick={() => onLike(article._id)}>
-              ♥ {article.likes?.length || 0}
-            </button>
-            <span className="text-xs text-gray-400 flex items-center gap-1">💬 {article.comments?.length || 0}</span>
-            <span className="text-xs text-gray-400 flex items-center gap-1">👁 {article.views || 0}</span>
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-3">
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="חפש מאמרים" className="bg-[#0f0f11] text-slate-300 px-3 py-2 rounded-lg border border-white/5" />
+              <button type="submit" className="bg-white/5 text-slate-200 px-3 py-2 rounded-lg">חפש</button>
+            </form>
+            {isLoggedIn && (
+              <button onClick={()=>navigate('/articles/new')} className="bg-[#ccff00] text-black px-3 py-2 rounded-lg font-semibold">מאמר חדש</button>
+            )}
           </div>
         </div>
+
+        {loading ? (
+          <div className="text-slate-400">טוען...</div>
+        ) : articles.length === 0 ? (
+          <div className="glass-card py-20 rounded-3xl text-center max-w-md mx-auto">
+            <div className="text-slate-600 text-3xl mb-2">⬡</div>
+            <p className="text-slate-400 font-light text-sm">לא נמצאו מאמרים התואמים את החיפוש שלך.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {articles.map(a => (
+              <div key={a._id || a.id} className="glass-card p-5 rounded-2xl no-underline hover:no-underline flex flex-col justify-between">
+                <div>
+                  <div className="text-sm text-slate-400 font-mono mb-2">{a.category || 'כללי'} · {timeAgo(a.createdAt)}</div>
+                  <Link to={`/articles/${a._id || a.id}`} className="no-underline">
+                    <h3 className="text-lg font-bold text-slate-100 mb-2">{a.title}</h3>
+                  </Link>
+                  <p className="text-slate-300 text-sm line-clamp-3">{a.excerpt || a.body?.slice(0,140)}</p>
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="text-xs text-slate-400">{a.author?.firstName || 'מחבר'}</div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => handleLike(a._id || a.id)} className="text-xs text-slate-400">♥ {a.likes?.length || 0}</button>
+                    <Link to={`/articles/${a._id || a.id}`} className="text-xs text-[#ccff00] font-semibold">קרא עוד →</Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }

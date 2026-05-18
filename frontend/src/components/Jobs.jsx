@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Breadcrumb from './Breadcrumb';
 import MarkdownRenderer from "./MarkdownRenderer";
+import { useAuth } from "../hooks";
+import { getToken, getLoggedInUserFromToken } from "../utils/storage";
 
 const API = "http://localhost:5000/api";
 
-const JOB_TYPES = { fulltime: "משרה מלאה", parttime: "משרה חלקית", freelance: "פרילנס", internship: "סטאז'" };
+const JOB_TYPES = { fulltime: "משרה מלאה", parttime: "משרה חלקית", freelance: "פרילנס", internship: "סטאג'" };
 
 function timeAgo(dateStr) {
   const days = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
@@ -15,6 +17,8 @@ function timeAgo(dateStr) {
 }
 
 export default function JobsPage() {
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -30,111 +34,242 @@ export default function JobsPage() {
       if (search) params.append("search", search);
       if (typeFilter) params.append("type", typeFilter);
       const res = await fetch(`${API}/jobs?${params}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        headers: { Authorization: `Bearer ${getToken()}` }
       });
       const data = await res.json();
       setJobs(data.jobs || []);
       setTotalPages(data.pages || 1);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchJobs(); }, [page, typeFilter]);
+  useEffect(() => {
+    fetchJobs();
+  }, [page, typeFilter]);
 
-  const handleSearch = (e) => { e.preventDefault(); setPage(1); fetchJobs(); };
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setPage(1);
+    fetchJobs();
+  };
 
   const handleLike = async (id) => {
-    const token = localStorage.getItem("token");
-    if (!token) return navigate("/login");
-    const res = await fetch(`${API}/jobs/${id}/like`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    setJobs(prev => prev.map(j => j._id === id ? { ...j, likes: Array(data.likes).fill(null), _liked: data.liked } : j));
+    const token = getToken();
+    if (!token) return navigate("/auth");
+    try {
+      const r = await fetch(`${API}/jobs/${id}/like`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const res = await r.json();
+      if (res.success) {
+        setJobs(prev => prev.map(job => {
+          if (job._id === id) {
+            const userId = getLoggedInUserFromToken()?.id;
+            const liked = job.likes?.includes(userId);
+            return {
+              ...job,
+              likes: liked ? job.likes.filter(u => u !== userId) : [...(job.likes || []), userId],
+              _liked: !liked
+            };
+          }
+          return job;
+        }));
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
+  const JOBS_STYLES = `
+    .cyber-grid-jobs {
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 2px 2px, rgba(204, 255, 0, 0.02) 1px, transparent 0);
+      background-size: 32px 32px;
+      z-index: -1;
+    }
+    .ambient-glow-jobs {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(204, 255, 0, 0.03), transparent 70%);
+      filter: blur(140px);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .glass-job-card {
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(204, 255, 0, 0.05);
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .glass-job-card:hover {
+      border-color: rgba(204, 255, 0, 0.2);
+      background: rgba(255, 255, 255, 0.03);
+      transform: translateX(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(204, 255, 0, 0.02);
+    }
+    .neon-job-btn {
+      background: #ccff00;
+      color: #0a0a0c;
+      transition: all 0.2s ease;
+    }
+    .neon-job-btn:hover {
+      background: #bfff00;
+      box-shadow: 0 0 15px rgba(204, 255, 0, 0.3);
+    }
+  `;
+
   return (
-    <div className="max-w-7xl mx-auto px-6">
-      <Breadcrumb />
-      <div className="py-13 relative z-1 rtl">
-        <div className="flex items-start justify-between gap-6 flex-wrap mb-7">
-          <div>
-            <p className="font-mono text-xs tracking-widest text-cyan-500 uppercase mb-2.5">// משרות</p>
-            <h1 className="text-4xl font-black text-white mb-2 leading-tight">הזדמנויות <span className="text-cyan-500">קריירה</span> בהייטק</h1>
-            <p className="text-sm text-gray-400 leading-relaxed">משרות מפותחים עבור מפותחים — ללא דמי תיווך</p>
+    <>
+      <style>{JOBS_STYLES}</style>
+      <div className="relative min-h-screen text-slate-200 pb-16" dir="rtl">
+        <div className="cyber-grid-jobs" />
+        <div className="ambient-glow-jobs top-40 right-20" />
+
+        <div className="max-w-6xl mx-auto px-6 pt-24 relative z-10">
+          <Breadcrumb items={[{ label: "לוח משרות וקריירה", active: true }]} />
+
+          {/* לוח עליון - כותרת וחיפוש */}
+          <div className="glass-job-card p-8 md:p-10 rounded-3xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-3xl font-black text-white tracking-tight mb-2">לוח משרות הקהילה</h1>
+              <p className="text-slate-400 text-sm max-w-xl font-light">משרות פיתוח, דאטה, DevOps וסייבר מחברות טכנולוגיה מובילות ומחברי הקהילה.</p>
+            </div>
+            
+            <form onSubmit={handleSearchSubmit} className="relative max-w-sm w-full">
+              <input
+                type="text"
+                placeholder="חפש תפקיד, חברה או טכנולוגיה..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00] transition-all"
+              />
+              <button type="submit" className="absolute left-3 top-3.5 text-slate-500 hover:text-[#ccff00] text-xs font-mono">🔍</button>
+            </form>
           </div>
-          <Link to="/jobs/new" className="inline-flex items-center gap-2 px-5.5 py-2.75 bg-transparent border border-cyan-500 text-cyan-500 font-sans text-xs font-bold no-underline uppercase tracking-widest cursor-pointer transition-all hover:bg-cyan-500 hover:text-gray-900 hover:shadow-lg hover:shadow-cyan-500/50 whitespace-nowrap">+ פרסם משרה</Link>
-        </div>
-        <form onSubmit={handleSearch} className="flex items-center gap-3 flex-wrap mb-5 rtl">
-          <div className="flex items-center gap-2.5 bg-white/3 border border-white/8 px-4 py-2.5 flex-1 min-w-56 max-w-96 transition-all focus-within:border-cyan-500 focus-within:shadow-lg focus-within:shadow-cyan-500/50 focus-within:bg-white/5">
-            <span className="text-cyan-500/50 text-base flex-shrink-0">🔍</span>
-            <input className="bg-none border-none outline-none text-gray-100 font-sans text-sm w-full rtl placeholder:text-gray-600" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי תפקיד, חברה..." />
+
+          {/* סנן סוג משרה קבוע */}
+          <div className="flex flex-wrap items-center gap-2 mb-8">
+            <button
+              onClick={() => { setTypeFilter(""); setPage(1); }}
+              className={`px-4 py-2 rounded-xl text-xs font-mono tracking-wider transition-all border ${
+                typeFilter === "" 
+                  ? "bg-[#ccff00]/10 border-[#ccff00]/30 text-[#ccff00] font-bold" 
+                  : "bg-white/5 border-white/5 text-slate-400 hover:border-white/10"
+              }`}
+            >
+              // All_Positions
+            </button>
+            {Object.entries(JOB_TYPES).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => { setTypeFilter(key); setPage(1); }}
+                className={`px-4 py-2 rounded-xl text-xs font-sans transition-all border ${
+                  typeFilter === key 
+                    ? "bg-[#ccff00]/10 border-[#ccff00]/30 text-[#ccff00] font-bold" 
+                    : "bg-white/5 border-white/5 text-slate-400 hover:border-white/10 hover:text-slate-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-          <button type="submit" className="px-5 py-2.5 bg-cyan-500 text-gray-900 border-none font-sans text-xs font-bold cursor-pointer transition-all hover:shadow-lg hover:shadow-cyan-500/50 flex-shrink-0">חפש</button>
-        </form>
-      </div>
 
-      <div className="flex gap-2 flex-wrap mb-7 rtl">
-        <button className={`px-3.5 py-1.25 bg-white/3 border border-white/8 text-gray-400 font-sans text-xs font-semibold cursor-pointer transition-all tracking-wide ${!typeFilter ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500 hover:text-cyan-500"}`} onClick={() => { setTypeFilter(""); setPage(1); }}>הכל</button>
-        {Object.entries(JOB_TYPES).map(([val, label]) => (
-          <button key={val} className={`px-3.5 py-1.25 bg-white/3 border border-white/8 text-gray-400 font-sans text-xs font-semibold cursor-pointer transition-all tracking-wide ${typeFilter === val ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500 hover:text-cyan-500"}`} onClick={() => { setTypeFilter(val); setPage(1); }}>{label}</button>
-        ))}
-      </div>
+          {/* גוף הלוח */}
+          {loading ? (
+            <div className="text-center py-24 font-mono text-[#ccff00] animate-pulse text-xs tracking-widest">// DOWNLOADING HEADHUNTER INDEX...</div>
+          ) : jobs.length === 0 ? (
+            <div className="glass-job-card py-20 rounded-3xl text-center max-w-md mx-auto">
+              <div className="text-slate-600 text-3xl mb-2">◇</div>
+              <p className="text-slate-400 font-light text-sm">אין כרגע משרות זמינות בחתך שנבחר.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 mb-10">
+              {jobs.map(job => (
+                <div key={job._id} className="glass-job-card rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  
+                  {/* פרטי משרה */}
+                  <div className="space-y-2 flex-1">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-mono text-[10px] text-slate-500">{timeAgo(job.createdAt)}</span>
+                      <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-slate-400 text-[11px]">
+                        {JOB_TYPES[job.type] || job.type}
+                      </span>
+                      {job.salary && <span className="text-xs text-[#ccff00]/80 font-mono">💰 {job.salary}</span>}
+                    </div>
 
-      <div className="flex items-center gap-3 mb-5 rtl">
-        <div className="flex-1 h-px bg-cyan-500/10" />
-        <span className="font-mono text-xs tracking-wide text-cyan-500/50">// {jobs.length} משרות</span>
-        <div className="flex-1 h-px bg-cyan-500/10" />
-      </div>
+                    <Link to={`/jobs/${job._id}`} className="block focus:outline-none">
+                      <h2 className="text-lg font-bold text-white hover:text-[#ccff00] transition-colors leading-snug">
+                        {job.title}
+                      </h2>
+                    </Link>
 
-      {loading ? (
-        <div className="text-center py-20 text-gray-400 text-sm font-mono">טוען משרות...</div>
-      ) : jobs.length === 0 ? (
-        <div className="text-center py-20 text-gray-600 text-sm"><div className="text-4xl mb-3 opacity-30">💼</div>אין משרות עדיין</div>
-      ) : (
-        <div className="flex flex-col gap-2.5 rtl">
-          {jobs.map(job => <JobRow key={job._id} job={job} onLike={handleLike} />)}
-        </div>
-      )}
+                    <div className="flex items-center gap-4 text-xs text-slate-400 font-light">
+                      <span className="font-medium text-slate-300">🏢 {job.company}</span>
+                      <span>📍 {job.location}</span>
+                    </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-10 rtl">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-            <button key={p} onClick={() => setPage(p)} className={`w-9 h-9 bg-white/3 border border-white/8 text-gray-400 font-sans text-sm font-semibold cursor-pointer transition-all ${p === page ? "bg-cyan-500/10 border-cyan-500 text-cyan-500" : "hover:border-cyan-500 hover:text-cyan-500"}`}>{p}</button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+                    {job.description && (
+                      <div className="text-xs text-slate-400 font-light line-clamp-2 leading-relaxed pt-1">
+                        <MarkdownRenderer source={(job.description || "").slice(0, 140) + "..."} />
+                      </div>
+                    )}
+                  </div>
 
-function JobRow({ job, onLike }) {
-  return (
-    <div className="bg-gradient-to-br from-white/2 to-cyan-500/1 border border-cyan-500/8 px-7 py-5.5 flex justify-between items-start gap-5 relative transition-all duration-350 animate-slide-in-right rtl shadow-lg hover:border-cyan-500/20 hover:bg-gradient-to-br hover:from-white/5 hover:to-cyan-500/2 hover:-translate-x-0.75 hover:shadow-2xl hover:shadow-cyan-500/8 group">
-      <div className="absolute right-0 top-0 bottom-0 w-0.75 bg-cyan-500 scale-y-0 transition-transform group-hover:scale-y-100" />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2.5 flex-wrap mb-2 rtl">
-          <span className="font-mono text-xs px-2.5 py-0.75 border border-cyan-500/20 text-cyan-500 bg-cyan-500/5 tracking-wide">{JOB_TYPES[job.type] || job.type}</span>
-          {job.tags?.slice(0, 3).map(tag => <span key={tag} className="font-mono text-xs px-2 py-0.5 bg-white/4 border border-white/6 text-gray-600">#{tag}</span>)}
-          <span className="font-mono text-xs text-gray-600 mr-auto">{timeAgo(job.createdAt)}</span>
+                  {/* כפתורי פעולה צידיים */}
+                  <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-4 border-t md:border-t-0 border-white/5 pt-4 md:pt-0">
+                    {job.applyLink && (
+                      <a 
+                        href={job.applyLink} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="neon-job-btn px-5 py-2.5 rounded-xl font-bold text-xs text-center whitespace-nowrap no-underline shadow-sm"
+                      >
+                        הגש מועמדות
+                      </a>
+                    )}
+                    <button 
+                      onClick={() => handleLike(job._id)} 
+                      className={`px-3.5 py-2 rounded-xl bg-white/5 border border-white/5 text-slate-400 text-xs font-mono transition-all flex items-center gap-1 ${
+                        job._liked ? "border-rose-500/20 text-rose-400 bg-rose-500/5" : "hover:text-rose-400 hover:border-rose-500/10"
+                      }`}
+                    >
+                      ♥ {job.likes?.length || 0}
+                    </button>
+                  </div>
+
+                </div>
+              ))}
+
+              {/* ניווט / עמודים */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 font-mono pt-6">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-sm disabled:opacity-30 hover:border-[#ccff00]/40 transition-colors"
+                  >
+                    ←
+                  </button>
+                  <span className="text-xs text-slate-500 px-2">עמוד {page} מתוך {totalPages}</span>
+                  <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-sm disabled:opacity-30 hover:border-[#ccff00]/40 transition-colors"
+                  >
+                    →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <Link to={`/jobs/${job._id}`} className="font-sans text-base font-bold text-white no-underline block mb-1 leading-relaxed transition-colors hover:text-cyan-500">{job.title}</Link>
-        <p className="font-sans text-sm font-semibold text-cyan-500 mb-2">{job.company}</p>
-        <div className="flex gap-5 mb-3 rtl flex-wrap">
-          <span className="text-xs text-gray-400 flex items-center gap-1">📍 {job.location}</span>
-          {job.salary && <span className="text-xs text-gray-400 flex items-center gap-1">💰 {job.salary}</span>}
-        </div>
-        <div className="text-sm text-gray-400 leading-relaxed"><MarkdownRenderer source={(job.description || "").slice(0, 120) + (job.description && job.description.length > 120 ? "..." : "")} /></div>
       </div>
-      <div className="flex flex-col items-end gap-3 flex-shrink-0 min-w-32">
-        {job.applyLink && (
-          <a href={job.applyLink} target="_blank" rel="noreferrer" className="block px-5 py-2.5 bg-cyan-500 text-gray-900 no-underline font-sans text-xs font-bold text-center whitespace-nowrap transition-all border border-cyan-500 hover:bg-transparent hover:text-cyan-500 hover:shadow-lg hover:shadow-cyan-500/50">הגש מועמדות</a>
-        )}
-        <div className="flex gap-3 items-center">
-          <button className={`bg-none border-none cursor-pointer text-gray-400 text-xs flex items-center gap-1 px-0 transition-colors hover:text-rose-500 font-sans ${job._liked ? "text-rose-500 hover:text-rose-500" : ""}`} onClick={() => onLike(job._id)}>
-            ♥ {job.likes?.length || 0}
-          </button>
-          <Link to={`/jobs/${job._id}`} className="text-xs text-gray-400 no-underline flex items-center gap-1 transition-colors hover:text-cyan-500 font-sans">💬 {job.comments?.length || 0}</Link>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

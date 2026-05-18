@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MarkdownEditor from "./MarkdownEditor";
+import { getToken } from "../utils/storage";
 
 const API = "http://localhost:5000/api";
 
@@ -60,7 +61,7 @@ export default function NewEventForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) return navigate("/login");
 
     const validationErrors = validate();

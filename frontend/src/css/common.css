@@ -1,71 +1,38 @@
 /* ─────────────────────────────────────────────────────────────────────────
-   COMMON.CSS - משתנים גלובליים וסגנונות בסיסיים למימוש בכל הקבצים
+   COMMON.CSS - משתנים גלובליים וסגנונות בסיסיים מעודכנים (Cyberpunk Acid)
    ───────────────────────────────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
-/* ✨ CSS VARIABLES - צבעים, אנימציות, משתנים */
 :root {
-    /* צבעים ע קו - DARK MODE (DEFAULT) */
-    --accent: #00e5ff;
-    --accent-glow: rgba(0, 229, 255, 0.25);
-    --accent-dim: rgba(0, 229, 255, 0.15);
-    --accent-muted: rgba(0, 229, 255, 0.6);
-    --bg-dark: #080b12;
-    --bg-overlay: rgba(8, 11, 18, 0.9);
+    /* פלטת צבעים עתידנית חדשה - DARK MODE */
+    --accent: #ccff00; /* צהוב זורח */
+    --accent-glow: rgba(204, 255, 0, 0.2);
+    --accent-dim: rgba(204, 255, 0, 0.1);
+    --accent-muted: rgba(204, 255, 0, 0.6);
+    --bg-dark: #0a0a0c; /* שחור-פחם עמוק */
+    --bg-overlay: rgba(10, 10, 12, 0.95);
     --text-main: #e2e8f0;
     --text-muted: rgba(226, 232, 240, 0.4);
     --text-dim: rgba(226, 232, 240, 0.25);
     --text-muted-alt: rgba(226, 232, 240, 0.35);
-    --border-dark: rgba(0, 229, 255, 0.08);
-    --border-light: rgba(0, 229, 255, 0.15);
+    --border-dark: rgba(204, 255, 0, 0.05);
+    --border-light: rgba(204, 255, 0, 0.15);
     
-    /* צבעי גלאס (Glassmorphism) - DARK */
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-bg-light: rgba(255, 255, 255, 0.05);
+    /* צבעי גלאס (Glassmorphism) */
+    --glass-bg: rgba(255, 255, 255, 0.02);
+    --glass-bg-light: rgba(255, 255, 255, 0.04);
     --glass-bg-lighter: rgba(255, 255, 255, 0.06);
-    --glass-border: rgba(255, 255, 255, 0.07);
+    --glass-border: rgba(204, 255, 0, 0.1);
     
     /* צבעים פונקציונאליים */
     --error: #ff4081;
-    --success: #00e676;
+    --success: #00ff88; /* ירוק חומצה זוהר */
     
-    /* אנימציות */
-    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     --transition-fast: all 0.15s ease;
-    --transition-slow: all 0.4s ease;
+    --transition-slow: all 0.5s ease;
 }
-
-/* LIGHT MODE */
-[data-theme="light"] {
-    /* צבעים ע קו - LIGHT MODE */
-    --accent: #0091bc;
-    --accent-glow: rgba(0, 145, 188, 0.15);
-    --accent-dim: rgba(0, 145, 188, 0.12);
-    --accent-muted: rgba(0, 145, 188, 0.65);
-    --bg-dark: #f5f7fa;
-    --bg-overlay: rgba(245, 247, 250, 0.95);
-    --text-main: #1a1f2e;
-    --text-muted: rgba(26, 31, 46, 0.55);
-    --text-dim: rgba(26, 31, 46, 0.35);
-    --text-muted-alt: rgba(26, 31, 46, 0.45);
-    --border-dark: rgba(0, 145, 188, 0.08);
-    --border-light: rgba(0, 145, 188, 0.18);
-    
-    /* צבעי גלאס (Glassmorphism) - LIGHT */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-bg-light: rgba(255, 255, 255, 0.8);
-    --glass-bg-lighter: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(26, 31, 46, 0.08);
-    
-    /* צבעים פונקציונאליים */
-    --error: #d93a52;
-    --success: #1fb47d;
-}
-
-/* ─────────────────────────────────────────────────────────────────────---- */
-/* RESET & BASE STYLES */
-/* ──────────────────────────────────────────────────────────────────────── */
 
 *,
 *::before,
@@ -78,6 +45,7 @@
 html, body {
     height: 100%;
     width: 100%;
+    background-color: var(--bg-dark) !important;
 }
 
 body {
@@ -94,42 +62,30 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─────────────────────────────────────────────────────────────────────---- */
-/* SCROLLBAR STYLING - מודרני וטיפה יותר יפה */
-/* ──────────────────────────────────────────────────────────────────────── */
-
+/* ─── SCROLLBAR STYLING ─── */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(0, 229, 255, 0.03);
-    border-radius: 10px;
+    background: rgba(204, 255, 0, 0.01);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--accent), rgba(0, 229, 255, 0.5));
+    background: linear-gradient(180deg, var(--accent), rgba(204, 255, 0, 0.2));
     border-radius: 10px;
-    border: 2px solid rgba(0, 229, 255, 0.1);
-    transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(0, 229, 255, 0.8), var(--accent));
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
 }
 
-::-webkit-scrollbar-corner {
-    background: transparent;
-}
-
-/* Firefox */
 * {
     scrollbar-width: thin;
-    scrollbar-color: var(--accent) rgba(0, 229, 255, 0.03);
+    scrollbar-color: var(--accent) rgba(204, 255, 0, 0.01);
 }
-
 /* Light Mode Scrollbar */
 [data-theme="light"] ::-webkit-scrollbar-track {
     background: rgba(0, 145, 188, 0.05);

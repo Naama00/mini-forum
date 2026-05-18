@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getToken } from "../utils/storage";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -41,7 +42,7 @@ export default function NotificationBell() {
     const [unread, setUnread] = useState(0);
     const [loading, setLoading] = useState(false);
     const dropRef = useRef(null);
-    const token = localStorage.getItem("token");
+    const token = getToken();
     const navigate = useNavigate();
 
     // שלוף מספר שלא-נקראו בכל 30 שניות
