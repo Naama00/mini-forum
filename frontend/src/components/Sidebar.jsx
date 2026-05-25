@@ -38,7 +38,7 @@ const SIDEBAR_STYLES = `
 
   .sidebar-label {
     font-size: 10px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-family);
     text-transform: uppercase;
     letter-spacing: 0.15em;
     color: rgba(226, 232, 240, 0.25);
@@ -77,7 +77,7 @@ export default function Sidebar() {
       <style>{SIDEBAR_STYLES}</style>
       
       <div 
-        className="sidebar-scroll modern-sidebar sticky top-0 flex h-screen w-[280px] shrink-0 flex-col border-l border-white/[0.04] bg-[#0a0a0c] py-6 text-slate-300 pointer-events-auto z-50"
+        className="sidebar-scroll modern-sidebar sticky top-0 flex h-screen w-[280px] shrink-0 flex-col border-l border-white/[0.04] bg-[var(--bg-secondary)] py-6 text-slate-300 pointer-events-auto z-50"
         dir="rtl"
         style={{
           boxShadow: 'inset -10px 0 30px rgba(0, 0, 0, 0.2)'
@@ -121,6 +121,25 @@ export default function Sidebar() {
                 </li>
               );
             })}
+            {isLoggedIn && (
+              <li className="p-0 m-0">
+                <Link
+                  to="/ai-workspace"
+                  className={`block w-full flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none ${
+                    location.pathname === '/ai-workspace'
+                      ? 'nav-active-glow bg-white/[0.02] text-white font-bold'
+                      : 'text-slate-400 hover:bg-white/[0.01] hover:text-slate-200'
+                  }`}
+                >
+                  <span 
+                    className={`font-mono text-base transition-colors ${location.pathname === '/ai-workspace' ? 'text-[#ccff00]' : 'text-slate-600'}`}
+                  >
+                    🤖
+                  </span>
+                  <span className="flex-1">AI Workspace</span>
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
 
@@ -176,9 +195,6 @@ export default function Sidebar() {
                 key={tag}
                 to={`/search?tag=${encodeURIComponent(tag)}`}
                 className="sidebar-tag block cursor-pointer rounded-lg border border-white/[0.04] px-2.5 py-1 text-[11px] font-mono text-slate-500 transition-all duration-200 hover:border-[#ccff00]/20 hover:text-[#ccff00] hover:bg-[#ccff00]/5"
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                }}
               >
                 #{tag}
               </Link>

@@ -85,7 +85,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-sm font-sans" ref={dropdownRef} style={{ direction: "rtl" }}>
+    <div className="relative w-full max-w-full font-sans" ref={dropdownRef} style={{ direction: "rtl" }}>
       {/* Search Input Wrapper */}
       <div className="relative group">
         <input

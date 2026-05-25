@@ -3,6 +3,8 @@
  * Catches all errors thrown from controllers and services
  */
 
+const logger = require('../logger');
+
 function errorMiddleware(err, req, res, next) {
   // Default values
   let status = 500;
@@ -10,13 +12,13 @@ function errorMiddleware(err, req, res, next) {
   const isDevelopment = process.env.NODE_ENV !== 'production';
 
   // Log error with timestamp
-  console.error(`[${new Date().toISOString()}] ERROR:`, {
+  logger.error({
     message: err.message,
     status: err.status || status,
     path: req.path,
     method: req.method,
     stack: isDevelopment ? err.stack : undefined
-  });
+  }, 'Request error');
 
   // Determine status code based on error message
   if (err.message) {

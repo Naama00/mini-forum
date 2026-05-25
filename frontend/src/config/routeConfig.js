@@ -20,7 +20,7 @@ const EditEvent = lazy(() => import('../components/EditEvent'));
 const EditJob = lazy(() => import('../components/EditJob'));
 const Notifications = lazy(() => import('../components/Notifications'));
 const SearchResults = lazy(() => import('../components/Searchresults'));
-
+const AIWorkspaceContainer = lazy(() => import('../components/AIWorkspaceContainer'));
 /**
  * Route configuration
  * כל הנתיבים באפליקציה במקום אחד
@@ -45,4 +45,5 @@ export const routes = [
   { path: '/jobs/:id/edit', element: EditJob },
   { path: '/notifications', element: Notifications },
   { path: '/search', element: SearchResults },
+  { path: '/ai-workspace', element: AIWorkspaceContainer },
 ];

@@ -59,9 +59,9 @@ const GLOBAL_STYLES = `
   }
 
   body { 
-    background-color: var(--bg-dark) !important; 
+    background-color: var(--bg-primary) !important; 
+    color: var(--text-primary);
     font-family: 'Assistant', sans-serif;
-    color: #e2e8f0;
   }
 
   /* אפקט הטשטוש בכותרת (Masking) */

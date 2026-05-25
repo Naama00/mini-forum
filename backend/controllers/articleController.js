@@ -30,7 +30,11 @@ async function getArticleById(req, res, next) {
 async function createArticle(req, res, next) {
   try {
     const article = await articleService.createArticle(req.body, req.user.userId);
-    res.status(201).json(article);
+    res.status(201).json({
+      success: true,
+      message: 'מאמר נוצר בהצלחה',
+      data: article
+    });
   } catch (err) {
     next(err);
   }

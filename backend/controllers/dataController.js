@@ -1,16 +1,17 @@
 const dataService = require('../services/dataService');
+const logger = require('../logger');
 
 /**
  * GET /api/categories
  */
 async function getCategories(req, res, next) {
-    console.log('[DEBUG] dataController.getCategories called');
+    logger.debug({ path: req.path, method: req.method }, 'dataController.getCategories called');
     try {
         const result = await dataService.getCategories();
-        console.log('[DEBUG] Sending response:', result);
+        logger.debug({ resultCount: result.count }, 'Sending categories response');
         res.json(result);
     } catch (error) {
-        console.error('[DEBUG] Error in getCategories:', error);
+        logger.error({ err: error }, 'Error in dataController.getCategories');
         next(error);
     }
 }

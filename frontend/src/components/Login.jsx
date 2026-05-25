@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../hooks";
+import CityAutocomplete from "./CityAutocomplete";
 
 const GOOGLE_CLIENT_ID = "151921932655-85p00136srh9nb2tquam8qkkjtuvfnl5.apps.googleusercontent.com";
 const API_BASE = "http://localhost:5000";
@@ -18,9 +19,9 @@ const AUTH_STYLES = `
   }
 
   body { 
-    background-color: var(--bg-dark) !important; 
+    background-color: var(--bg-primary) !important; 
+    color: var(--text-primary);
     font-family: 'Assistant', sans-serif;
-    color: #e2e8f0;
   }
 
   .dh-grid-bg {
@@ -232,9 +233,13 @@ function AuthForm() {
 
                 {mode === "register" && (
                   <div className="flex flex-col">
-                    <label className="text-xs tracking-widest text-slate-400 mb-2 uppercase">עיר (אופציונלי)</label>
-                    <input className="bg-white/5 border border-white/10 text-white px-4 py-3 rounded-xl font-sans text-sm outline-none rtl transition-colors focus:border-[#ccff00]/50 focus:bg-[#ccff00]/5 placeholder:text-slate-500" name="city" placeholder="תל אביב"
-                      value={form.city} onChange={handleChange} />
+                    <CityAutocomplete
+                      label="עיר (אופציונלי)"
+                      name="city"
+                      placeholder="בחר עיר בישראל"
+                      value={form.city}
+                      onChange={handleChange}
+                    />
                   </div>
                 )}
               </div>

@@ -110,10 +110,13 @@ async function loginWithGoogle(credential) {
     const payload = ticket.getPayload();
     const { email, given_name, family_name, picture } = payload;
 
+    logger.info({ email, given_name, family_name, picture }, '🔐 Google login payload received');
+
     let user = await User.findOne({ email });
 
     if (!user) {
         // Create new user automatically
+        logger.info({ email, picture }, '👤 Creating new user from Google');
         user = new User({
             firstName: given_name || '',
             lastName: family_name || '',
@@ -128,11 +131,20 @@ async function loginWithGoogle(credential) {
             links: { topics: [], posts: [], uploads: [] }
         });
         await user.save();
+        logger.info({ userId: user._id, icon: user.icon }, '✅ New user created with icon');
     } else {
+        logger.info({ userId: user._id, oldIcon: user.icon, newIcon: picture }, '🔄 Existing user found, updating');
         user.lastLogin = new Date();
         user.isConnected = true;
-        user.icon = picture || user.icon;
+        // Only update icon if Google provides a new picture
+        if (picture) {
+            user.icon = picture;
+            logger.info({ userId: user._id, icon: user.icon }, '🖼️  Icon updated from Google');
+        } else {
+            logger.warn({ userId: user._id }, '⚠️  No picture from Google, keeping existing icon');
+        }
         await user.save();
+        logger.info({ userId: user._id, iconAfterSave: user.icon }, '✅ User updated in database');
     }
 
     const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });

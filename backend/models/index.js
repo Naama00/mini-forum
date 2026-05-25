@@ -10,6 +10,8 @@ const { Post, postSchema } = require('./Post');
 const { Upload, uploadSchema } = require('./Upload');
 
 // יצירת אינדקסים וקולקציות
+const logger = require('../logger');
+
 async function initializeDatabase() {
     try {
         // יצירת אינדקסים
@@ -35,13 +37,13 @@ async function initializeDatabase() {
             ];
             
             await Category.insertMany(defaultCategories);
-            console.log(`✓ ${defaultCategories.length} קטגוריות ברירת מחדל נוצרו`);
+            logger.info(`✓ ${defaultCategories.length} קטגוריות ברירת מחדל נוצרו`);
         }
         
-        console.log('✓ בסיס הנתונים אותחל בהצלחה!');
-        console.log('✓ כל כולקציות והאינדקסים נוצרו בהצלחה');
+        logger.info('✓ בסיס הנתונים אותחל בהצלחה!');
+        logger.info('✓ כל כולקציות והאינדקסים נוצרו בהצלחה');
     } catch (error) {
-        console.error('שגיאה באתחול בסיס הנתונים:', error);
+        logger.error({ err: error }, 'שגיאה באתחול בסיס הנתונים');
         throw error;
     }
 }

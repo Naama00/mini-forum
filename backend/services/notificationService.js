@@ -1,4 +1,6 @@
 const Notification = require('../models/Notification');
+const logger = require('../logger');
+const { addNotificationJob } = require('../queues/notificationQueue');
 
 /**
  * Create a notification (internal helper)
@@ -7,9 +9,9 @@ const Notification = require('../models/Notification');
 async function createNotification({ recipient, sender, type, refModel, refId, text = '' }) {
   try {
     if (recipient.toString() === sender.toString()) return; // Don't send to yourself
-    await Notification.create({ recipient, sender, type, refModel, refId, text });
+    await addNotificationJob({ recipient, sender, type, refModel, refId, text });
   } catch (err) {
-    console.error('createNotification error:', err.message);
+    logger.error({ err }, 'createNotification error');
   }
 }
 

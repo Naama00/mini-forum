@@ -1,4 +1,5 @@
 const { registerUser, loginUser, loginWithGoogle } = require('../services/authService');
+const logger = require('../logger');
 
 /**
  * POST /api/auth/register
@@ -39,13 +40,21 @@ async function login(req, res, next) {
 async function googleLogin(req, res, next) {
     try {
         const { credential } = req.body;
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: 'לא התקבל credential מגוגל'
+            });
+        }
         const result = await loginWithGoogle(credential);
+        logger.info({ userId: result.user._id, icon: result.user.icon }, '✓ Google login response prepared');
         res.json({
             success: true,
             message: 'התחברת בהצלחה עם Google!',
             ...result
         });
     } catch (error) {
+        logger.error({ err: error }, '✗ Google login error');
         next(error);
     }
 }

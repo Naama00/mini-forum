@@ -116,7 +116,7 @@ export default function EditEvent() {
     }
     .label-mono-dh {
       font-size: 10px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-family);
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: rgba(204, 255, 0, 0.4);

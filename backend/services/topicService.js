@@ -2,6 +2,7 @@ const { Topic } = require('../models/Topic');
 const { Post } = require('../models/Post');
 const { Category } = require('../models/Category');
 const { User } = require('../models/User');
+const cache = require('../cache');
 
 /**
  * Create new topic with first post
@@ -43,6 +44,11 @@ async function createTopic({ title, content, type, categoryId, tags }, userId) {
 
   await Category.findByIdAndUpdate(categoryId, { $push: { topics: topic._id } });
   await User.findByIdAndUpdate(userId, { $push: { 'links.topics': topic._id } });
+
+  await cache.del('categories:all');
+  await cache.del(`category:${categoryId}`);
+  await cache.invalidate('trending:');
+  await cache.del('statistics:summary');
 
   return topic;
 }

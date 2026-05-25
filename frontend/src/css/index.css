@@ -1,9 +1,18 @@
-/* קובץ index.css המעודכן שלך */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CSS IMPORTS - Organized Architecture for Professional Design
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Base & Design System */
+@import './variables.css';
 @import './global.css';
 @import './common.css';
-@import './variables.css';
-@import './responsive.css';
+
+/* Animations & Effects */
+@import './animations.css';
+
+/* Page & Component Styles */
 @import './style.css';
 @import './pages-layout.css';
-@import './navigation.css';
 @import './components.css';
+@import './navigation.css';
+@import './responsive.css';

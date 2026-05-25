@@ -47,22 +47,30 @@ export default function MarkdownRenderer({ source }) {
       const match = /language-(\w+)/.exec(className || "");
       const codeString = String(children).replace(/\n$/, '');
 
-      if (!match && inline) {
+      // Inline code
+      if (inline || !match) {
         return <code className={className} {...props}>{children}</code>;
       }
 
+      // Code block - use span as wrapper instead of div to avoid nesting issues
       return (
-        <div className="ltr" style={{ direction: 'ltr', textAlign: 'left' }}>
-          <SyntaxHighlighter
-            language={match ? match[1] : 'javascript'}
-            style={vscDarkPlus}
-            useInlineStyles={false}
-            PreTag="div"
-            className="md-syntax"
-          >
-            {codeString}
-          </SyntaxHighlighter>
-        </div>
+        <SyntaxHighlighter
+          language={match ? match[1] : 'javascript'}
+          style={vscDarkPlus}
+          useInlineStyles={false}
+          PreTag="span"
+          className="md-syntax ltr"
+        >
+          {codeString}
+        </SyntaxHighlighter>
+      );
+    },
+    pre({ children, ...props }) {
+      // Handle pre blocks
+      return (
+        <pre className="md-pre" style={{ direction: 'ltr', textAlign: 'left' }} {...props}>
+          {children}
+        </pre>
       );
     }
   };
@@ -72,8 +80,9 @@ export default function MarkdownRenderer({ source }) {
       <style>{`
         .md-renderer h1, .md-renderer h2, .md-renderer h3 { margin: 12px 0; }
         .md-renderer p { margin: 8px 0; }
-        .md-renderer pre { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 6px; overflow: auto; }
+        .md-pre { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 6px; overflow: auto; margin: 12px 0; display: block; }
         .md-renderer code { background: rgba(0,0,0,0.45); padding: 2px 6px; border-radius: 4px; }
+        .md-syntax { display: block !important; }
         .md-syntax .token.keyword { color: #569CD6 !important; }
         .md-syntax .token.function { color: #DCDCAA !important; }
         .md-syntax .token.class-name { color: #4EC9B0 !important; }

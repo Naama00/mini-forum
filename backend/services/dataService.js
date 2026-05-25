@@ -1,5 +1,20 @@
 const { User, Category, Topic, Upload } = require('../models');
 const { Post } = require('../models/Post');
+const logger = require('../logger');
+const cache = require('../cache');
+
+const CACHE_KEYS = {
+    categories: 'categories:all',
+    statistics: 'statistics:summary',
+    trendingTopics: 'trending:topics'
+};
+
+const CACHE_PREFIX = {
+    category: 'category:',
+    topic: 'topic:',
+    post: 'post:',
+    user: 'user:'
+};
 
 /**
  * Format public user data - remove sensitive fields
@@ -21,19 +36,31 @@ function formatPublicUserData(user) {
  * Get all categories with sub-categories
  */
 async function getCategories() {
-    console.log('[DEBUG] getCategories called');
+    logger.debug('getCategories called');
     try {
+        const cacheKey = CACHE_KEYS.categories;
+        const cached = await cache.get(cacheKey);
+        if (cached) {
+            logger.debug({ key: cacheKey }, 'Redis cache hit for categories');
+            return cached;
+        }
+
         const categories = await Category.find()
             .populate('subCategories', 'name description icon')
-            .select('-__v');
-        console.log('[DEBUG] Found categories:', categories.length);
-        return {
+            .select('-__v')
+            .lean();
+
+        const result = {
             success: true,
             data: categories,
             count: categories.length
         };
+
+        await cache.set(cacheKey, result, 300);
+        logger.debug({ count: categories.length }, 'Found categories');
+        return result;
     } catch (error) {
-        console.error('[DEBUG] Error in getCategories:', error.message);
+        logger.error({ err: error }, 'Error in getCategories');
         throw error;
     }
 }
@@ -42,6 +69,13 @@ async function getCategories() {
  * Get category by ID with topics
  */
 async function getCategoryById(categoryId) {
+    const cacheKey = `${CACHE_PREFIX.category}${categoryId}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+        logger.debug({ key: cacheKey }, 'Redis cache hit for category');
+        return cached;
+    }
+
     const category = await Category.findById(categoryId)
         .populate('subCategories', 'name description icon')
         .select('-__v')
@@ -62,16 +96,26 @@ async function getCategoryById(categoryId) {
             author: formatPublicUserData(t.author)
         }));
 
-    return {
+    const result = {
         success: true,
         data: { ...category, topics: formattedTopics }
     };
+
+    await cache.set(cacheKey, result, 300);
+    return result;
 }
 
 /**
  * Get topic by ID with posts
  */
 async function getTopicById(topicId) {
+    const cacheKey = `${CACHE_PREFIX.topic}${topicId}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+        logger.debug({ key: cacheKey }, 'Redis cache hit for topic');
+        return cached;
+    }
+
     const topic = await Topic.findById(topicId)
         .select('-__v')
         .populate('category', 'name _id')
@@ -96,17 +140,27 @@ async function getTopicById(topicId) {
         posts: formattedPosts
     };
 
-    return {
+    const response = {
         success: true,
         data: result,
         postsCount: formattedPosts.length
     };
+
+    await cache.set(cacheKey, response, 300);
+    return response;
 }
 
 /**
  * Get post by ID with replies
  */
 async function getPostById(postId) {
+    const cacheKey = `${CACHE_PREFIX.post}${postId}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+        logger.debug({ key: cacheKey }, 'Redis cache hit for post');
+        return cached;
+    }
+
     const post = await Post.findById(postId)
         .populate({ path: 'author', select: 'firstName lastName icon votes city' })
         .populate({
@@ -130,24 +184,37 @@ async function getPostById(postId) {
         }));
     }
 
-    return {
+    const response = {
         success: true,
         data: post
     };
+
+    await cache.set(cacheKey, response, 300);
+    return response;
 }
 
 /**
  * Get user profile by ID
  */
 async function getUserById(userId) {
+    const cacheKey = `${CACHE_PREFIX.user}${userId}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+        logger.debug({ key: cacheKey }, 'Redis cache hit for user');
+        return cached;
+    }
+
     const user = await User.findById(userId)
         .populate({ path: 'links.topics', select: 'title votes createdAt', options: { limit: 10 } })
         .populate({ path: 'links.posts', select: 'content numberOfVotes createdAt topicId', options: { limit: 10 } })
-        .select('-isAdmin -email -__v');
+        .select('-isAdmin -email -__v')
+        .lean();
 
     if (!user) {
         throw new Error('יוזר לא נמצא');
     }
+
+    logger.debug({ userId, icon: user.icon }, '📦 User loaded from DB');
 
     const topics = (user.links?.topics || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     const posts = (user.links?.posts || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -156,7 +223,7 @@ async function getUserById(userId) {
         posts.reduce((sum, p) => sum + (p.numberOfVotes || 0), 0) +
         topics.reduce((sum, t) => sum + (t.votes || 0), 0);
 
-    return {
+    const response = {
         success: true,
         data: {
             ...formatPublicUserData(user),
@@ -167,6 +234,10 @@ async function getUserById(userId) {
             isConnected: user.isConnected
         }
     };
+
+    logger.debug({ userId, iconInResponse: response.data.icon }, '📮 User response prepared');
+    await cache.set(cacheKey, response, 300);
+    return response;
 }
 
 /**
@@ -189,6 +260,13 @@ async function getAllUsers() {
  * Get statistics: counts and trending data
  */
 async function getStatistics() {
+    const cacheKey = CACHE_KEYS.statistics;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+        logger.debug({ key: cacheKey }, 'Redis cache hit for statistics');
+        return cached;
+    }
+
     const [usersCount, topicsCount, postsCount, categoriesCount, uploadsCount] = await Promise.all([
         User.countDocuments(),
         Topic.countDocuments(),
@@ -207,7 +285,7 @@ async function getStatistics() {
         .limit(5)
         .select('title createdAt votes');
 
-    return {
+    const response = {
         success: true,
         data: {
             totalUsers: usersCount,
@@ -219,22 +297,36 @@ async function getStatistics() {
             recentTopics
         }
     };
+
+    await cache.set(cacheKey, response, 60);
+    return response;
 }
 
 /**
  * Get trending topics
  */
 async function getTrendingTopics() {
+    const cacheKey = CACHE_KEYS.trendingTopics;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+        logger.debug({ key: cacheKey }, 'Redis cache hit for trending topics');
+        return cached;
+    }
+
     const trendingTopics = await Topic.find()
         .sort({ votes: -1, createdAt: -1 })
         .limit(20)
         .select('title votes isPinned createdAt author')
-        .populate('author', 'firstName lastName icon');
+        .populate('author', 'firstName lastName icon')
+        .lean();
 
-    return {
+    const response = {
         success: true,
         data: trendingTopics
     };
+
+    await cache.set(cacheKey, response, 120);
+    return response;
 }
 
 module.exports = {

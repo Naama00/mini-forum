@@ -7,11 +7,11 @@ const rateLimit = require('express-rate-limit');
 
 /**
  * Auth rate limiter - Prevents brute force attacks
- * 5 requests per 15 minutes per IP
+ * 50 requests per 15 minutes per IP (development - increase for production)
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: 50, // Limit each IP to 50 requests per windowMs (increased for development)
   message: 'יותר מדי ניסיונות התחברות. אנא נסה שוב בעוד 15 דקות.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers

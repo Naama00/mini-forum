@@ -20,15 +20,22 @@
   },
   "homepage": "https://github.com/Naama00/mini-forum#readme",
   "dependencies": {
+    "@google/genai": "^2.6.0",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.77.2",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^7.1.5",
     "google-auth-library": "^10.6.1",
     "jsonwebtoken": "^9.0.3",
     "marked": "^17.0.3",
     "mongoose": "^9.2.3",
+    "pino": "^8.18.0",
+    "pino-http": "^8.4.0",
+    "pino-pretty": "^11.0.0",
     "rate-limit-redis": "^4.3.1",
+    "redis": "^5.12.1",
     "vite": "^7.3.1"
   }
 }

@@ -7,6 +7,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Loading } from './components/common/Loading';
 import Sidebar from "./components/Sidebar";
+import SearchBar from './components/Searchbar';
 import ThemeToggle from './components/ThemeToggle';
 import NotificationBell from './components/Notificationbell';
 import { useAuth } from './hooks';
@@ -54,12 +55,34 @@ function AppShell() {
 
   return (
     <>
-      <div className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] bg-[#080c14]/95 px-4 backdrop-blur-md md:px-8">
-        <div />
+      <div 
+        className="sticky top-0 z-40 border-b border-white/10 backdrop-blur-md"
+        style={{ 
+          borderColor: 'var(--divider)',
+          backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 95%, transparent)'
+        }}
+      >
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-3 flex-nowrap md:px-8">
+          <div className="flex-shrink-0 flex items-center gap-3 justify-between min-w-0">
+            <Link
+              to="/"
+              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:border-[#ccff00]/40 hover:bg-[#ccff00]/10"
+            >
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ccff00]/10 text-sm font-bold text-[#ccff00]">⬡</span>
+              <span className="hidden sm:inline">DevHub</span>
+            </Link>
+            <span className="hidden md:inline rounded-full border border-white/10 bg-slate-950/40 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-slate-400">
+              COMMUNITY TERMINAL
+            </span>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <NotificationBell />
-          {user ? (
+          <div className="flex-1 min-w-0 max-w-3xl">
+            <SearchBar />
+          </div>
+
+          <div className="flex items-center gap-2 justify-end">
+            <NotificationBell />
+            {user ? (
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"
@@ -73,7 +96,14 @@ function AppShell() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-gray-950/95 border border-white/10 rounded-xl shadow-2xl py-2 z-50" style={{ backdropFilter: 'blur(6px)' }}>
+                <div 
+                  className="absolute right-0 mt-2 w-44 border rounded-xl shadow-2xl py-2 z-50" 
+                  style={{ 
+                    backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 95%, transparent)',
+                    borderColor: 'var(--border-primary)',
+                    backdropFilter: 'blur(6px)'
+                  }}
+                >
                   <button
                     onClick={() => { setUserMenuOpen(false); navigate(`/profile/${user._id}`); }}
                     className="w-full text-right px-4 py-2 text-sm text-slate-200 hover:bg-white/5"
@@ -101,8 +131,9 @@ function AppShell() {
           <ThemeToggle />
         </div>
       </div>
+    </div>
       <div className="flex min-h-0 flex-1 flex-col px-4 py-8 md:px-8 lg:px-10">
-        <div className="mx-auto w-full max-w-[80rem]">
+        <div className="mx-auto w-full max-w-7xl">
           <AppRoutes />
         </div>
       </div>
@@ -141,7 +172,7 @@ function App() {
                 */}
                 <div className="grid min-h-dvh w-full grid-cols-[14rem_minmax(0,1fr)] sm:grid-cols-[16rem_minmax(0,1fr)] md:grid-cols-[17.5rem_minmax(0,1fr)]">
                   <Sidebar currentUser={currentUser} />
-                  <main className="app-shell-main relative flex min-h-dvh min-w-0 flex-col border-s border-white/[0.06] bg-transparent">
+                  <main className="app-shell-main relative flex min-h-dvh min-w-0 flex-col border-s border-white/6 bg-transparent">
                     <AppShell />
                   </main>
                 </div>

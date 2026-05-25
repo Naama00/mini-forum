@@ -43,14 +43,22 @@ async function getArticleById(id) {
  * Create new article
  */
 async function createArticle({ title, content, summary, image, tags }, authorId) {
+  if (!title || !title.trim()) {
+    throw new Error('כותרת המאמר חסרה');
+  }
+  if (!content || !content.trim()) {
+    throw new Error('תוכן המאמר חסר');
+  }
+  
   const article = new Article({
-    title,
-    content,
-    summary,
-    image,
-    tags: tags || [],
+    title: title.trim(),
+    content: content.trim(),
+    summary: summary ? summary.trim() : '',
+    image: image || '',
+    tags: Array.isArray(tags) ? tags : (tags ? [tags] : []),
     author: authorId
   });
+  
   await article.save();
   await article.populate('author', 'firstName lastName icon');
   return article;

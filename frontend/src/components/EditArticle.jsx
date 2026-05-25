@@ -118,7 +118,7 @@ export default function EditArticle() {
     }
     .sidebar-label-mono {
       font-size: 10px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-family);
       text-transform: uppercase;
       letter-spacing: 0.15em;
       color: rgba(204, 255, 0, 0.4);

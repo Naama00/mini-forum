@@ -362,15 +362,15 @@ export default function CategoryPage() {
                           <Link
                             key={tId}
                             to={`/category?topicId=${tId}`}
-                            className="glass-panel block w-full p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer group transition-all no-underline border border-white/5 hover:border-[#ccff00]/30 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#ccff00]/20"
+                            className="glass-panel block w-full p-6 rounded-2xl flex flex-col sm:flex-row-reverse items-end gap-4 cursor-pointer group transition-all no-underline border border-white/5 hover:border-[#ccff00]/30 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#ccff00]/20 text-right"
                           >
-                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="flex items-end justify-end gap-4 min-w-0 w-full max-w-full text-right">
                               <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0 font-bold font-mono text-xs text-slate-400 group-hover:border-[#ccff00]/40 group-hover:text-[#ccff00] transition-colors">
                                 {avatarInitials(getAuthorName(t))}
                               </div>
-                              <div className="min-w-0 flex-1">
+                              <div className="min-w-0 flex-1 text-right">
                                 <h2 className="text-base font-bold text-slate-200 group-hover:text-[#ccff00] transition-colors truncate mb-1">{t.title}</h2>
-                                <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                                <div className="flex items-center gap-3 justify-end text-xs text-slate-500 font-mono">
                                   <span>מאת: <span className="text-slate-400">{getAuthorName(t)}</span></span>
                                   <span>•</span>
                                   <span>{timeAgo(t.createdAt)}</span>
@@ -378,8 +378,8 @@ export default function CategoryPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-6 shrink-0 self-end sm:self-auto border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end">
-                              <div className="flex gap-4 font-mono text-[11px] text-slate-500 uppercase">
+                            <div className="flex items-center gap-6 shrink-0 self-end border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0 w-full sm:w-auto justify-end">
+                              <div className="flex gap-4 font-mono text-[11px] text-slate-500 uppercase justify-end">
                                 <div>תגובות: <span className="text-slate-300 font-bold">{t.postCount || 0}</span></div>
                                 <div>צפיות: <span className="text-slate-300">{t.views || 0}</span></div>
                               </div>

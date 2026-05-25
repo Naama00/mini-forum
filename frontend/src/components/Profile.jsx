@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getLoggedInUserFromToken, getToken } from "../utils/storage";
 import { useAuth } from '../hooks';
+import CityAutocomplete from "./CityAutocomplete";
 
 const API_BASE = "http://localhost:5000";
 
@@ -79,7 +80,7 @@ export default function ProfilePage() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--bg-primary)]">
       <div className="text-center">
         <div className="text-[#ccff00] animate-pulse font-mono uppercase tracking-tighter text-sm">
           Accessing Mainframe...
@@ -89,7 +90,7 @@ export default function ProfilePage() {
   );
 
   if (error) return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--bg-primary)]">
       <div className="text-center max-w-md px-4">
         <div className="bg-rose-500/10 border border-rose-500/30 px-6 py-4 rounded-2xl mb-6 text-rose-400 font-mono text-sm">
           CRITICAL_ERROR: {error}
@@ -136,9 +137,18 @@ export default function ProfilePage() {
             <div className="relative flex-shrink-0">
               <div className="w-28 h-28 rounded-2xl p-[1px] bg-gradient-to-br from-[#ccff00] to-transparent shadow-lg">
                 {profile?.icon && !imgErr ? (
-                  <img src={profile.icon} alt="avatar" className="w-full h-full rounded-2xl bg-[#0a0a0c] object-cover border-2 border-[#0a0a0c]" onError={() => setImgErr(true)} />
+                  <img 
+                    src={profile.icon} 
+                    alt="avatar" 
+                    className="w-full h-full rounded-2xl bg-[var(--bg-secondary)] object-cover border-2 border-[var(--bg-secondary)]" 
+                    onError={() => {
+                      console.warn('Failed to load avatar image from:', profile.icon);
+                      setImgErr(true);
+                    }}
+                    crossOrigin="anonymous"
+                  />
                 ) : (
-                  <div className="w-full h-full rounded-2xl bg-[#0a0a0c] text-3xl font-bold text-[#ccff00] flex items-center justify-center border-2 border-[#0a0a0c]">
+                  <div className="w-full h-full rounded-2xl bg-[var(--bg-secondary)] text-3xl font-bold text-[var(--accent)] flex items-center justify-center border-2 border-[var(--bg-secondary)]">
                     {avatarInitials(profile?.firstName, profile?.lastName)}
                   </div>
                 )}
@@ -154,7 +164,13 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
                   <input className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-100 text-sm outline-none focus:border-[#ccff00] transition-colors" value={editForm.firstName} onChange={e => setEditForm(p => ({ ...p, firstName: e.target.value }))} placeholder="שם פרטי" />
                   <input className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-100 text-sm outline-none focus:border-[#ccff00] transition-colors" value={editForm.lastName} onChange={e => setEditForm(p => ({ ...p, lastName: e.target.value }))} placeholder="שם משפחה" />
-                  <input className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-100 text-sm outline-none focus:border-[#ccff00] transition-colors md:col-span-2" value={editForm.city} onChange={e => setEditForm(p => ({ ...p, city: e.target.value }))} placeholder="עיר מגורים" />
+                  <CityAutocomplete
+                    label="עיר מגורים"
+                    name="city"
+                    placeholder="בחר עיר בישראל"
+                    value={editForm.city}
+                    onChange={e => setEditForm(p => ({ ...p, [e.target.name]: e.target.value }))}
+                  />
                   <div className="flex gap-3 md:col-span-2 mt-2">
                     <button className="neon-btn px-5 py-2 rounded-xl font-bold text-xs disabled:opacity-50" onClick={handleSave} disabled={saving}>
                       {saving ? "שומר..." : "שמור שינויים"}
