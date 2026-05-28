@@ -1,18 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════════════════
-   CSS IMPORTS - Organized Architecture for Professional Design
-   ═══════════════════════════════════════════════════════════════════════════════ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Base & Design System */
-@import './variables.css';
-@import './global.css';
-@import './common.css';
-
-/* Animations & Effects */
-@import './animations.css';
-
-/* Page & Component Styles */
-@import './style.css';
-@import './pages-layout.css';
-@import './components.css';
-@import './navigation.css';
-@import './responsive.css';
+@import "./variables.css";
+@import "./global.css";
+@import "./components.css";

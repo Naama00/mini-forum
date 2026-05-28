@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import Markdown from 'react-markdown';
+import {
+  Sparkles,
+  Zap,
+  Bot,
+  Send,
+  Wand2,
+  Code2,
+  FileText,
+  Rocket,
+  Trash2,
+  Cpu,
+  ChevronRight,
+} from 'lucide-react';
 
 /**
  * AIWorkspace Component
- * @param {Object} props
- * @param {Object} props.currentUser - Current user object
- * @param {Array} props.categories - Available categories
- * @param {Function} props.onAddTopic - Callback to add new topic
- * @param {Function} props.onAddArticle - Callback to add new article
- * @param {Function} props.onNavigate - Navigation callback
+ * LOGIC PRESERVED — DESIGN UPGRADED
  */
 export default function AIWorkspace({
   currentUser,
@@ -17,37 +25,38 @@ export default function AIWorkspace({
   onAddArticle,
   onNavigate,
 }) {
-  // State initialization with localStorage restoration
+  // =========================
+  // ORIGINAL LOGIC (UNCHANGED)
+  // =========================
+
   const [action, setAction] = useState(() => {
     return localStorage.getItem('devhub_workspace_action') || 'draft';
   });
-  
+
   const [prompt, setPrompt] = useState(() => {
     return localStorage.getItem('devhub_workspace_prompt') || '';
   });
-  
+
   const [codeContext, setCodeContext] = useState(() => {
     return localStorage.getItem('devhub_workspace_code_context') || '';
   });
-  
+
   const [loading, setLoading] = useState(false);
-  
+
   const [result, setResult] = useState(() => {
     return localStorage.getItem('devhub_workspace_result') || '';
   });
-  
+
   const [error, setError] = useState('');
 
-  // Publication State with localStorage restoration
   const [publishTarget, setPublishTarget] = useState(() => {
     return localStorage.getItem('devhub_workspace_publish_target') || 'topic';
   });
-  
+
   const [selectedCatId, setSelectedCatId] = useState(() => {
     return localStorage.getItem('devhub_workspace_selected_cat_id') || '';
   });
 
-  // Update selectedCatId if it's empty and categories are loaded
   useEffect(() => {
     if (!selectedCatId && categories.length > 0) {
       const defaultCatId = categories[0]?.id || categories[0]?._id || '';
@@ -56,22 +65,24 @@ export default function AIWorkspace({
       }
     }
   }, [categories, selectedCatId]);
-  
+
   const [articleSummary, setArticleSummary] = useState(() => {
     return localStorage.getItem('devhub_workspace_article_summary') || '';
   });
-  
+
   const [articleImage, setArticleImage] = useState(() => {
-    return localStorage.getItem('devhub_workspace_article_image') || 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=600&q=80';
+    return (
+      localStorage.getItem('devhub_workspace_article_image') ||
+      'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=600&q=80'
+    );
   });
-  
+
   const [publishTags, setPublishTags] = useState(() => {
     return localStorage.getItem('devhub_workspace_publish_tags') || 'AI, CodeGen, Tutorial';
   });
-  
+
   const [publishedLink, setPublishedLink] = useState('');
 
-  // Sync state changes with localStorage
   useEffect(() => {
     localStorage.setItem('devhub_workspace_action', action);
   }, [action]);
@@ -108,7 +119,6 @@ export default function AIWorkspace({
     localStorage.setItem('devhub_workspace_publish_tags', publishTags);
   }, [publishTags]);
 
-  // Handle manual draft purge
   const handleClearWorkspace = () => {
     setPrompt('');
     setCodeContext('');
@@ -122,7 +132,6 @@ export default function AIWorkspace({
     localStorage.removeItem('devhub_workspace_article_summary');
   };
 
-  // AI Chat State inside sidebar with localStorage memory
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState(() => {
     try {
@@ -137,12 +146,15 @@ export default function AIWorkspace({
       console.error(e);
     }
     return [
-      { sender: 'assistant', text: "שלום! אני עוזר הפיתוח והנוסח שלך בפורום DevHub. במה נשדרג את הפוסט או הקוד שלך היום?" }
+      {
+        sender: 'assistant',
+        text: 'שלום! אני עוזר הפיתוח והנוסח שלך בפורום DevHub. במה נשדרג את הפוסט או הקוד שלך היום?',
+      },
     ];
   });
+
   const [chatLoading, setChatLoading] = useState(false);
 
-  // Invoke Express API for Main drafting
   const handleAIRequest = async () => {
     if (!prompt.trim()) {
       setError('אנא הקלד הנחיה או תיאור עבור הבינה המלאכותית.');
@@ -159,13 +171,19 @@ export default function AIWorkspace({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: action === 'draft' ? 'generate-draft' : action === 'optimize' ? 'optimize-code' : 'refine-content',
+          action:
+            action === 'draft'
+              ? 'generate-draft'
+              : action === 'optimize'
+              ? 'optimize-code'
+              : 'refine-content',
           prompt,
           extraContext: codeContext,
-        })
+        }),
       });
 
       const data = await resp.json();
+
       if (!resp.ok) {
         throw new Error(data.error || 'נכשלה פנייה לשרת ה-AI.');
       }
@@ -178,7 +196,6 @@ export default function AIWorkspace({
     }
   };
 
-  // Send message to assistant and retain history
   const handleChatSend = async () => {
     if (!chatInput.trim()) return;
 
@@ -191,7 +208,10 @@ export default function AIWorkspace({
     setChatLoading(true);
 
     try {
-      localStorage.setItem('devhub_chat_history', JSON.stringify(updatedWithUser));
+      localStorage.setItem(
+        'devhub_chat_history',
+        JSON.stringify(updatedWithUser)
+      );
     } catch (e) {
       console.error(e);
     }
@@ -204,31 +224,50 @@ export default function AIWorkspace({
           action: 'chat',
           prompt: userMsg,
           history: updatedWithUser,
-        })
+        }),
       });
 
       const data = await resp.json();
+
       if (!resp.ok) throw new Error(data.error);
 
-      const assistantMsg = { sender: 'assistant', text: data.text || '' };
+      const assistantMsg = {
+        sender: 'assistant',
+        text: data.text || '',
+      };
+
       const finalHistory = [...updatedWithUser, assistantMsg];
-      
+
       setChatMessages(finalHistory);
-      
+
       try {
-        localStorage.setItem('devhub_chat_history', JSON.stringify(finalHistory));
+        localStorage.setItem(
+          'devhub_chat_history',
+          JSON.stringify(finalHistory)
+        );
       } catch (e) {
         console.error(e);
       }
     } catch (e) {
-      const errorMsg = { sender: 'assistant', text: 'שגיאה: ' + (e.message || 'לא הצלחתי להתחבר למנוע ה-AI.') };
+      const errorMsg = {
+        sender: 'assistant',
+        text:
+          'שגיאה: ' +
+          (e.message || 'לא הצלחתי להתחבר למנוע ה-AI.'),
+      };
+
       setChatMessages((prev) => {
         const withError = [...prev, errorMsg];
+
         try {
-          localStorage.setItem('devhub_chat_history', JSON.stringify(withError));
+          localStorage.setItem(
+            'devhub_chat_history',
+            JSON.stringify(withError)
+          );
         } catch (err) {
           console.error(err);
         }
+
         return withError;
       });
     } finally {
@@ -236,31 +275,40 @@ export default function AIWorkspace({
     }
   };
 
-  // Publish to forum/article system
   const handlePublish = () => {
     if (!result.trim()) return;
 
     let title = 'פרסום מחקר מוכן מ-AI';
+
     const firstLine = result.trim().split('\n')[0];
+
     if (firstLine && firstLine.startsWith('#')) {
       title = firstLine.replace(/^#\s*/, '').trim();
     }
 
-    const tagsArray = publishTags.split(',').map(t => t.trim()).filter(Boolean);
+    const tagsArray = publishTags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     if (publishTarget === 'topic') {
-      const newId = onAddTopic({
-        categoryId: selectedCatId,
-        title,
-        tags: tagsArray,
-      }, result);
+      const newId = onAddTopic(
+        {
+          categoryId: selectedCatId,
+          title,
+          tags: tagsArray,
+        },
+        result
+      );
 
       setPublishedLink(`/category?topicId=${newId}`);
       onNavigate('category', selectedCatId);
     } else {
       onAddArticle({
         title,
-        summary: articleSummary || 'מאמר טכנולוגי שהופק בעזרת AI Workspace בקהילה.',
+        summary:
+          articleSummary ||
+          'מאמר טכנולוגי שהופק בעזרת AI Workspace בקהילה.',
         content: result,
         tags: tagsArray,
         image: articleImage,
@@ -271,151 +319,254 @@ export default function AIWorkspace({
     }
   };
 
+  // =========================
+  // UI
+  // =========================
+
   return (
-    <div className="w-full max-w-6xl mx-auto px-1 py-4 text-slate-100 animate-fade-in" dir="rtl">
-      {/* Banner Area */}
-      <div className="border-b border-white/[0.06] pb-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <p className="font-mono text-[9px] tracking-[3px] text-[#ccff00] uppercase mb-1">// CO-PILOT GENERATIVE DRAFTING SYSTEM</p>
-          <h1 className="text-3xl font-black text-white flex items-center gap-2">
-            סביבת כתיבה ופיתוח קוד <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-[#ccff00]">AI WorkSpace</span>
-          </h1>
-          <p className="text-sm text-slate-400">
-            נסח מאמרים, אופטימיזציה לאלגוריתמים, מצא באגים רדומים, ופרסם ישירות לפורום בלחיצת כפתור אחת!
-          </p>
+    <div
+      className="relative mx-auto w-full max-w-7xl px-4 py-8 text-slate-100"
+      dir="rtl"
+    >
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl p-8 mb-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-pink-500/10" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 mb-5">
+              <Cpu className="w-4 h-4 text-cyan-400" />
+              <span className="text-xs font-mono text-cyan-300">
+                AI GENERATIVE DEVELOPMENT SYSTEM
+              </span>
+            </div>
+
+            <h1 className="text-4xl lg:text-5xl font-black leading-tight">
+              סביבת עבודה
+              <span className="block bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                AI Workspace
+              </span>
+            </h1>
+
+            <p className="mt-4 text-slate-400 max-w-2xl leading-relaxed">
+              יצירת מאמרים, שדרוג קוד, ניתוח באגים והפצה ישירה לקהילה —
+              בממשק futurstic חדש.
+            </p>
+          </div>
+
+          <div className="hidden lg:flex items-center justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-500/30 blur-3xl rounded-full" />
+
+              <div className="relative w-32 h-32 rounded-3xl border border-cyan-500/30 bg-slate-950/80 flex items-center justify-center">
+                <Sparkles className="w-14 h-14 text-cyan-400" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
-        
-        {/* Main drafting board */}
-        <div className="space-y-6">
-          <div className="p-6 rounded-2xl bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden space-y-6">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-400 to-[#ccff00]" />
-            
-            {/* Action selectors & cleaner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-slate-400 font-mono tracking-wide">פעולת AI:</span>
-                <div className="flex bg-white/5 p-1 rounded-xl gap-1">
-                  {[
-                    { id: 'draft', label: '✍️ מחלל תוכן' },
-                    { id: 'optimize', label: '🛠️ שדרוג קוד' },
-                    { id: 'refine', label: '✨ עורך תוכן' }
-                  ].map((act) => (
+      {/* Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-8 items-start">
+        {/* Main */}
+        <div className="space-y-8">
+          {/* Main Card */}
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl p-6 lg:p-8">
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-cyan-500 via-violet-500 to-pink-500" />
+
+            {/* Modes */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  {
+                    id: 'draft',
+                    label: 'יצירת תוכן',
+                    icon: FileText,
+                  },
+                  {
+                    id: 'optimize',
+                    label: 'שדרוג קוד',
+                    icon: Code2,
+                  },
+                  {
+                    id: 'refine',
+                    label: 'שיפור ניסוח',
+                    icon: Wand2,
+                  },
+                ].map((act) => {
+                  const Icon = act.icon;
+
+                  return (
                     <button
                       key={act.id}
                       onClick={() => setAction(act.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border-none cursor-pointer transition-all ${
+                      className={`group flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold transition-all duration-300 ${
                         action === act.id
-                          ? 'bg-[#ccff00] text-slate-900 shadow-md'
-                          : 'bg-transparent text-slate-400 hover:text-white'
+                          ? 'bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950 shadow-lg shadow-cyan-500/20'
+                          : 'border border-slate-700 bg-slate-900/60 text-slate-400 hover:border-cyan-500/40 hover:text-cyan-300'
                       }`}
                     >
+                      <Icon className="w-4 h-4" />
                       {act.label}
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
 
               {(prompt || codeContext || result) && (
                 <button
                   type="button"
                   onClick={handleClearWorkspace}
-                  className="text-right text-slate-400 hover:text-rose-400 text-xs font-medium px-3 py-1.5 rounded-xl border border-white/5 hover:border-rose-500/20 bg-white/[0.02] cursor-pointer transition-all"
+                  className="flex items-center gap-2 rounded-2xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm font-semibold text-rose-300 transition-all hover:bg-rose-500/10"
                 >
-                  🧹 נקה טיוטה וקוד מקור
+                  <Trash2 className="w-4 h-4" />
+                  נקה סביבת עבודה
                 </button>
               )}
             </div>
 
-            {/* Inputs grid segment */}
-            <div className="space-y-4">
+            {/* Prompt */}
+            <div className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">
-                  {action === 'draft' ? 'על מה תרצה שהמאמר/פוסט יעסוק? (הקש תיאור מפורט)' :
-                   action === 'optimize' ? 'מה הבעיה בקוד? (למשל: סובל מדליפת זיכרון / איטי / לא מאובטח)' :
-                   'הקלד את התוכן החלק או הטיוטי שברצונך למרק ולשפר'}
+                <label className="mb-3 block text-sm font-semibold text-slate-300">
+                  {action === 'draft'
+                    ? 'מה תרצה ליצור?'
+                    : action === 'optimize'
+                    ? 'איזו בעיה קיימת בקוד?'
+                    : 'איזה טקסט תרצה לשפר?'}
                 </label>
+
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder={
-                    action === 'draft' ? 'לדוגמה: מדריך מפורט ומעמיק של פיתוח RAG Pipeline ב-Node.js עם Redis Vector...' :
-                    action === 'optimize' ? 'לדוגמה: הקוד הבא איטי, החלף לי את האלגוריתם ל- binary search או תקן סגירות...' :
-                    'הקלד או הדבק משהו שכתבת בקצרה ותרצה שנשפר לו את הניסוח לרמה מקצועית...'
+                    action === 'draft'
+                      ? 'לדוגמה: כתוב מדריך מלא על RAG Pipeline עם Node.js ו-Redis Vector...'
+                      : action === 'optimize'
+                      ? 'לדוגמה: האלגוריתם איטי מאוד, בצע אופטימיזציה...'
+                      : 'הדבק כאן טקסט שתרצה לשפר מקצועית...'
                   }
-                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3.5 text-slate-200 placeholder:text-slate-600 text-sm focus:outline-none focus:border-[#ccff00] transition-all min-h-[100px] resize-y"
+                  className="min-h-[160px] w-full rounded-3xl border border-slate-700 bg-slate-950/60 px-5 py-5 text-sm text-slate-200 placeholder:text-slate-600 outline-none transition-all focus:border-cyan-500/60"
                 />
               </div>
 
               {action === 'optimize' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2">
-                    הדבק את קוד המקור שלך פה:
+                  <label className="mb-3 block text-sm font-semibold text-slate-300">
+                    קוד מקור
                   </label>
+
                   <textarea
                     value={codeContext}
                     onChange={(e) => setCodeContext(e.target.value)}
-                    placeholder={`function fetchStaticData() {\n  // Code here...\n}`}
-                    className="w-full bg-black/50 border border-white/5 rounded-xl p-3.5 text-cyan-300 font-mono text-xs placeholder:text-slate-700 focus:outline-none focus:border-[#ccff00] transition-all min-h-[180px] resize-y leading-relaxed"
-                    style={{ direction: 'ltr', textAlign: 'left' }}
+                    placeholder={`function fetchData() {\n  // code here\n}`}
+                    className="min-h-[260px] w-full rounded-3xl border border-slate-700 bg-black/50 px-5 py-5 font-mono text-xs leading-relaxed text-cyan-300 outline-none transition-all focus:border-cyan-500/60"
+                    style={{
+                      direction: 'ltr',
+                      textAlign: 'left',
+                    }}
                   />
                 </div>
               )}
             </div>
 
             {error && (
-              <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-xl text-xs text-rose-400 font-mono">
-                [ERROR_LOG]: {error}
+              <div className="mt-6 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+                {error}
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-[10px] font-mono text-slate-500">// Engine target: gemini-3.5-flash</span>
+            {/* Footer */}
+            <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
+                <Bot className="w-4 h-4" />
+                Engine: gemini-3.5-flash
+              </div>
+
               <button
                 onClick={handleAIRequest}
                 disabled={loading}
-                className="bg-[#ccff00] hover:bg-[#bfff00] text-slate-950 font-sans font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg hover:shadow-[#ccff00]/25 disabled:opacity-40 cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-violet-500 px-8 py-4 text-sm font-bold text-slate-950 transition-all hover:shadow-2xl hover:shadow-cyan-500/30 disabled:opacity-50"
               >
-                {loading ? 'מעבד נתונים בענן AI...' : 'שגר לעיבוד AI 🚀'}
+                {loading ? (
+                  'מעבד בקשה...'
+                ) : (
+                  <>
+                    <Rocket className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                    שלח ל-AI
+                  </>
+                )}
               </button>
             </div>
           </div>
 
-          {/* Result block with Markdown Parser */}
+          {/* Result */}
           {result && (
-            <div className="p-6 rounded-2xl bg-[#0d1017] border border-white/[0.05] shadow-2xl relative block space-y-6">
-              <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4">
-                <span className="text-xs font-bold text-[#ccff00] font-mono">// AI_RESULT_OUTPUT.md</span>
-                <span className="text-[10px] text-slate-500 font-mono">ערוך לשלמות או פרסם לקוראים</span>
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl overflow-hidden">
+              <div className="flex items-center justify-between border-b border-slate-800 px-6 py-5">
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    AI Output
+                  </h3>
+                  <p className="text-xs text-slate-500 font-mono">
+                    GENERATED CONTENT
+                  </p>
+                </div>
+
+                <div className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-mono text-cyan-300">
+                  Markdown Ready
+                </div>
               </div>
 
-              {/* Rendering formatted Markdown containing styled components */}
-              <div className="bg-black/20 p-5 rounded-xl border border-white/[0.03] max-h-[500px] overflow-y-auto">
-                <div className="text-slate-300 font-sans text-sm leading-relaxed prose prose-invert">
+              {/* Markdown */}
+              <div className="max-h-[650px] overflow-y-auto px-6 py-6">
+                <div className="prose prose-invert max-w-none">
                   <Markdown
                     components={{
-                      h1: ({node, ...props}) => <h1 className="text-xl font-bold text-white mt-4 mb-2 border-b border-white/10 pb-1" {...props} />,
-                      h2: ({node, ...props}) => <h2 className="text-lg font-bold text-white mt-4 mb-2" {...props} />,
-                      h3: ({node, ...props}) => <h3 className="text-md font-semibold text-white mt-3 mb-1" {...props} />,
-                      p: ({node, ...props}) => <p className="text-slate-300 text-sm leading-relaxed mb-3" {...props} />,
-                      ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 mb-3 text-slate-300 pl-4" {...props} />,
-                      ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-1 mb-3 text-slate-300 pl-4" {...props} />,
-                      li: ({node, ...props}) => <li className="text-sm list-item" {...props} />,
-                      code: ({node, children, ...props}) => {
-                        const codeString = String(children);
-                        const isInline = !codeString.includes('\n');
+                      h1: ({ node, ...props }) => (
+                        <h1
+                          className="text-3xl font-black text-white border-b border-slate-700 pb-3 mb-5"
+                          {...props}
+                        />
+                      ),
+
+                      h2: ({ node, ...props }) => (
+                        <h2
+                          className="text-2xl font-bold text-cyan-300 mt-8 mb-4"
+                          {...props}
+                        />
+                      ),
+
+                      h3: ({ node, ...props }) => (
+                        <h3
+                          className="text-xl font-bold text-violet-300 mt-6 mb-3"
+                          {...props}
+                        />
+                      ),
+
+                      p: ({ node, ...props }) => (
+                        <p
+                          className="text-slate-300 leading-relaxed mb-4"
+                          {...props}
+                        />
+                      ),
+
+                      code: ({ node, children, ...props }) => {
+                        const isInline = !String(children).includes('\n');
+
                         return isInline ? (
-                          <code className="bg-white/10 text-[#ccff00] px-1.5 py-0.5 rounded font-mono text-xs" {...props}>{children}</code>
+                          <code
+                            className="rounded bg-slate-800 px-1.5 py-1 text-cyan-300"
+                            {...props}
+                          >
+                            {children}
+                          </code>
                         ) : (
-                          <pre className="bg-black/40 border border-white/5 p-4 rounded-xl my-3 overflow-x-auto font-mono text-xs text-cyan-300 leading-relaxed text-left max-w-full" style={{ direction: 'ltr' }}>
+                          <pre className="overflow-x-auto rounded-2xl border border-slate-700 bg-black/50 p-5 text-cyan-300">
                             <code {...props}>{children}</code>
                           </pre>
                         );
                       },
-                      a: ({node, ...props}) => <a className="text-[#ccff00] hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                      blockquote: ({node, ...props}) => <blockquote className="border-r-4 border-cyan-500 bg-white/5 pr-4 py-2 my-2 rounded-l text-slate-400 italic" {...props} />,
                     }}
                   >
                     {result}
@@ -423,46 +574,68 @@ export default function AIWorkspace({
                 </div>
               </div>
 
-              {/* Direct-to-forum setup */}
-              <div className="p-5 rounded-xl bg-white/[0.01] border border-white/[0.03] space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span>⚡</span> הפץ ישירות לפורום
-                </h3>
+              {/* Publish */}
+              <div className="border-t border-slate-800 px-6 py-6 space-y-5">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-cyan-400" />
+                  <h4 className="font-bold text-white">
+                    פרסום ישיר לקהילה
+                  </h4>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1.5">ערוץ הפצה לקוראים:</label>
-                    <div className="flex bg-white/5 p-1 rounded-xl gap-1">
+                    <label className="mb-2 block text-sm text-slate-400">
+                      יעד פרסום
+                    </label>
+
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setPublishTarget('topic')}
-                        className={`flex-1 px-3 py-1 text-[11px] font-bold rounded-lg border-none ${
-                          publishTarget === 'topic' ? 'bg-cyan-500 text-slate-950' : 'bg-transparent text-slate-400'
+                        className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+                          publishTarget === 'topic'
+                            ? 'bg-cyan-500 text-slate-950'
+                            : 'border border-slate-700 bg-slate-900 text-slate-400'
                         }`}
                       >
-                        דיון (Forum Topic)
+                        Forum Topic
                       </button>
+
                       <button
                         onClick={() => setPublishTarget('article')}
-                        className={`flex-1 px-3 py-1 text-[11px] font-bold rounded-lg border-none ${
-                          publishTarget === 'article' ? 'bg-cyan-500 text-slate-950' : 'bg-transparent text-slate-400'
+                        className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+                          publishTarget === 'article'
+                            ? 'bg-cyan-500 text-slate-950'
+                            : 'border border-slate-700 bg-slate-900 text-slate-400'
                         }`}
                       >
-                        מאמר טכנולוגי (Article)
+                        Article
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1.5">קטגוריה רלוונטית:</label>
+                    <label className="mb-2 block text-sm text-slate-400">
+                      קטגוריה
+                    </label>
+
                     <select
                       value={selectedCatId}
-                      onChange={(e) => setSelectedCatId(e.target.value)}
-                      className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-slate-200 outline-none"
+                      onChange={(e) =>
+                        setSelectedCatId(e.target.value)
+                      }
+                      className="w-full rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none"
                     >
-                      {categories.map(c => {
+                      {categories.map((c) => {
                         const catId = c.id || c._id;
+
                         return (
-                          <option key={catId} value={catId} className="bg-slate-900">{c.name}</option>
+                          <option
+                            key={catId}
+                            value={catId}
+                          >
+                            {c.name}
+                          </option>
                         );
                       })}
                     </select>
@@ -470,46 +643,46 @@ export default function AIWorkspace({
                 </div>
 
                 {publishTarget === 'article' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">תקציר מנהלים קצר:</label>
-                      <input
-                        type="text"
-                        value={articleSummary}
-                        onChange={(e) => setArticleSummary(e.target.value)}
-                        placeholder="רשום תקציר קצר עבור כרטיסיית המאמר..."
-                        className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-1.5 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">תמונת רקע (URL):</label>
-                      <input
-                        type="text"
-                        value={articleImage}
-                        onChange={(e) => setArticleImage(e.target.value)}
-                        className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-1.5 text-xs font-mono"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <input
+                      type="text"
+                      value={articleSummary}
+                      onChange={(e) =>
+                        setArticleSummary(e.target.value)
+                      }
+                      placeholder="תקציר קצר..."
+                      className="rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none"
+                    />
+
+                    <input
+                      type="text"
+                      value={articleImage}
+                      onChange={(e) =>
+                        setArticleImage(e.target.value)
+                      }
+                      placeholder="Image URL"
+                      className="rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none"
+                    />
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">תגיות מופרדות בפסיקים (Tags):</label>
-                  <input
-                    type="text"
-                    value={publishTags}
-                    onChange={(e) => setPublishTags(e.target.value)}
-                    placeholder="AI, Code, RAG, React"
-                    className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-1.5 text-xs font-mono"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={publishTags}
+                  onChange={(e) =>
+                    setPublishTags(e.target.value)
+                  }
+                  placeholder="AI, React, Node..."
+                  className="w-full rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none"
+                />
 
-                <div className="pt-2 flex justify-end">
+                <div className="flex justify-end">
                   <button
                     onClick={handlePublish}
-                    className="bg-gradient-to-r from-cyan-400 to-[#ccff00] text-slate-950 px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                    className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-violet-500 px-7 py-4 text-sm font-bold text-slate-950 transition-all hover:shadow-2xl hover:shadow-cyan-500/30"
                   >
-                    הפץ ופרסם לקהילה עכשיו! ⚡
+                    פרסם לקהילה
+                    <ChevronRight className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -517,114 +690,120 @@ export default function AIWorkspace({
           )}
         </div>
 
-        {/* Co-Pilot Chat Helper Column */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-white/[0.01] border border-white/[0.05] shadow-xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-[#ccff00] font-mono uppercase tracking-wider flex items-center gap-1.5">
-                <span>🤖</span> Co-Pilot Chat Helper
-              </h3>
+          {/* Chat */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl overflow-hidden">
+            <div className="border-b border-slate-800 px-5 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+                  <Bot className="w-4 h-4 text-cyan-400" />
+                  AI Co-Pilot
+                </h3>
+
+                <p className="text-xs text-slate-500 mt-1">
+                  Assistant Chat
+                </p>
+              </div>
+
               {chatMessages.length > 1 && (
                 <button
                   type="button"
                   onClick={() => {
                     localStorage.removeItem('devhub_chat_history');
+
                     setChatMessages([
-                      { sender: 'assistant', text: 'שלום! היסטוריית הצ\'אט נמחקה. במה נשדרג את הפוסט או הקוד שלך היום?' }
+                      {
+                        sender: 'assistant',
+                        text: 'שלום! היסטוריית הצ׳אט אופסה.',
+                      },
                     ]);
                   }}
-                  className="bg-transparent hover:text-rose-400 text-slate-500 text-[10px] font-bold py-0.5 px-1.5 border border-white/10 hover:border-[#ccff00]/20 rounded cursor-pointer transition-all"
+                  className="text-xs text-rose-400 hover:text-rose-300"
                 >
-                  נקה צ'אט
+                  נקה
                 </button>
               )}
             </div>
-            
-            <p className="text-[11px] text-slate-400 leading-normal">
-              שאלי אותי מונחים טכנולוגיים, קבלו הסברי קוד מעמיקים או בקשי טיפיי כתיבה.
-            </p>
 
-            <div className="h-[280px] overflow-y-auto bg-black/30 rounded-xl p-3 border border-white/[0.02] space-y-3 flex flex-col">
+            {/* Messages */}
+            <div className="h-[420px] overflow-y-auto p-4 space-y-4">
               {chatMessages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`p-2.5 rounded-xl max-w-[85%] text-xs leading-relaxed ${
+                  className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                     msg.sender === 'user'
-                      ? 'bg-cyan-500/10 text-cyan-100 border border-cyan-500/20 mr-auto text-left'
-                      : 'bg-white/5 text-slate-300 ml-auto'
+                      ? 'mr-auto border border-cyan-500/20 bg-cyan-500/10 text-cyan-100'
+                      : 'ml-auto border border-slate-700 bg-slate-800/70 text-slate-300'
                   }`}
-                  style={{ direction: msg.sender === 'user' ? 'ltr' : 'rtl' }}
                 >
-                  {msg.sender === 'user' ? (
-                    msg.text
-                  ) : (
-                    <Markdown
-                      components={{
-                        p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                        ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-0.5 mb-2 pl-2 text-slate-300" {...props} />,
-                        ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-0.5 mb-2 pl-2 text-slate-300" {...props} />,
-                        code: ({node, children, ...props}) => {
-                          const isInline = !String(children).includes('\n');
-                          return isInline ? (
-                            <code className="bg-white/10 text-[#ccff00] px-1 rounded font-mono text-[10px]" {...props}>{children}</code>
-                          ) : (
-                            <pre className="bg-black/40 border border-white/5 p-2 rounded my-1 overflow-x-auto font-mono text-[10px] text-cyan-300 leading-normal text-left max-w-full" style={{ direction: 'ltr' }}>
-                              <code {...props}>{children}</code>
-                            </pre>
-                          );
-                        }
-                      }}
-                    >
-                      {msg.text}
-                    </Markdown>
-                  )}
+                  {msg.text}
                 </div>
               ))}
+
               {chatLoading && (
-                <div className="p-2 ml-auto text-slate-600 text-[10px] animate-pulse">
-                  מחולל תגובה תחת השרת...
+                <div className="text-xs text-slate-500 animate-pulse">
+                  AI חושב...
                 </div>
               )}
             </div>
 
-            <div className="flex gap-2">
+            {/* Input */}
+            <div className="border-t border-slate-800 p-4 flex gap-2">
               <input
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleChatSend()}
-                placeholder="שאל אותי משהו..."
-                className="flex-1 bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 transition-all"
+                onKeyDown={(e) =>
+                  e.key === 'Enter' && handleChatSend()
+                }
+                placeholder="שאל משהו..."
+                className="flex-1 rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-cyan-500/60"
               />
+
               <button
                 onClick={handleChatSend}
-                className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 px-3 py-2 rounded-xl text-xs font-bold transition-all border-none font-mono cursor-pointer"
+                className="flex items-center justify-center rounded-2xl bg-cyan-500 px-4 text-slate-950 transition-all hover:bg-cyan-400"
               >
-                Send
+                <Send className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Quick Helper presets */}
-          <div className="p-5 rounded-2xl bg-white/[0.01] border border-white/[0.05] text-xs space-y-3">
-            <h4 className="font-bold text-white">// מקשי עזר מהירים</h4>
-            <div className="space-y-2">
-              <button 
-                onClick={() => { setAction('optimize'); setPrompt('תקן שגיאות אבטחה וכנס לאופטימיזציה קשיחה לקוד הבא'); }}
-                className="w-full text-right p-2.5 rounded bg-white/5 hover:bg-[#ccff00]/10 hover:text-[#ccff00] text-[11px] text-slate-400 border border-transparent transition-all cursor-pointer block"
+          {/* Presets */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl p-5">
+            <h4 className="mb-4 font-bold text-white">
+              Quick Actions
+            </h4>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setAction('optimize');
+                  setPrompt(
+                    'תקן שגיאות אבטחה וכנס לאופטימיזציה קשיחה לקוד הבא'
+                  );
+                }}
+                className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-4 text-right text-sm text-slate-300 transition-all hover:border-cyan-500/40 hover:text-cyan-300"
               >
-                🛠️ תקן אבטחת סינטקס
+                🛠️ תקן אבטחה ואופטימיזציה
               </button>
-              <button 
-                onClick={() => { setAction('draft'); setPrompt('כתוב פוסט מקיף על פיתוח Microfrontends עם Module Federation'); }}
-                className="w-full text-right p-2.5 rounded bg-white/5 hover:bg-[#ccff00]/10 hover:text-[#ccff00] text-[11px] text-slate-400 border border-transparent transition-all cursor-pointer block"
+
+              <button
+                onClick={() => {
+                  setAction('draft');
+
+                  setPrompt(
+                    'כתוב פוסט מקיף על פיתוח Microfrontends עם Module Federation'
+                  );
+                }}
+                className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-4 text-right text-sm text-slate-300 transition-all hover:border-violet-500/40 hover:text-violet-300"
               >
                 ✍️ רעיון לפוסט: Microfrontends
               </button>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

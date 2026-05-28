@@ -107,29 +107,44 @@ export default function ProfilePage() {
   const totalVotes = (profile?.votes || 0);
 
   return (
-    <div className="relative min-h-screen overflow-hidden text-[#e2e8f0] pb-20" dir="rtl">
-      {/* Background Layers */}
-      <div className="dh-grid-bg" />
-      <div className="ambient-glow -top-20 -left-20" />
-      <div className="ambient-glow bottom-0 right-0 opacity-50" />
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white pb-20" dir="rtl">
+      <section className="relative z-10 px-6 pt-12 pb-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-6">
+              <span className="text-xs font-mono uppercase tracking-widest text-cyan-300">
+                פרופיל משתמש
+              </span>
+            </div>
 
-      <div className="max-w-5xl mx-auto px-6 pt-12 relative z-10">
-        {/* TOPBAR */}
-        <div className="flex items-center justify-between mb-12">
-          <a href="/" className="text-2xl font-black text-[#ccff00] tracking-tighter">DEV.HUB</a>
-          <div className="flex gap-4">
-            <button className="px-4 py-2 border border-white/5 bg-white/5 backdrop-blur-md rounded-xl text-sm font-medium hover:border-[#ccff00]/30 hover:text-[#ccff00] transition-all" onClick={() => navigate("/")}>
-              ← בית
-            </button>
-            {loggedIn && (
-              <button className="px-4 py-2 border border-white/5 bg-white/5 backdrop-blur-md rounded-xl text-sm font-medium hover:border-rose-500/30 hover:text-rose-400 transition-all" onClick={handleLogout}>
-                התנתק
+            <h1 className="text-5xl lg:text-6xl font-black leading-tight tracking-tight mb-6">
+              ברוכים הבאים לפרופיל
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                DEV.HUB
+              </span>
+            </h1>
+
+            <p className="text-lg text-slate-400 max-w-2xl mb-8 leading-relaxed">
+              נהל את זהותך בקהילה, צפה בפעילות האחרונה שלך ושמור על נוכחות מקצועית ברשת.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <button className="px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950 font-bold hover:shadow-xl hover:shadow-cyan-500/30 transition-all duration-300" onClick={() => navigate('/') }>
+                חזור לדיונים
               </button>
-            )}
+
+              {isOwnProfile && (
+                <button className="px-8 py-4 rounded-xl border border-slate-700 text-slate-300 hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300" onClick={() => setEditing(true)}>
+                  ערוך פרופיל
+                </button>
+              )}
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* HERO SECTION */}
+      <div className="max-w-5xl mx-auto px-6 relative z-10">
         <section className="glass-card rounded-3xl p-8 md:p-10 mb-8 relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
             

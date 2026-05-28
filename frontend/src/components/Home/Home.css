@@ -1,0 +1,218 @@
+/* עיצובים ייחודיים לדף הבית - DEV.HUB */
+
+.home-gradient-text {
+  background-image: linear-gradient(90deg, #22d3ee, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.home-hero-section {
+  position: relative;
+  z-index: 10;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+
+.home-categories-section {
+  position: relative;
+  z-index: 10;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-bottom: 6rem;
+}
+
+.home-cta-section {
+  position: relative;
+  z-index: 10;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-bottom: 6rem;
+}
+
+.home-footer {
+  position: relative;
+  z-index: 10;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 2rem 1.5rem;
+  backdrop-filter: blur(0.5rem);
+}
+
+.home-bg-container {
+  position: fixed;
+  inset: 0;
+  z-index: -50;
+  overflow: hidden;
+}
+
+.home-bg-blob {
+  position: absolute;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 9999px;
+  filter: blur(3rem);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.home-bg-blob-1 {
+  background-color: rgba(6, 182, 212, 0.1);
+  top: -25%;
+  left: -25%;
+}
+
+.home-bg-blob-2 {
+  background-color: rgba(139, 92, 246, 0.1);
+  top: 33%;
+  right: -25%;
+}
+
+.home-bg-blob-3 {
+  background-color: rgba(236, 72, 153, 0.1);
+  bottom: -25%;
+  left: 33%;
+}
+
+.home-cursor-glow {
+  position: absolute;
+  width: 20rem;
+  height: 20rem;
+  background: linear-gradient(to right, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2));
+  border-radius: 9999px;
+  filter: blur(3rem);
+  pointer-events: none;
+  transition: all 300ms;
+}
+
+.home-grid-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image:
+    linear-gradient(
+      0deg,
+      transparent 24%,
+      rgba(0,229,255,.05) 25%,
+      rgba(0,229,255,.05) 26%,
+      transparent 27%,
+      transparent 74%,
+      rgba(0,229,255,.05) 75%,
+      rgba(0,229,255,.05) 76%,
+      transparent 77%,
+      transparent
+    ),
+    linear-gradient(
+      90deg,
+      transparent 24%,
+      rgba(0,229,255,.05) 25%,
+      rgba(0,229,255,.05) 26%,
+      transparent 27%,
+      transparent 74%,
+      rgba(0,229,255,.05) 75%,
+      rgba(0,229,255,.05) 76%,
+      transparent 77%,
+      transparent
+    );
+  background-size: 60px 60px;
+}
+
+.home-stat-card {
+  position: relative;
+  border-radius: 1.5rem;
+  border: 1px solid rgb(30, 41, 59);
+  background-color: rgba(15, 23, 42, 0.5);
+  padding: 1.5rem;
+  transition: all 300ms;
+}
+
+.home-stat-card:hover {
+  border-color: rgba(0, 229, 255, 0.5);
+  transform: translateY(-0.5rem);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 60px rgba(0, 229, 255, 0.1);
+}
+
+.home-stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.5rem;
+  background: linear-gradient(to bottom right, rgba(6, 182, 212, 0.1), rgba(139, 92, 246, 0.1));
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+.home-stat-card:hover::before {
+  opacity: 1;
+}
+
+.home-stat-card > * {
+  position: relative;
+  z-index: 10;
+}
+
+.home-category-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.875rem;
+  border: 1px solid rgb(30, 41, 59);
+  background-color: rgba(15, 23, 42, 0.5);
+  cursor: pointer;
+  transition: all 500ms;
+}
+
+.home-category-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0.25rem;
+  background: linear-gradient(to bottom, rgb(6, 182, 212), rgb(59, 130, 246), rgb(139, 92, 246));
+}
+
+.home-category-card.expanded {
+  border-color: rgba(6, 182, 212, 0.6);
+  background-color: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 25px 50px -12px rgba(6, 182, 212, 0.2);
+}
+
+.home-category-card:not(.expanded):hover {
+  border-color: rgba(6, 182, 212, 0.5);
+  transform: translateY(-0.5rem);
+  box-shadow: 0 25px 50px -12px rgba(6, 182, 212, 0.1);
+}
+
+.home-category-hover-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(6, 182, 212, 0.05), rgba(139, 92, 246, 0.05));
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+.home-category-card:hover .home-category-hover-glow {
+  opacity: 1;
+}
+
+.home-cta-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.875rem;
+  border: 1px solid rgb(30, 41, 59);
+  background: linear-gradient(to right, rgb(15, 23, 42), rgb(30, 41, 59));
+  padding: 3rem;
+}
+
+.home-cta-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(6, 182, 212, 0.1), rgba(139, 92, 246, 0.1));
+}
+
+.home-cta-content {
+  position: relative;
+  z-index: 10;
+  max-width: 32rem;
+}

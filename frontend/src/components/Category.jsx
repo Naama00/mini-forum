@@ -193,51 +193,115 @@ export default function CategoryPage() {
 
   const topicAuthorId = getAuthorId(topic) || getAuthorId(posts[0]) || null;
 
-  // סגנונות מקומיים ייחודיים לטובת מראה הניאון והגלאס הכהה
+  // סגנונות מקומיים ייחודיים לטובת מראה ניאון-גלאס בהתאמה לתמונה
   const CATEGORY_STYLES = `
+    /* Background grid + glow spots */
     .cyber-bg-grid {
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle at 2px 2px, rgba(204, 255, 0, 0.04) 1px, transparent 0);
+      background-image: radial-gradient(circle at 2px 2px, rgba(0,0,0,0.0) 1px, transparent 0),
+                        linear-gradient(90deg, rgba(10,10,12,0.96), rgba(6,6,8,0.98));
       background-size: 32px 32px;
       z-index: -1;
+      opacity: 0.9;
     }
+
     .cyber-glow-spot {
       position: fixed;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(204, 255, 0, 0.06), transparent 70%);
-      filter: blur(90px);
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(0,229,255,0.08), transparent 50%);
+      filter: blur(80px);
       z-index: -1;
       pointer-events: none;
     }
+
+    /* Base glass-panel transformed into neon gradient cards */
     .glass-panel {
-      background: rgba(255, 255, 255, 0.02);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(204, 255, 0, 0.08);
+      background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 8px 30px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+      backdrop-filter: blur(14px) saturate(120%);
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background 220ms ease;
     }
+
+    /* Prominent hover state for cards */
     .glass-panel:hover {
-      border-color: rgba(204, 255, 0, 0.2);
-      box-shadow: 0 0 25px rgba(204, 255, 0, 0.05);
+      transform: translateY(-6px);
+      border-color: rgba(204,255,0,0.12);
+      box-shadow: 0 18px 50px rgba(2,6,23,0.8), 0 0 40px rgba(0,229,255,0.06);
+      background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.03));
     }
-    .neon-text-glow {
-      text-shadow: 0 0 10px rgba(204, 255, 0, 0.3);
+
+    /* Large hero/category header look */
+    .glass-panel.p-8, .glass-panel.p-12 {
+      border-radius: 28px;
+      padding: 2rem;
+      background: linear-gradient(90deg, rgba(16,12,28,0.6), rgba(6,6,8,0.55));
+      border: 1px solid rgba(102,51,255,0.06);
     }
-    .neon-border-btn {
-      border: 1px solid #ccff00;
-      color: #ccff00;
-      box-shadow: inset 0 0 8px rgba(204, 255, 0, 0.05);
-      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-    .neon-border-btn:hover {
-      background: #ccff00;
-      color: #0a0a0c;
-      box-shadow: 0 0 15px #ccff00;
-    }
+
+    /* Gradient headline mask */
     .fade-mask-header {
-      background: linear-gradient(to left, #fff 60%, rgba(255, 255, 255, 0.1));
+      background: linear-gradient(90deg, rgba(0,229,255,0.25), rgba(204,255,0,0.25) 40%, rgba(255,0,170,0.12));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    /* Neon text glow used in titles */
+    .neon-text-glow {
+      color: #dfffbf;
+      text-shadow: 0 6px 40px rgba(0,229,255,0.06), 0 0 10px rgba(204,255,0,0.06);
+    }
+
+    /* Action buttons with neon outline */
+    .neon-border-btn {
+      border: 1px solid rgba(204,255,0,0.9);
+      color: rgba(204,255,0,0.95);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6), inset 0 0 8px rgba(204,255,0,0.03);
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .neon-border-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(180deg, rgba(204,255,0,0.12), rgba(0,229,255,0.06));
+      color: #071012;
+      box-shadow: 0 10px 36px rgba(204,255,0,0.12), 0 0 40px rgba(0,229,255,0.06);
+    }
+
+    /* Avatar and highlight tweaks for list items */
+    .glass-panel .w-10.h-10, .glass-panel .w-9.h-9, .glass-panel .w-8.h-8 {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.45);
+    }
+
+    /* Small stat chip style */
+    .stat-chip {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      color: #dbeafe;
+    }
+
+    /* Link arrow animation */
+    .glass-panel .w-8.h-8 svg {
+      transition: transform 220ms ease, opacity 220ms ease;
+    }
+    .glass-panel:hover .w-8.h-8 svg { transform: translateX(-4px); opacity: 1; }
+
+    /* Small utility tweaks */
+    .badge-pinned { background: rgba(204,255,0,0.08); color: #ccff00; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
+    .badge-trending { background: linear-gradient(90deg,#ff6bd9,#5be0ff); color: white; padding: 3px 8px; border-radius: 999px; font-size: 10px; }
+
+    @media (min-width: 768px) {
+      .glass-panel.p-8, .glass-panel.p-12 { padding: 2.5rem; }
     }
   `;
 

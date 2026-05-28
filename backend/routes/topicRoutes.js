@@ -3,6 +3,7 @@ const router = express.Router();
 const topicController = require('../controllers/topicController');
 const authMiddleware = require('../middleware/authMiddleware');
 
+router.get('/', topicController.getTopics);
 router.post('/', authMiddleware, topicController.createTopic);
 
 module.exports = router;

@@ -1,31 +1,19 @@
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { Suspense, useState, useEffect, useRef } from "react";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Suspense, useState, useEffect } from "react";
 import { routes } from './config/routeConfig';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Loading } from './components/common/Loading';
-import Sidebar from "./components/Sidebar";
-import SearchBar from './components/Searchbar';
-import ThemeToggle from './components/ThemeToggle';
-import NotificationBell from './components/Notificationbell';
-import { useAuth } from './hooks';
-import './css/global.css';
-
-const TOP_NAV = [
-  { to: '/', icon: '⌂', label: 'בית' },
-  { to: '/articles', icon: '◎', label: 'מאמרים' },
-  { to: '/events', icon: '◆', label: 'אירועים' },
-  { to: '/jobs', icon: '◇', label: 'משרות' },
-  { to: '/notifications', icon: '◐', label: 'התראות' },
-];
+import Sidebar from "./components/Sidebar/Sidebar";
+import AppShell from "./components/layout/AppShell"; 
 
 function AppRoutes() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading />}>\
       <Routes>
-        {routes.map((route) => (
+        {routes.map((route) => (  
           <Route
             key={route.path}
             path={route.path}
@@ -34,110 +22,6 @@ function AppRoutes() {
         ))}
       </Routes>
     </Suspense>
-  );
-}
-
-function AppShell() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const initials = user?.firstName ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}` : 'אורח';
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
-
-  // close menu on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  return (
-    <>
-      <div 
-        className="sticky top-0 z-40 border-b border-white/10 backdrop-blur-md"
-        style={{ 
-          borderColor: 'var(--divider)',
-          backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 95%, transparent)'
-        }}
-      >
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-3 flex-nowrap md:px-8">
-          <div className="flex-shrink-0 flex items-center gap-3 justify-between min-w-0">
-            <Link
-              to="/"
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:border-[#ccff00]/40 hover:bg-[#ccff00]/10"
-            >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ccff00]/10 text-sm font-bold text-[#ccff00]">⬡</span>
-              <span className="hidden sm:inline">DevHub</span>
-            </Link>
-            <span className="hidden md:inline rounded-full border border-white/10 bg-slate-950/40 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-slate-400">
-              COMMUNITY TERMINAL
-            </span>
-          </div>
-
-          <div className="flex-1 min-w-0 max-w-3xl">
-            <SearchBar />
-          </div>
-
-          <div className="flex items-center gap-2 justify-end">
-            <NotificationBell />
-            {user ? (
-            <div className="relative" ref={userMenuRef}>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setUserMenuOpen((s) => !s); }}
-                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-[#ccff00]/40 hover:bg-[#ccff00]/10"
-              >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#ccff00]/10 text-sm font-bold text-[#ccff00]">
-                  {initials}
-                </span>
-                <span className="hidden sm:inline">{user.firstName || 'פרופיל'}</span>
-              </button>
-
-              {userMenuOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-44 border rounded-xl shadow-2xl py-2 z-50" 
-                  style={{ 
-                    backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 95%, transparent)',
-                    borderColor: 'var(--border-primary)',
-                    backdropFilter: 'blur(6px)'
-                  }}
-                >
-                  <button
-                    onClick={() => { setUserMenuOpen(false); navigate(`/profile/${user._id}`); }}
-                    className="w-full text-right px-4 py-2 text-sm text-slate-200 hover:bg-white/5"
-                  >
-                    פרופיל
-                  </button>
-                  <button
-                    onClick={() => { setUserMenuOpen(false); if (logout) logout(); navigate('/auth'); }}
-                    className="w-full text-right px-4 py-2 text-sm text-rose-400 hover:bg-white/5"
-                  >
-                    התנתק
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => navigate('/auth')}
-              className="rounded-full border border-white/10 bg-[#ccff00]/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#ccff00] transition hover:bg-[#ccff00]/10"
-            >
-              התחבר / הרשמה
-            </button>
-          )}
-          <ThemeToggle />
-        </div>
-      </div>
-    </div>
-      <div className="flex min-h-0 flex-1 flex-col px-4 py-8 md:px-8 lg:px-10">
-        <div className="mx-auto w-full max-w-7xl">
-          <AppRoutes />
-        </div>
-      </div>
-    </>
   );
 }
 
@@ -163,18 +47,24 @@ function App() {
         <AuthProvider>
           <ThemeProvider>
             <NotificationProvider>
-              <div
-                className="min-h-dvh w-full overflow-x-hidden bg-transparent text-slate-100 antialiased selection:bg-cyan-500/25 selection:text-cyan-50"
-                dir="rtl"
-              >
-                {/*
-                  Grid ב-RTL: העמודה הראשונה ב-template נצבת מימין → סיידבר, השנייה משמאל → תוכן מלא רוחב.
-                */}
-                <div className="grid min-h-dvh w-full grid-cols-[14rem_minmax(0,1fr)] sm:grid-cols-[16rem_minmax(0,1fr)] md:grid-cols-[17.5rem_minmax(0,1fr)]">
-                  <Sidebar currentUser={currentUser} />
-                  <main className="app-shell-main relative flex min-h-dvh min-w-0 flex-col border-s border-white/6 bg-transparent">
-                    <AppShell />
+              <div className="min-h-screen w-full bg-slate-950 text-slate-100 antialiased" dir="rtl">
+                
+                {/* מבנה ה-Grid הראשי של האפליקציה - 2 עמודות קבועות */}
+                <div className="grid min-h-screen w-full grid-cols-[14rem_minmax(0,1fr)] sm:grid-cols-[16rem_minmax(0,1fr)] md:grid-cols-[17.5rem_minmax(0,1fr)]">
+                  
+                  {/* עמודה 1: סיידבר קבוע מימין */}
+                  <aside className="border-e border-white/5 bg-slate-900/40 h-full">
+                    <Sidebar currentUser={currentUser} />
+                  </aside>
+                  
+                  {/* עמודה 2: אזור התוכן הראשי משמאל */}
+                  <main className="flex min-h-screen flex-col min-w-0 overflow-y-auto">
+                    {/* ה-AppShell מנהל את הניווט הפנימי והתוכן הדינמי */}
+                    <AppShell>
+                      <AppRoutes />
+                    </AppShell>
                   </main>
+
                 </div>
               </div>
             </NotificationProvider>

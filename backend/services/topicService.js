@@ -53,6 +53,27 @@ async function createTopic({ title, content, type, categoryId, tags }, userId) {
   return topic;
 }
 
+/**
+ * Fetch topics list with pagination / sorting support
+ */
+async function getTopics({ limit = 12, sort = 'newest' }) {
+  const query = {};
+  const sortOrder = sort === 'top'
+    ? { votes: -1, createdAt: -1 }
+    : sort === 'trending'
+      ? { votes: -1, createdAt: -1 }
+      : { createdAt: -1 };
+
+  const topics = await Topic.find(query)
+    .sort(sortOrder)
+    .limit(Math.max(1, Math.min(Number(limit) || 12, 100)))
+    .populate('author', 'firstName lastName icon')
+    .lean();
+
+  return topics;
+}
+
 module.exports = {
-  createTopic
+  createTopic,
+  getTopics
 };
