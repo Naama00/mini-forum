@@ -2,25 +2,25 @@ import { lazy } from 'react';
 
 // Lazy load components for better performance
 const Home = lazy(() => import('../components/Home/Home'));
-const Category = lazy(() => import('../components/Category'));
+const Category = lazy(() => import('../components/Category/Category'));
 const AuthForm = lazy(() => import('../components/Login'));
 const NewTopic = lazy(() => import('../components/NewTopic'));
 const ProfilePage = lazy(() => import('../components/Profile'));
-const ArticlesPage = lazy(() => import('../components/Articles'));
-const EventsPage = lazy(() => import('../components/Events'));
-const JobsPage = lazy(() => import('../components/Jobs'));
-const NewArticleForm = lazy(() => import('../components/NewArticle'));
-const NewEventForm = lazy(() => import('../components/NewEvent'));
-const NewJobForm = lazy(() => import('../components/NewJob'));
-const ArticlePage = lazy(() => import('../components/Article'));
-const JobPage = lazy(() => import('../components/Job'));
-const EventPage = lazy(() => import('../components/Event'));
-const EditArticle = lazy(() => import('../components/EditArticle'));
-const EditEvent = lazy(() => import('../components/EditEvent'));
-const EditJob = lazy(() => import('../components/EditJob'));
+const ArticlesPage = lazy(() => import('../components/Article/Articles'));
+const EventsPage = lazy(() => import('../components/Event/Events'));
+const JobsPage = lazy(() => import('../components/Job/Jobs'));
+const NewArticleForm = lazy(() => import('../components/Article/NewArticle'));
+const NewEventForm = lazy(() => import('../components/Event/NewEvent'));
+const NewJobForm = lazy(() => import('../components/Job/NewJob'));
+const ArticlePage = lazy(() => import('../components/Article/Article'));
+const JobPage = lazy(() => import('../components/Job/Job'));
+const EventPage = lazy(() => import('../components/Event/Event'));
+const EditArticle = lazy(() => import('../components/Article/EditArticle'));
+const EditEvent = lazy(() => import('../components/Event/EditEvent'));
+const EditJob = lazy(() => import('../components/Job/EditJob'));
 const Notifications = lazy(() => import('../components/Notifications'));
 const SearchResults = lazy(() => import('../components/Searchresults'));
-const AIWorkspaceContainer = lazy(() => import('../components/AIWorkspaceContainer'));
+const AIWorkspaceContainer = lazy(() => import('../components/AIWorkspace/AIWorkspaceContainer'));
 /**
  * Route configuration
  * כל הנתיבים באפליקציה במקום אחד

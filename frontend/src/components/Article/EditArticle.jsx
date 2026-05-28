@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import MarkdownEditor from "./MarkdownEditor";
-import { useAuth } from "../hooks";
-import { getToken } from "../utils/storage";
+import MarkdownEditor from "../MarkdownEditor";
+import { useAuth } from "../../hooks";
+import { getToken } from "../../utils/storage";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import Breadcrumb from './Breadcrumb';
-import MarkdownRenderer from "./MarkdownRenderer";
-import { useAuth } from "../hooks";
-import { getToken, getLoggedInUserFromToken } from "../utils/storage";
+import Breadcrumb from '../Breadcrumb';
+import MarkdownRenderer from "../MarkdownRenderer";
+import { useAuth } from "../../hooks";
+import { getToken, getLoggedInUserFromToken } from "../../utils/storage";
 
 const API = "http://localhost:5000/api";
 

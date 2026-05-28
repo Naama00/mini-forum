@@ -1,15 +1,19 @@
-import { defineConfig } from 'vite'; // השורה הזו כנראה חסרה אצלך
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(), // הפלאגין הרשמי שמחבר את Tailwind 4 ל-Vite
+  ],
   server: {
     port: 5173,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
-        changeOrigin: true, // משנה את מקור הבקשה ל-5000
-        secure: false,      // מאפשר עבודה גם אם אין SSL (HTTP רגיל)
+        changeOrigin: true,
+        secure: false,
       }
     }
   }

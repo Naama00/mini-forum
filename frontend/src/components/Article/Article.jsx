@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { MessageCircle, Send } from "lucide-react";
 
-import Breadcrumb from "./Breadcrumb";
-import MarkdownEditor from "./MarkdownEditor";
-import MarkdownRenderer from "./MarkdownRenderer";
+import Breadcrumb from "../Breadcrumb";
+import MarkdownEditor from "../MarkdownEditor";
+import MarkdownRenderer from "../MarkdownRenderer";
 
-import { useAuth } from "../hooks";
-import { getToken } from "../utils/storage";
+import { useAuth } from "../../hooks";
+import { getToken } from "../../utils/storage";
 
 const API = "http://localhost:5000/api";
 

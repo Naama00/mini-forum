@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Heart } from "lucide-react";
 
-import Breadcrumb from "./Breadcrumb";
-import { useAuth } from "../hooks";
-import { getToken } from "../utils/storage";
+import Breadcrumb from "../Breadcrumb";
+import { useAuth } from "../../hooks";
+import { getToken } from "../../utils/storage";
 
 const API = "http://localhost:5000/api";
 

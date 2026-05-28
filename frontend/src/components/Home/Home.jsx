@@ -6,7 +6,7 @@ import {
   Gauge,
   Radio,
 } from "lucide-react";
-import './Home.css';
+import styles from'./Home.module.css';
 
 
 const API_BASE = "http://localhost:5000";

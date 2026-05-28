@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks';
-import { getToken } from '../utils/storage';
+import { useAuth } from '../../hooks';
+import { getToken } from '../../utils/storage';
 import AIWorkspace from './AIWorkspace';
-import { Loading } from './common/Loading';
+import { Loading } from '../common/Loading';
 
 const API_BASE = 'http://localhost:5000';
 

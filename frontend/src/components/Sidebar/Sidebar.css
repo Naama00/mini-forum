@@ -1,4 +1,5 @@
 @layer components {
+  /* ── המבנה הראשי: אפקט זכוכית סייבר-פאנק כהה ועמוק עם זוהר סגול ── */
   .sidebar-shell {
     position: sticky;
     top: 0;
@@ -10,245 +11,278 @@
     max-width: 280px;
     flex-shrink: 0;
     height: 100vh;
-    padding: 1.5rem 1rem;
-    gap: 1.25rem;
-    background: rgba(8, 10, 16, 0.88);
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: inset -14px 0 40px rgba(0, 0, 0, 0.24), 0 0 45px rgba(0, 0, 0, 0.28);
-    backdrop-filter: blur(22px);
+    padding: 1.75rem 1.25rem;
+    gap: 1.5rem;
+    background: rgba(10, 12, 22, 0.75) !important; /* רקע כהה עמוק לקונטרסט מושלם */
+    border-left: 1px solid var(--surface-border) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    box-shadow: 
+      inset -15px 0 40px rgba(0, 0, 0, 0.6),
+      -5px 0 50px rgba(168, 85, 247, 0.12) !important; /* זוהר סגלגל עוצמתי */
+    overflow: hidden;
+    position: relative;
   }
 
+  /* שכבת אורות דינמית ברקע - pointer-events: none מונע חסימת קישורים! */
   .sidebar-shell::before {
     content: '';
     position: absolute;
     inset: 0;
-    pointer-events: none;
-    background: linear-gradient(180deg, rgba(204, 255, 0, 0.06), transparent 30%), radial-gradient(circle at top right, rgba(0, 229, 255, 0.12), transparent 22%);
+    pointer-events: none !important;
+    background: 
+      radial-gradient(circle at top right, rgba(168, 85, 247, 0.22) 0%, transparent 55%),
+      radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.12) 0%, transparent 50%) !important;
+    opacity: 0.9;
+    z-index: -1;
   }
 
-  .sidebar-shell > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  .sidebar-scroll::-webkit-scrollbar {
-    width: 6px;
-  }
-  .sidebar-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .sidebar-scroll::-webkit-scrollbar-thumb {
-    background: rgba(204, 255, 0, 0.25);
-    border-radius: 999px;
-  }
-  .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(204, 255, 0, 0.45);
-  }
-
-  .sidebar-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: #f8fafc;
-    text-decoration: none;
-    font-size: 1.05rem;
-    font-weight: 800;
-  }
-
-  .sidebar-brand-icon {
-    width: 2.15rem;
-    height: 2.15rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 1rem;
-    border: 1px solid rgba(204, 255, 0, 0.25);
-    background: rgba(204, 255, 0, 0.08);
-    color: #ccff00;
-    box-shadow: 0 0 18px rgba(204, 255, 0, 0.24);
-    font-family: monospace;
-  }
-
-  .sidebar-subtitle {
-    margin-top: 0.4rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgba(226, 232, 240, 0.45);
-  }
-
-  .sidebar-section,
-  .sidebar-user-panel {
-    border-radius: 1.4rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(255, 255, 255, 0.025);
-    padding: 1rem;
-    backdrop-filter: blur(16px);
-  }
-
-  .sidebar-label {
-    font-size: 0.72rem;
-    font-family: var(--font-family);
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: rgba(226, 232, 240, 0.38);
-    font-weight: 700;
-    margin-bottom: 0.9rem;
-    display: block;
-  }
-
-  .sidebar-nav {
-    display: grid;
-    gap: 0.6rem;
-  }
-
-  .sidebar-link {
+  /* ── אזור הלוגו והכותרת ── */
+  .sidebar-header {
     display: flex;
     align-items: center;
     gap: 0.85rem;
-    padding: 0.95rem 1rem;
-    border-radius: 1rem;
-    color: #cbd5e1;
-    text-decoration: none;
-    transition: all 0.25s ease;
-    border: 1px solid transparent;
-    background: rgba(255, 255, 255, 0.02);
+    padding: 0.5rem 0.75rem;
+    position: relative;
+    z-index: 2;
   }
 
-  .sidebar-link:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 18px rgba(0, 229, 255, 0.12);
+  .sidebar-logo-icon {
+    font-size: 1.4rem;
+    filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.85)) !important;
+    animation: cyberPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .sidebar-link.active {
-    color: #071012;
-    background: linear-gradient(90deg, #00e5ff, #7a5bff, #ff6bd9);
-    border-color: rgba(0, 229, 255, 0.5);
-    box-shadow: 0 0 28px rgba(0, 229, 255, 0.35);
-    font-weight: 600;
+  .sidebar-brand-name {
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+    /* גרדיאנט ורוד-סגול יוקרתי */
+    background: linear-gradient(135deg, #ffffff 10%, var(--accent-violet) 65%, var(--accent-cyan) 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 8px rgba(168, 85, 247, 0.3)) !important;
   }
 
-  .sidebar-icon {
-    display: inline-flex;
-    width: 1.85rem;
-    height: 1.85rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.9rem;
-    background: rgba(255, 255, 255, 0.05);
-    color: #7f9cf5;
-    font-family: monospace;
-    transition: color 0.25s ease, background 0.25s ease;
+  /* ── תפריט הניווט ── */
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+    overflow-y: auto;
+    padding-left: 0.25rem;
+    position: relative;
+    z-index: 2;
   }
 
-  .sidebar-link.active .sidebar-icon {
-    color: #ccff00;
-    text-shadow: 0 0 12px rgba(204, 255, 0, 0.35);
-    background: rgba(204, 255, 0, 0.08);
-  }
-
-  .sidebar-category-list {
-    display: grid;
-    gap: 0.55rem;
-  }
-
-  .sidebar-category-item {
+  /* כפתור ניווט נייטרלי */
+  .sidebar-nav-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.95rem 1rem;
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    background: rgba(255, 255, 255, 0.02);
-    color: #d2d9e3;
-    text-decoration: none;
-    transition: all 0.22s ease;
+    justify-content: space-between;
+    padding: 0.85rem 1.15rem;
+    border-radius: 1.1rem;
+    color: var(--text-muted) !important;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none !important;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
   }
 
-  .sidebar-category-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(204, 255, 0, 0.18);
-    color: #fff;
-  }
-
-  .sidebar-category-item.active {
-    background: rgba(0, 229, 255, 0.1);
-    border-color: rgba(0, 229, 255, 0.3);
-    color: #00e5ff;
-  }
-
-  .sidebar-category-marker {
-    width: 0.85rem;
-    height: 0.85rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #00e5ff, #ccff00);
-    box-shadow: 0 0 14px rgba(0, 229, 255, 0.18);
-    flex-shrink: 0;
-  }
-
-  .sidebar-tag {
-    display: inline-flex;
+  .sidebar-nav-link-content {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0.45rem 0.75rem;
-    font-size: 0.72rem;
-    font-family: monospace;
-    color: #9ca3af;
-    background: rgba(255, 255, 255, 0.03);
+    gap: 0.95rem;
+  }
+
+  .sidebar-nav-icon {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    transition: all 0.25s ease;
+  }
+
+  /* מצב הובר (Hover) - ניאון ורוד זוהר */
+  .sidebar-nav-item:hover {
+    color: #ffffff !important;
+    background: rgba(168, 85, 247, 0.08) !important;
+    border-color: rgba(168, 85, 247, 0.3) !important;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.1) !important;
+    transform: translateX(-3px); /* תנועה חלקה מימין לשמאל */
+  }
+
+  .sidebar-nav-item:hover .sidebar-nav-icon {
+    color: var(--accent-violet);
+    filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7)) !important;
+  }
+
+  /* מצב פעיל (Active) */
+  .sidebar-nav-item--active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(6, 182, 212, 0.08) 100%) !important;
+    border-color: rgba(168, 85, 247, 0.45) !important;
+    box-shadow: 
+      0 4px 25px rgba(168, 85, 247, 0.15),
+      inset 0 0 14px rgba(168, 85, 247, 0.1) !important;
+  }
+
+  .sidebar-nav-item--active .sidebar-nav-icon {
+    color: var(--accent-violet);
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.8)) !important;
+  }
+
+  /* מוני נוטיפיקציות */
+  .sidebar-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: rgba(10, 12, 22, 0.8);
+    color: var(--text-muted);
+    border: 1px solid var(--surface-border);
+    transition: all 0.25s ease;
+  }
+
+  .sidebar-nav-item--active .sidebar-badge {
+    background: rgba(168, 85, 247, 0.25);
+    color: #ffffff;
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+  }
+
+  /* חוצץ הפרדה */
+  .sidebar-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--surface-border-strong) 20%, var(--surface-border-strong) 80%, transparent);
+    margin: 0.75rem 0.75rem;
+    border: none;
+  }
+
+  /* תגיות חמות */
+  .sidebar-tag {
+    text-decoration: none !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.75rem;
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid var(--surface-border);
+    color: var(--text-soft) !important;
     transition: all 0.2s ease;
   }
 
   .sidebar-tag:hover {
-    color: #ccff00;
-    border-color: rgba(204, 255, 0, 0.3);
-    background: rgba(204, 255, 0, 0.06);
+    background: rgba(168, 85, 247, 0.15) !important;
+    border-color: rgba(168, 85, 247, 0.4) !important;
+    color: var(--accent-cyan) !important;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.1);
+    transform: translateY(-1px);
+  }
+
+  /* ── חלק תחתון: פרופיל משתמש ── */
+  .sidebar-user-panel {
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
   }
 
   .sidebar-user-btn {
     width: 100%;
-    text-align: right;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.95rem 1rem;
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.02);
-    color: #e2e8f0;
-    transition: all 0.25s ease;
+    gap: 0.85rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 1.35rem;
+    border: 1px solid var(--surface-border);
+    background: rgba(20, 24, 43, 0.4);
+    color: var(--text-soft) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-align: right;
   }
 
   .sidebar-user-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(168, 85, 247, 0.06) !important;
+    border-color: rgba(168, 85, 247, 0.4) !important;
+    box-shadow: 
+      0 4px 30px rgba(0, 0, 0, 0.3),
+      0 0 20px rgba(168, 85, 247, 0.08) !important;
   }
 
   .sidebar-user-avatar {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 1rem;
-    border: 1px solid rgba(204, 255, 0, 0.25);
-    background: rgba(204, 255, 0, 0.08);
-    color: #ccff00;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.95rem;
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    background: rgba(139, 92, 246, 0.15);
+    color: #ffffff !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-family: monospace;
-    box-shadow: inset 0 0 12px rgba(204, 255, 0, 0.18);
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 
+      inset 0 0 10px rgba(168, 85, 247, 0.3),
+      0 0 12px rgba(168, 85, 247, 0.2);
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+  }
+
+  .sidebar-user-btn:hover .sidebar-user-avatar {
+    border-color: var(--accent-cyan);
+    background: rgba(6, 182, 212, 0.2);
+    box-shadow: 
+      inset 0 0 12px rgba(6, 182, 212, 0.4),
+      0 0 18px rgba(6, 182, 212, 0.3);
   }
 
   .sidebar-user-name {
-    font-size: 0.95rem;
     font-weight: 700;
-    color: #fff;
+    font-size: 0.9rem;
+    color: #ffffff !important;
+    margin: 0;
   }
 
   .sidebar-user-meta {
-    font-size: 0.72rem;
-    color: #a5b4fc;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+    transition: color 0.25s ease;
   }
+
+  .sidebar-user-btn:hover .sidebar-user-meta {
+    color: var(--accent-cyan);
+  }
+
+  .sidebar-pulse {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-cyan);
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px var(--accent-cyan);
+  }
+
+  /* ── אנימציות ── */
+  @keyframes cyberPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.7));
+    }
+    50% {
+      opacity: 0.85;
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 22px rgba(6, 182, 212, 0.95));
+    }
+  }
+
+  .sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.15); border-radius: 10px; }
+  .sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.35); }
 }

@@ -6,7 +6,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Loading } from './components/common/Loading';
-import Sidebar from "./components/Sidebar/Sidebar";
+import Sidebar from "./components/Sidebar/Sidebar.jsx";
 import AppShell from "./components/layout/AppShell"; 
 
 function AppRoutes() {

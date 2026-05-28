@@ -234,7 +234,7 @@
   padding: 1.25rem;
 }
 
-..card-empty {
+.card-empty {
   border-radius: 1.5rem;
   border: 1px solid rgba(148, 163, 184, 0.1);
   background-color: rgba(15, 23, 42, 0.35);
