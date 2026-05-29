@@ -13,7 +13,6 @@ import MarkdownRenderer from "../MarkdownRenderer";
 import { useAuth } from "../../hooks";
 import styles from "./Category.module.css";
 
-
 const API_BASE = "http://localhost:5000";
 
 /* ─────────────────────────────────────────────
@@ -192,36 +191,46 @@ export default function CategoryPage() {
     setCreatingTopic(true);
 
     try {
-      const token = getToken();
+  const token = getToken();
 
-      const r = await fetch(`${API_BASE}/api/topics`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: newTopicTitle,
-          content: newTopicContent,
-          categoryId: id,
-        }),
-      });
+  const r = await fetch(`${API_BASE}/api/topics`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      title: newTopicTitle,
+      content: newTopicContent,
+      categoryId: id,
+    }),
+  });
 
-      const res = await r.json();
-
-      if (res.success) {
-        window.location.href = `/category?topicId=${
-          res.data._id || res.data.id
-        }`;
-      } else {
-        alert(res.message);
-      }
-    } catch {
-      alert("Error");
-    } finally {
-      setCreatingTopic(false);
+  // הגנה: אם השרת החזיר שגיאת HTTP (כמו 401 או 500)
+  if (!r.ok) {
+    if (r.status === 401) {
+      alert("פג תוקף ההתחברות, נא להתחבר מחדש");
+      // כאן אפשר גם לנקות טוקן ולהעביר ל-/auth
+    } else {
+      alert("אירעה שגיאה ביצירת הנושא");
     }
-  };
+    return; // עוצר את המשך הפונקציה
+  }
+
+  const res = await r.json();
+
+  if (res.success) {
+    // שימוש ב-navigate של React Router במקום רענון עמוד מלא
+    navigate(`/category?topicId=${res.data._id || res.data.id}`);
+  } else {
+    alert(res.message || "יצירת הנושא נכשלה");
+  }
+} catch (error) {
+  console.error("Error creating topic:", error);
+  alert("שגיאת רשת, נסה שנית מאוחר יותר");
+} finally {
+  setCreatingTopic(false);
+}
 
   /* ───────────────────────────────────────────── */
 
@@ -577,11 +586,8 @@ function ReplyBox({ topicId, onReplyAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!content.trim()) return;
-
     setSending(true);
-
     try {
       const token = getToken();
 

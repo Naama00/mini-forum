@@ -45,22 +45,45 @@ export default function NotificationBell() {
     const token = getToken();
     const navigate = useNavigate();
 
-    // שלוף מספר שלא-נקראו בכל 30 שניות
-    useEffect(() => {
-        if (!token) return;
-        const fetchCount = async () => {
-            try {
-                const res = await fetch(`${API}/notifications/unread-count`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await res.json();
-                setUnread(data.count || 0);
-            } catch { }
-        };
-        fetchCount();
-        const interval = setInterval(fetchCount, 30000);
-        return () => clearInterval(interval);
-    }, [token]);
+useEffect(() => {
+  const fetchUnreadCount = async () => {
+    const token = localStorage.getItem('token');
+    
+    // הגנה קריטית: אם המשתמש בכלל לא מחובר כרגע (אין טוקן), אל תפנה לשרת!
+    if (!token) {
+      console.log("אין טוקן ב-LocalStorage, מדלג על הבאת התראות");
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/api/notifications/unread-count', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`, // שליחת הטוקן בצורה תקינה
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (res.status === 401) {
+        console.warn("השרת החזיר 401 - הטוקן באמת פג תוקף. מנקה ומפנה ל-Auth.");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');  
+        navigate("/auth"); 
+        return;
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+        // כאן הקוד שלך שמעדכן את כמות ההתראות (למשל setUnreadCount(data.count))
+      }
+
+    } catch (err) {
+      console.error("שגיאת רשת בניסיון להביא התראות:", err);
+    }
+  };
+
+  fetchUnreadCount();
+}, [navigate]); // ודאי ש-navigate נמצא במערך התלויות או הורידי אותו אם אין צורך
 
     // סגור dropdown בלחיצה מחוץ
     useEffect(() => {
@@ -74,7 +97,7 @@ export default function NotificationBell() {
     const openDropdown = async () => {
         console.log("נלחץ! open =", open);
         console.log("token =", token);
-        if (!token) return navigate("/login");
+        if (!token) return navigate("/auth");
 
         const isOpening = !open;
         setOpen(isOpening);

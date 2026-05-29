@@ -1,27 +1,4 @@
-// const jwt = require('jsonwebtoken');
-// const JWT_SECRET = process.env.JWT_SECRET || 'devhub-secret-key-change-in-production';
-
-// module.exports = (req, res, next) => {
-//   const token = req.headers.authorization?.split(' ')[1];
-//   if (!token) {
-//     const error = new Error('לא מחובר');
-//     error.status = 401;
-//     return next(error);
-//   }
-
-//   try {
-//     const decoded = jwt.verify(token, JWT_SECRET);
-//     req.user = decoded;
-//     next();
-//   } catch (err) {
-//     const error = new Error('טוקן לא תקין');
-//     error.status = 401;
-//     next(error);
-//   }
-// };
 const jwt = require('jsonwebtoken');
-
-// Enforce strict secret check during initialization phase to prevent silent failures
 const JWT_SECRET = process.env.JWT_SECRET;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -32,7 +9,6 @@ if (!JWT_SECRET) {
   console.warn('WARNING: JWT_SECRET is not defined. Using a volatile fallback key for development.');
 }
 
-// Volatile fallback only for local testing, isolated from production
 const EffectiveSecret = JWT_SECRET || 'devhub-temporary-volatile-development-secret-key-12345';
 
 /**
@@ -62,14 +38,12 @@ module.exports = (req, res, next) => {
     // Hardened verification with explicit algorithm enforcement
     const decoded = jwt.verify(token, EffectiveSecret, {
       algorithms: ['HS256'],
-      // You can add 'issuer' or 'audience' checks here for enhanced security if applicable
     });
 
-    // Sanitized attachment of user context
+    // Sanitized attachment of user context supporting both userId and id from token payload
     req.user = {
-      id: decoded.id,
+      id: decoded.userId || decoded.id,
       roles: decoded.roles || [],
-      // Only extract what you explicitly trust and need
     };
 
     next();

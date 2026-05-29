@@ -3,7 +3,7 @@ import { lazy } from 'react';
 // Lazy load components for better performance
 const Home = lazy(() => import('../components/Home/Home'));
 const Category = lazy(() => import('../components/Category/Category'));
-const AuthForm = lazy(() => import('../components/Login'));
+const AuthForm = lazy(() => import('../components/Auth'));
 const NewTopic = lazy(() => import('../components/NewTopic'));
 const ProfilePage = lazy(() => import('../components/Profile'));
 const ArticlesPage = lazy(() => import('../components/Article/Articles'));

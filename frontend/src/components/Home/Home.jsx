@@ -339,7 +339,7 @@ export default function ForumHome() {
               <div className="home-cta-content">
                 <h3 className="text-4xl font-black text-white mb-4">Ready to join the future?</h3>
                 <p className="text-lg text-slate-400 mb-8">Connect with developers, share ideas and explore advanced tech discussions.</p>
-                <button className="px-10 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950 font-bold text-lg hover:shadow-xl hover:shadow-cyan-500/30 transition-all duration-300 flex items-center gap-2">
+               <button className="button-primary px-8 py-4 rounded-xl hover:shadow-xl hover:shadow-cyan-500/30 duration-300">
                   <Zap className="w-5 h-5" /> Start Exploring
                 </button>
               </div>

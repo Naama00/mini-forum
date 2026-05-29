@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const { User } = require('../models/User');
+const logger = require('../logger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'devhub-secret-key-change-in-production';
 const GOOGLE_CLIENT_ID = '151921932655-85p00136srh9nb2tquam8qkkjtuvfnl5.apps.googleusercontent.com';
@@ -41,8 +42,8 @@ async function registerUser(userData) {
 
     await user.save();
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-
+    // const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+const token = jwt.sign({ userId: user._id }, 'my-super-secret-local-key-123', { expiresIn: '7d' });
     return {
         token,
         user: {

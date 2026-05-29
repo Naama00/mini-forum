@@ -1,20 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { getLoggedInUserFromToken, getToken } from "../utils/storage";
-import { useAuth } from '../hooks';
+import { useAuth } from "../hooks";
+import { timeAgo } from "../utils/formatters";
 import CityAutocomplete from "./CityAutocomplete";
 
 const API_BASE = "http://localhost:5000";
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
-  if (diff < 60) return "עכשיו";
-  if (diff < 3600) return `לפני ${Math.floor(diff / 60)} דק'`;
-  if (diff < 86400) return `לפני ${Math.floor(diff / 3600)} שע'`;
-  if (diff < 604800) return `לפני ${Math.floor(diff / 86400)} ימים`;
-  return new Date(dateStr).toLocaleDateString("he-IL");
-}
 
 function avatarInitials(firstName = "", lastName = "") {
   return `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || "?";
@@ -76,214 +67,243 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     if (logout) logout();
-    navigate('/');
+    navigate("/");
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-[var(--bg-primary)]">
-      <div className="text-center">
-        <div className="text-[#ccff00] animate-pulse font-mono uppercase tracking-tighter text-sm">
-          Accessing Mainframe...
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+      טוען פרופיל...
     </div>
   );
 
   if (error) return (
-    <div className="flex items-center justify-center min-h-screen bg-[var(--bg-primary)]">
-      <div className="text-center max-w-md px-4">
-        <div className="bg-rose-500/10 border border-rose-500/30 px-6 py-4 rounded-2xl mb-6 text-rose-400 font-mono text-sm">
-          CRITICAL_ERROR: {error}
-        </div>
-        <button className="neon-btn px-6 py-2.5 rounded-xl text-sm font-bold cursor-pointer" onClick={() => navigate("/")}>
-          Return to Terminal
-        </button>
+    <div className="page-shell flex items-center justify-center px-6">
+      <div className="max-w-md w-full rounded-3xl border border-red-500/20 bg-slate-900/60 p-10 text-center">
+        <p className="text-red-400 mb-6">{error}</p>
+        <Link to="/" className="inline-flex px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950 font-bold">
+          חזרה לדף הבית
+        </Link>
       </div>
     </div>
   );
 
   const topics = profile?.topics || [];
   const posts = profile?.posts || [];
-  const totalVotes = (profile?.votes || 0);
+  const totalVotes = profile?.votes || 0;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white pb-20" dir="rtl">
-      <section className="relative z-10 px-6 pt-12 pb-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-6">
-              <span className="text-xs font-mono uppercase tracking-widest text-cyan-300">
-                פרופיל משתמש
-              </span>
-            </div>
+    <div dir="rtl" className="page-shell">
+      {/* רקע */}
+      <div className="page-bg">
+        <div className="page-bg-blob page-bg-blob--cyan" />
+        <div className="page-bg-blob page-bg-blob--violet" />
+        <div className="page-bg-grid" />
+      </div>
 
-            <h1 className="text-5xl lg:text-6xl font-black leading-tight tracking-tight mb-6">
-              ברוכים הבאים לפרופיל
-              <br />
-              <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
-                DEV.HUB
-              </span>
+      <div className="page-container">
+
+        {/* ── כותרת עמוד ── */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-14">
+          <div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 mb-5">
+              <div className="w-2 h-2 rounded-full bg-cyan-400" />
+              <span className="text-sm text-cyan-300 font-medium">PROFILE</span>
+            </div>
+            <h1 className="text-5xl font-black mb-4">
+              <span className="text-white">{profile?.firstName}</span>{" "}
+              <span className="text-gradient">{profile?.lastName}</span>
             </h1>
-
-            <p className="text-lg text-slate-400 max-w-2xl mb-8 leading-relaxed">
-              נהל את זהותך בקהילה, צפה בפעילות האחרונה שלך ושמור על נוכחות מקצועית ברשת.
+            <p className="text-slate-400 max-w-xl">
+              {profile?.city && `📍 ${profile.city} · `}
+              כניסה אחרונה {timeAgo(profile?.lastLogin)}
             </p>
+          </div>
 
-            <div className="flex flex-wrap gap-4">
-              <button className="px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950 font-bold hover:shadow-xl hover:shadow-cyan-500/30 transition-all duration-300" onClick={() => navigate('/') }>
-                חזור לדיונים
+          <div className="flex flex-wrap gap-3">
+            <button onClick={() => navigate("/")} className="button-secondary">
+              חזור לדיונים
+            </button>
+            {isOwnProfile && !editing && (
+              <button onClick={() => setEditing(true)} className="button-primary">
+                ✎ ערוך פרופיל
               </button>
-
-              {isOwnProfile && (
-                <button className="px-8 py-4 rounded-xl border border-slate-700 text-slate-300 hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300" onClick={() => setEditing(true)}>
-                  ערוך פרופיל
-                </button>
-              )}
-            </div>
+            )}
+            {isOwnProfile && (
+              <button onClick={handleLogout} className="px-5 py-3 rounded-2xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-semibold">
+                התנתק
+              </button>
+            )}
           </div>
         </div>
-      </section>
 
-      <div className="max-w-5xl mx-auto px-6 relative z-10">
-        <section className="glass-card rounded-3xl p-8 md:p-10 mb-8 relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-            
-            {/* AVATAR */}
+        {/* ── כרטיס פרופיל ── */}
+        <div className="section-card section-card-lg mb-8">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+
+            {/* אווטר */}
             <div className="relative flex-shrink-0">
-              <div className="w-28 h-28 rounded-2xl p-[1px] bg-gradient-to-br from-[#ccff00] to-transparent shadow-lg">
+              <div className="w-28 h-28 rounded-2xl bg-gradient-to-r from-cyan-500 to-violet-500 p-[2px]">
                 {profile?.icon && !imgErr ? (
-                  <img 
-                    src={profile.icon} 
-                    alt="avatar" 
-                    className="w-full h-full rounded-2xl bg-[var(--bg-secondary)] object-cover border-2 border-[var(--bg-secondary)]" 
-                    onError={() => {
-                      console.warn('Failed to load avatar image from:', profile.icon);
-                      setImgErr(true);
-                    }}
+                  <img
+                    src={profile.icon}
+                    alt="avatar"
+                    className="w-full h-full rounded-2xl object-cover bg-slate-900"
+                    onError={() => setImgErr(true)}
                     crossOrigin="anonymous"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-2xl bg-[var(--bg-secondary)] text-3xl font-bold text-[var(--accent)] flex items-center justify-center border-2 border-[var(--bg-secondary)]">
+                  <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-3xl font-black text-white">
                     {avatarInitials(profile?.firstName, profile?.lastName)}
                   </div>
                 )}
               </div>
-              {profile?.isConnected && (
-                <div className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-[#ccff00] border-4 border-[#0a0a0c] live-pulse" />
+              {profile?.isVerifiedEmail && (
+                <div className="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-cyan-400 border-4 border-slate-950 flex items-center justify-center text-[10px] text-slate-950 font-black">✓</div>
               )}
             </div>
 
-            {/* INFO */}
+            {/* מידע / טופס עריכה */}
             <div className="flex-1 text-center md:text-right w-full">
               {editing ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
-                  <input className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-100 text-sm outline-none focus:border-[#ccff00] transition-colors" value={editForm.firstName} onChange={e => setEditForm(p => ({ ...p, firstName: e.target.value }))} placeholder="שם פרטי" />
-                  <input className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-100 text-sm outline-none focus:border-[#ccff00] transition-colors" value={editForm.lastName} onChange={e => setEditForm(p => ({ ...p, lastName: e.target.value }))} placeholder="שם משפחה" />
-                  <CityAutocomplete
-                    label="עיר מגורים"
-                    name="city"
-                    placeholder="בחר עיר בישראל"
-                    value={editForm.city}
-                    onChange={e => setEditForm(p => ({ ...p, [e.target.name]: e.target.value }))}
-                  />
-                  <div className="flex gap-3 md:col-span-2 mt-2">
-                    <button className="neon-btn px-5 py-2 rounded-xl font-bold text-xs disabled:opacity-50" onClick={handleSave} disabled={saving}>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-2">שם פרטי</label>
+                    <input className="form-input" value={editForm.firstName} onChange={e => setEditForm(p => ({ ...p, firstName: e.target.value }))} placeholder="שם פרטי" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-2">שם משפחה</label>
+                    <input className="form-input" value={editForm.lastName} onChange={e => setEditForm(p => ({ ...p, lastName: e.target.value }))} placeholder="שם משפחה" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <CityAutocomplete
+                      label="עיר מגורים"
+                      name="city"
+                      placeholder="בחר עיר בישראל"
+                      value={editForm.city}
+                      onChange={e => setEditForm(p => ({ ...p, [e.target.name]: e.target.value }))}
+                    />
+                  </div>
+                  {saveError && <p className="text-rose-400 text-sm md:col-span-2">{saveError}</p>}
+                  <div className="flex gap-3 md:col-span-2">
+                    <button onClick={handleSave} disabled={saving} className="button-primary">
                       {saving ? "שומר..." : "שמור שינויים"}
                     </button>
-                    <button className="px-5 py-2 border border-white/10 bg-white/5 rounded-xl font-bold text-xs text-slate-400 hover:text-white transition-colors" onClick={() => setEditing(false)}>ביטול</button>
+                    <button onClick={() => setEditing(false)} className="button-secondary">
+                      ביטול
+                    </button>
                   </div>
-                  {saveError && <p className="text-rose-400 text-sm md:col-span-2 font-mono">{saveError}</p>}
                 </div>
               ) : (
                 <div>
-                  <span className="font-mono text-[10px] text-[#ccff00]/70 tracking-widest block mb-1">SYSTEM_USER_{userId.slice(-4).toUpperCase()}</span>
-                  <h1 className="text-3xl font-black text-white mb-4 leading-tight">{profile?.firstName} {profile?.lastName}</h1>
-                  
-                  <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-6">
-                    <span className="text-xs bg-white/5 px-3 py-1.5 border border-white/5 rounded-xl text-slate-400">📍 {profile?.city || "Unknown_Sector"}</span>
-                    <span className="text-xs bg-white/5 px-3 py-1.5 border border-white/5 rounded-xl text-slate-400">🕒 כניסה: {timeAgo(profile?.lastLogin)}</span>
-                    {profile?.isVerifiedEmail && <span className="text-xs bg-[#ccff00]/10 px-3 py-1.5 border border-[#ccff00]/20 rounded-xl text-[#ccff00] font-mono tracking-wide">✓ VERIFIED_SECURE</span>}
+                  <h2 className="text-3xl font-black text-white mb-3">
+                    {profile?.firstName} {profile?.lastName}
+                  </h2>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                    {profile?.city && (
+                      <span className="px-3 py-1 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 text-xs">
+                        📍 {profile.city}
+                      </span>
+                    )}
+                    <span className="px-3 py-1 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 text-xs">
+                      🕒 {timeAgo(profile?.lastLogin)}
+                    </span>
+                    {profile?.isVerifiedEmail && (
+                      <span className="px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold">
+                        ✓ מאומת
+                      </span>
+                    )}
                   </div>
-
-                  {isOwnProfile && (
-                    <button className="px-4 py-2 border border-white/10 bg-white/5 rounded-xl text-slate-300 text-xs font-bold hover:border-[#ccff00]/40 hover:text-[#ccff00] transition-all" onClick={() => setEditing(true)}>
-                      ✎ עריכת נתוני פרופיל
-                    </button>
-                  )}
                 </div>
               )}
             </div>
 
-            {/* STATS */}
-            <div className="flex gap-4 w-full md:w-auto justify-center">
-              <div className="glass-card px-5 py-4 rounded-2xl min-w-[90px] text-center">
-                <span className="block text-2xl font-black text-white">{topics.length}</span>
-                <span className="block text-[10px] text-slate-500 font-bold tracking-wider mt-1">נושאים</span>
-              </div>
-              <div className="px-5 py-4 rounded-2xl min-w-[90px] text-center border bg-[#ccff00]/5 border-[#ccff00]/20">
-                <span className="block text-2xl font-black text-[#ccff00]">
-                  {totalVotes >= 0 ? "+" : ""}{totalVotes}
-                </span>
-                <span className="block text-[10px] text-[#ccff00]/60 font-bold tracking-wider mt-1">מוניטין</span>
-              </div>
-              <div className="glass-card px-5 py-4 rounded-2xl min-w-[90px] text-center">
-                <span className="block text-2xl font-black text-white">{posts.length}</span>
-                <span className="block text-[10px] text-slate-500 font-bold tracking-wider mt-1">תגובות</span>
-              </div>
+            {/* סטטיסטיקה */}
+            <div className="flex gap-4 flex-shrink-0">
+              {[
+                { value: topics.length, label: "נושאים", accent: false },
+                { value: (totalVotes >= 0 ? "+" : "") + totalVotes, label: "מוניטין", accent: true },
+                { value: posts.length, label: "תגובות", accent: false },
+              ].map(stat => (
+                <div key={stat.label} className={`px-5 py-4 rounded-2xl min-w-[80px] text-center border ${stat.accent ? "bg-cyan-500/10 border-cyan-500/20" : "bg-slate-800/50 border-slate-700"}`}>
+                  <span className={`block text-2xl font-black ${stat.accent ? "text-cyan-300" : "text-white"}`}>{stat.value}</span>
+                  <span className="block text-[10px] text-slate-500 font-bold tracking-wider mt-1 uppercase">{stat.label}</span>
+                </div>
+              ))}
             </div>
 
           </div>
-        </section>
-
-        {/* TABS */}
-        <div className="mt-12">
-          <div className="flex gap-6 border-b border-white/5 mb-8">
-            <button className={`pb-4 font-sans font-bold text-sm tracking-wide transition-all border-b-2 ${activeTab === "topics" ? "border-[#ccff00] text-[#ccff00]" : "border-transparent text-slate-500 hover:text-slate-300"}`} onClick={() => setActiveTab("topics")}>
-              דיונים שפתחתי <span className="text-[10px] bg-white/5 border border-white/5 px-2 py-0.5 rounded-md mr-1 text-white">{topics.length}</span>
-            </button>
-            <button className={`pb-4 font-sans font-bold text-sm tracking-wide transition-all border-b-2 ${activeTab === "posts" ? "border-[#ccff00] text-[#ccff00]" : "border-transparent text-slate-500 hover:text-slate-300"}`} onClick={() => setActiveTab("posts")}>
-              תגובות בקהילה <span className="text-[10px] bg-white/5 border border-white/5 px-2 py-0.5 rounded-md mr-1 text-white">{posts.length}</span>
-            </button>
-          </div>
-
-          <div>
-            {activeTab === "topics" ? (
-              topics.length === 0 ? (
-                <div className="text-center py-16 glass-card rounded-2xl text-slate-500 text-sm font-mono uppercase tracking-wider">No active logs found in this sector</div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {topics.map((t, i) => (
-                    <a key={t._id || i} href={`/category?topicId=${t._id}`} className="glass-card flex items-center gap-4 px-6 py-4 rounded-2xl no-underline text-inherit group">
-                      <span className="text-[#ccff00] text-lg group-hover:animate-pulse">◈</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="block text-sm font-bold text-white group-hover:text-[#ccff00] transition-colors truncate">{t.title}</span>
-                        <span className="text-xs text-slate-500 font-mono mt-1 block">{timeAgo(t.createdAt)}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400 bg-white/5 border border-white/5 px-2 py-1 rounded-md">VOTES: {t.votes ?? 0}</span>
-                    </a>
-                  ))}
-                </div>
-              )
-            ) : (
-              posts.length === 0 ? (
-                <div className="text-center py-16 glass-card rounded-2xl text-slate-500 text-sm font-mono uppercase tracking-wider">Transmission database empty</div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {posts.map((p, i) => (
-                    <a key={p._id || i} href={p.topicId ? `/category?topicId=${p.topicId}` : "#"} className="glass-card flex items-center gap-4 px-6 py-4 rounded-2xl no-underline text-inherit group">
-                      <span className="text-[#ccff00] opacity-60 text-lg">◇</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="block text-sm font-medium text-slate-300 group-hover:text-white transition-colors truncate">{(p.content || "").slice(0, 80)}...</span>
-                        <span className="text-xs text-slate-500 font-mono mt-1 block">{timeAgo(p.createdAt)}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-[#ccff00] bg-[#ccff00]/5 border border-[#ccff00]/10 px-2 py-1 rounded-md">▲ {p.numberOfVotes ?? 0}</span>
-                    </a>
-                  ))}
-                </div>
-              )
-            )}
-          </div>
         </div>
+
+        {/* ── טאבים ── */}
+        <div className="flex items-center gap-2 mb-8 border-b border-slate-800 pb-0">
+          {[
+            { key: "topics", label: "דיונים שפתחתי", count: topics.length },
+            { key: "posts", label: "תגובות בקהילה", count: posts.length },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`pb-4 px-2 font-bold text-sm transition-all border-b-2 -mb-px ${
+                activeTab === tab.key
+                  ? "border-cyan-400 text-cyan-300"
+                  : "border-transparent text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              {tab.label}
+              <span className="mr-2 text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-slate-400">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* ── תוכן טאב ── */}
+        {activeTab === "topics" ? (
+          topics.length === 0 ? (
+            <div className="card-empty">
+              <p className="text-slate-400">עדיין לא נפתחו דיונים על ידי משתמש זה.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {topics.map((t, i) => (
+                <a key={t._id || i} href={`/category?topicId=${t._id}`} className="group section-card section-card-md section-shadow-hover flex items-center gap-4 no-underline text-inherit">
+                  <span className="text-cyan-400 text-lg flex-shrink-0">◈</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-bold text-white group-hover:text-cyan-300 transition-colors truncate">{t.title}</span>
+                    <span className="text-xs text-slate-500 mt-1 block">{timeAgo(t.createdAt)}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-400 bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl flex-shrink-0">
+                    ▲ {t.votes ?? 0}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )
+        ) : (
+          posts.length === 0 ? (
+            <div className="card-empty">
+              <p className="text-slate-400">עדיין לא נכתבו תגובות על ידי משתמש זה.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {posts.map((p, i) => (
+                <a key={p._id || i} href={p.topicId ? `/category?topicId=${p.topicId}` : "#"} className="group section-card section-card-md section-shadow-hover flex items-center gap-4 no-underline text-inherit">
+                  <span className="text-slate-600 text-lg flex-shrink-0 group-hover:text-cyan-400 transition-colors">◇</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm text-slate-300 group-hover:text-white transition-colors truncate">
+                      {(p.content || "").slice(0, 90)}...
+                    </span>
+                    <span className="text-xs text-slate-500 mt-1 block">{timeAgo(p.createdAt)}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-xl flex-shrink-0">
+                    ▲ {p.numberOfVotes ?? 0}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )
+        )}
+
       </div>
     </div>
   );

@@ -1,23 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor";
 import { getToken } from "../../utils/storage";
 
 const API = "http://localhost:5000/api";
-
 const QUICK_TAGS = ["Conference", "Meetup", "Hackathon", "Workshop", "Webinar", "Networking", "AI", "Cyber", "React", "Career"];
 
 export default function NewEventForm() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    date: "",
-    location: "",
-    link: "",
-    image: "",
-  });
+  const [form, setForm] = useState({ title: "", description: "", date: "", location: "", link: "", image: "" });
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [errors, setErrors] = useState({});
@@ -32,21 +24,14 @@ export default function NewEventForm() {
 
   const addTag = (tag) => {
     const clean = tag.trim().replace(/^#/, "");
-    if (clean && !tags.includes(clean) && tags.length < 5) {
-      setTags(prev => [...prev, clean]);
-    }
+    if (clean && !tags.includes(clean) && tags.length < 5) setTags(prev => [...prev, clean]);
     setTagInput("");
   };
-
+  const removeTag = (tag) => setTags(prev => prev.filter(t => t !== tag));
+  const toggleQuickTag = (tag) => tags.includes(tag) ? removeTag(tag) : addTag(tag);
   const handleTagKeyDown = (e) => {
     if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(tagInput); }
     if (e.key === "Backspace" && !tagInput && tags.length) setTags(prev => prev.slice(0, -1));
-  };
-
-  const removeTag = (tag) => setTags(prev => prev.filter(t => t !== tag));
-
-  const toggleQuickTag = (tag) => {
-    tags.includes(tag) ? removeTag(tag) : addTag(tag);
   };
 
   const validate = () => {
@@ -63,189 +48,134 @@ export default function NewEventForm() {
     e.preventDefault();
     const token = getToken();
     if (!token) return navigate("/login");
-
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
-
     setLoading(true);
     try {
       const res = await fetch(`${API}/events`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ...form, tags }),
       });
-
       const data = await res.json();
       if (!res.ok) { setErrors({ submit: data.error || "שגיאה בפרסום האירוע" }); return; }
-
       setSuccess(true);
       setTimeout(() => navigate(`/events/${data._id}`), 2000);
-    } catch {
-      setErrors({ submit: "שגיאת רשת — נסי שוב" });
-    } finally {
-      setLoading(false);
-    }
+    } catch { setErrors({ submit: "שגיאת רשת — נסי שוב" }); }
+    finally { setLoading(false); }
   };
 
-  if (success) {
-    return (
-      <div className="main">
-        <div className="form-success">
-          <div className="form-success-icon">📅</div>
-          <h2 className="form-success-title">האירוע פורסם בהצלחה!</h2>
-          <p className="form-success-sub">מעביר אותך לדף האירוע...</p>
-        </div>
+  if (success) return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6">
+      <div className="text-center">
+        <div className="w-24 h-24 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 flex items-center justify-center text-slate-950 text-4xl font-black mx-auto mb-6">📅</div>
+        <h2 className="text-4xl font-black text-white mb-3">האירוע פורסם!</h2>
+        <p className="text-slate-400">מעביר אותך לדף האירוע...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 py-8 rtl" dir="rtl">
-      <div className="mb-8">
-        <p className="text-slate-400 text-xs font-mono uppercase tracking-widest mb-2">// פרסום אירוע</p>
-        <h1 className="text-4xl font-bold text-white mb-2">פרסם <span className="text-cyan-500">אירוע חדש</span></h1>
-        <p className="text-slate-400 text-sm">כנסים, מיטאפים, האקתונים ואירועי קהילה</p>
+    <div dir="rtl" className="page-shell">
+      <div className="page-bg">
+        <div className="page-bg-blob page-bg-blob--cyan" />
+        <div className="page-bg-blob page-bg-blob--violet" />
+        <div className="page-bg-grid" />
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-
-        {/* ── עמודה ראשית ── */}
-        <div>
-
-          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
-            <p className="font-mono text-slate-400 text-xs uppercase tracking-widest mb-6">// פרטי האירוע</p>
-
-            <div className="mb-6">
-              <label className="text-slate-300 text-sm font-medium mb-2 block">שם האירוע <span className="text-rose-500">*</span></label>
-              <input className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30" name="title" value={form.title} onChange={handleChange} placeholder="שם האירוע..." />
-              {errors.title && <span className="text-rose-400 text-xs mt-1 block">⚠ {errors.title}</span>}
-            </div>
-
-            <div>
-              <label className="text-slate-300 text-sm font-medium mb-2 block">תיאור <span className="text-rose-500">*</span></label>
-              <MarkdownEditor
-                value={form.description}
-                onChange={(v) => setForm(prev => ({ ...prev, description: v }))}
-                placeholder="תאר את האירוע — מה יקרה, למי הוא מתאים, מה ניתן ללמוד..."
-                rows={6}
-              />
-              {errors.description && <span className="text-rose-400 text-xs mt-1 block">⚠ {errors.description}</span>}
-            </div>
+      <div className="page-container">
+        <div className="mb-14">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 mb-5">
+            <Plus className="w-4 h-4 text-cyan-400" />
+            <span className="text-sm text-cyan-300 font-medium">CREATE EVENT</span>
           </div>
-
-          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
-            <p className="font-mono text-slate-400 text-xs uppercase tracking-widest mb-6">// מתי ואיפה</p>
-
-            <div className="mb-6">
-              <label className="text-slate-300 text-sm font-medium mb-2 block">תאריך ושעה <span className="text-rose-500">*</span></label>
-              <input
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30"
-                type="datetime-local"
-                name="date"
-                value={form.date}
-                onChange={handleChange}
-              />
-              {errors.date && <span className="text-rose-400 text-xs mt-1 block">⚠ {errors.date}</span>}
-            </div>
-
-            <div className="mb-6">
-              <label className="text-slate-300 text-sm font-medium mb-2 block">מיקום <span className="text-rose-500">*</span></label>
-              <input
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30"
-                name="location"
-                value={form.location}
-                onChange={handleChange}
-                placeholder="עיר, כתובת או Online..."
-              />
-              {errors.location && <span className="text-rose-400 text-xs mt-1 block">⚠ {errors.location}</span>}
-            </div>
-
-            <div>
-              <label className="text-slate-300 text-sm font-medium mb-2 block">לינק לאירוע</label>
-              <input
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30"
-                name="link"
-                value={form.link}
-                onChange={handleChange}
-                placeholder="https://..."
-              />
-              <span className="text-slate-400 text-xs mt-2 block">Eventbrite, Meetup, אתר רשמי וכו' (אופציונלי)</span>
-            </div>
-          </div>
-
+          <h1 className="text-5xl font-black mb-4">
+            פרסם <span className="text-gradient">אירוע חדש</span>
+          </h1>
+          <p className="text-slate-400 max-w-2xl">כנסים, מיטאפים, האקתונים ואירועי קהילה.</p>
         </div>
 
-        {/* ── סיידבר ── */}
-        <div className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+          {/* Main */}
+          <div className="space-y-8">
+            <div className="section-card section-card-lg">
+              <h2 className="text-2xl font-black mb-8">פרטי האירוע</h2>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-3">שם האירוע <span className="text-rose-400">*</span></label>
+                <input name="title" value={form.title} onChange={handleChange} placeholder="שם האירוע..." className="form-input" />
+                {errors.title && <p className="text-rose-400 text-sm mt-2">{errors.title}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">תיאור <span className="text-rose-400">*</span></label>
+                <MarkdownEditor value={form.description} onChange={(v) => setForm(prev => ({ ...prev, description: v }))} placeholder="תאר את האירוע..." rows={6} />
+                {errors.description && <p className="text-rose-400 text-sm mt-2">{errors.description}</p>}
+              </div>
+            </div>
 
-          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg sticky top-20">
-            <p className="font-mono text-slate-400 text-xs uppercase tracking-widest mb-6">// תגיות</p>
-            <div>
-              <label className="text-slate-300 text-sm font-medium mb-2 block">תגיות (עד 5)</label>
-              <div className="flex flex-wrap gap-2 bg-white/3 border border-white/8 px-3.5 py-2.5 min-h-12 items-center rounded rtl mb-4">
+            <div className="section-card section-card-lg">
+              <h2 className="text-2xl font-black mb-8">מתי ואיפה</h2>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-3">תאריך ושעה <span className="text-rose-400">*</span></label>
+                <input type="datetime-local" name="date" value={form.date} onChange={handleChange} className="form-input" />
+                {errors.date && <p className="text-rose-400 text-sm mt-2">{errors.date}</p>}
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-3">מיקום <span className="text-rose-400">*</span></label>
+                <input name="location" value={form.location} onChange={handleChange} placeholder="עיר, כתובת או Online..." className="form-input" />
+                {errors.location && <p className="text-rose-400 text-sm mt-2">{errors.location}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">לינק לאירוע</label>
+                <input name="link" value={form.link} onChange={handleChange} placeholder="https://..." className="form-input" />
+                <p className="text-xs text-slate-500 mt-2">Eventbrite, Meetup, אתר רשמי (אופציונלי)</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-8">
+            <div className="section-card section-card-md sticky top-10">
+              <h2 className="text-xl font-black mb-6">תגיות</h2>
+              <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-700 bg-slate-950/50 p-3 mb-4 min-h-[56px]">
                 {tags.map(tag => (
-                  <span key={tag} className="bg-cyan-500/20 text-cyan-300 px-2.5 py-1.5 rounded text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
+                  <span key={tag} className="tag-chip">
                     #{tag}
-                    <button type="button" className="font-bold hover:text-cyan-200" onClick={() => removeTag(tag)}>×</button>
+                    <button type="button" onClick={() => removeTag(tag)} className="hover:text-white">×</button>
                   </span>
                 ))}
                 {tags.length < 5 && (
-                  <input
-                    className="flex-1 bg-transparent text-slate-200 outline-none placeholder-slate-400 text-sm min-w-16"
-                    value={tagInput}
-                    onChange={e => setTagInput(e.target.value)}
-                    onKeyDown={handleTagKeyDown}
-                    placeholder={tags.length === 0 ? "הוסף תגית..." : "+"}
-                  />
+                  <input value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={handleTagKeyDown} placeholder={tags.length === 0 ? "הוסף תגית..." : "+"} className="tag-input" />
                 )}
               </div>
-              <span className="text-slate-400 text-xs">Enter או פסיק להוספה</span>
+              <p className="text-xs text-slate-500 mb-5">Enter או פסיק להוספה</p>
+              <div className="grid grid-cols-2 gap-2">
+                {QUICK_TAGS.map(tag => (
+                  <button key={tag} type="button" onClick={() => toggleQuickTag(tag)} disabled={!tags.includes(tag) && tags.length >= 5}
+                    className={`rounded-xl px-3 py-2 text-sm font-medium transition-all ${tags.includes(tag) ? "bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950" : "border border-slate-700 bg-slate-950/50 text-slate-300 hover:border-cyan-500/40"}`}>
+                    #{tag}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              {QUICK_TAGS.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  className={`px-3 py-2 rounded text-xs font-medium transition-colors ${tags.includes(tag) ? "bg-cyan-500 text-gray-950 font-bold" : "bg-white/3 border border-white/8 text-slate-200 hover:bg-white/5"} ${!tags.includes(tag) && tags.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
-                  onClick={() => toggleQuickTag(tag)}
-                  disabled={!tags.includes(tag) && tags.length >= 5}
-                >
-                  #{tag}
+
+            <div className="section-card section-card-md">
+              <h2 className="text-xl font-black mb-6">תמונה</h2>
+              <input name="image" value={form.image} onChange={handleChange} placeholder="https://..." className="form-input" />
+              <p className="text-xs text-slate-500 mt-3">קישור לתמונה ראשית (אופציונלי)</p>
+            </div>
+
+            <div className="section-card section-card-md">
+              {errors.submit && <p className="text-rose-400 text-sm mb-4">{errors.submit}</p>}
+              <div className="space-y-3">
+                <button type="submit" disabled={loading} className="button-primary w-full">
+                  {loading ? "מפרסם..." : "פרסם אירוע"}
                 </button>
-              ))}
+                <Link to="/events" className="button-secondary w-full text-center">ביטול</Link>
+              </div>
             </div>
           </div>
-
-          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
-            <p className="font-mono text-slate-400 text-xs uppercase tracking-widest mb-6">// תמונה</p>
-            <div>
-              <label className="text-slate-300 text-sm font-medium mb-2 block">קישור לתמונה</label>
-              <input
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30"
-                name="image"
-                value={form.image}
-                onChange={handleChange}
-                placeholder="https://..."
-              />
-              <span className="text-slate-400 text-xs mt-2 block">אופציונלי</span>
-            </div>
-          </div>
-
-          <div className="bg-white/2 border border-white/7 px-7 py-6 rounded-lg">
-            {errors.submit && <div className="text-rose-400 text-xs mb-3">⚠ {errors.submit}</div>}
-            <div className="flex flex-col gap-3">
-              <button type="submit" className="w-full px-6 py-2.75 bg-cyan-500 text-gray-950 font-sans font-bold uppercase tracking-widest rounded hover:shadow-lg hover:shadow-cyan-500/35 disabled:opacity-50 disabled:cursor-not-allowed" disabled={loading}>
-                {loading ? "מפרסם..." : "פרסם אירוע"}
-              </button>
-              <Link to="/events" className="w-full px-6 py-2.75 bg-white/3 border border-white/8 text-slate-200 font-sans font-bold uppercase tracking-widest rounded text-center hover:bg-white/5">ביטול</Link>
-            </div>
-          </div>
-
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

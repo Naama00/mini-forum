@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require("dotenv");
+dotenv.config();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const logger = require('./logger');
@@ -34,8 +35,6 @@ app.use(pinoHttp);
 
 // Apply general rate limiter to all routes
 app.use(generalLimiter);
-
-dotenv.config();
 
 async function startServer() {
     try {
