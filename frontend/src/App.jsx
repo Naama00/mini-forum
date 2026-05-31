@@ -1,72 +1,100 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Suspense, useState, useEffect } from "react";
-import { routes } from './config/routeConfig';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Loading } from './components/common/Loading';
-import Sidebar from "./components/Sidebar/Sidebar.jsx";
-import AppShell from "./components/layout/AppShell"; 
+import AppShell from './components/layout/AppShell';
+import Sidebar from './components/Sidebar/Sidebar';
 
+// ── Lazy routes ──────────────────────────────────────
+const Home               = lazy(() => import('./components/Home/Home'));
+const Category           = lazy(() => import('./components/Category/Category'));
+const AuthForm           = lazy(() => import('./components/Auth'));
+const NewTopic           = lazy(() => import('./components/NewTopic'));
+const ProfilePage        = lazy(() => import('./components/Profile'));
+const ArticlesPage       = lazy(() => import('./components/Article/Articles'));
+const EventsPage         = lazy(() => import('./components/Event/Events'));
+const JobsPage           = lazy(() => import('./components/Job/Jobs'));
+const NewArticleForm     = lazy(() => import('./components/Article/NewArticle'));
+const NewEventForm       = lazy(() => import('./components/Event/NewEvent'));
+const NewJobForm         = lazy(() => import('./components/Job/NewJob'));
+const ArticlePage        = lazy(() => import('./components/Article/Article'));
+const JobPage            = lazy(() => import('./components/Job/Job'));
+const EventPage          = lazy(() => import('./components/Event/Event'));
+const EditArticle        = lazy(() => import('./components/Article/EditArticle'));
+const EditEvent          = lazy(() => import('./components/Event/EditEvent'));
+const EditJob            = lazy(() => import('./components/Job/EditJob'));
+const Notifications      = lazy(() => import('./components/Notification/Notifications'));
+const SearchResults      = lazy(() => import('./components/Search/Searchresults'));
+const AIWorkspace        = lazy(() => import('./components/AIWorkspace/AIWorkspaceContainer'));
+
+// דפים שמציגים סיידבר
+const WITH_SIDEBAR = [
+  '/', '/category', '/articles', '/events', '/jobs',
+  '/notifications', '/search', '/new-topic', '/ai-workspace',
+];
+
+function useSidebar() {
+  const { pathname } = useLocation();
+  return WITH_SIDEBAR.some(r =>
+    r === '/' ? pathname === '/' : pathname === r || pathname.startsWith(r + '/')
+  );
+}
+
+// ── Layout wrapper שמחליט אם להציג סיידבר ──────────
+function Layout({ children }) {
+  const showSidebar = useSidebar();
+
+  return (
+    <AppShell sidebar={showSidebar ? <Sidebar /> : null}>
+      {children}
+    </AppShell>
+  );
+}
+
+// ── כל ה-Routes ──────────────────────────────────────
 function AppRoutes() {
   return (
-    <Suspense fallback={<Loading />}>\
+    <Suspense fallback={<Loading />}>
       <Routes>
-        {routes.map((route) => (  
-          <Route
-            key={route.path}
-            path={route.path}
-            element={<route.element />}
-          />
-        ))}
+        <Route path="/"                   element={<Home />} />
+        <Route path="/category"           element={<Category />} />
+        <Route path="/auth"               element={<AuthForm />} />
+        <Route path="/new-topic"          element={<NewTopic />} />
+        <Route path="/profile/:userId"    element={<ProfilePage />} />
+        <Route path="/articles"           element={<ArticlesPage />} />
+        <Route path="/articles/new"       element={<NewArticleForm />} />
+        <Route path="/articles/:id"       element={<ArticlePage />} />
+        <Route path="/articles/:id/edit"  element={<EditArticle />} />
+        <Route path="/events"             element={<EventsPage />} />
+        <Route path="/events/new"         element={<NewEventForm />} />
+        <Route path="/events/:id"         element={<EventPage />} />
+        <Route path="/events/:id/edit"    element={<EditEvent />} />
+        <Route path="/jobs"               element={<JobsPage />} />
+        <Route path="/jobs/new"           element={<NewJobForm />} />
+        <Route path="/jobs/:id"           element={<JobPage />} />
+        <Route path="/jobs/:id/edit"      element={<EditJob />} />
+        <Route path="/notifications"      element={<Notifications />} />
+        <Route path="/search"             element={<SearchResults />} />
+        <Route path="/ai-workspace"       element={<AIWorkspace />} />
       </Routes>
     </Suspense>
   );
 }
 
-function App() {
-  const [currentUser, setCurrentUser] = useState({
-    firstName: "אורח",
-    lastName: "בבדיקה",
-    votes: 10,
-    isAdmin: false,
-    links: { topics: [], posts: [], uploads: [] }
-  });
-
-  useEffect(() => {
-    const loggedInUser = localStorage.getItem("user");
-    if (loggedInUser) {
-      setCurrentUser(JSON.parse(loggedInUser));
-    }
-  }, []);
-
+// ── Root ──────────────────────────────────────────────
+export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
             <NotificationProvider>
-              <div className="min-h-screen w-full bg-slate-950 text-slate-100 antialiased" dir="rtl">
-                
-                {/* מבנה ה-Grid הראשי של האפליקציה - 2 עמודות קבועות */}
-                <div className="grid min-h-screen w-full grid-cols-[14rem_minmax(0,1fr)] sm:grid-cols-[16rem_minmax(0,1fr)] md:grid-cols-[17.5rem_minmax(0,1fr)]">
-                  
-                  {/* עמודה 1: סיידבר קבוע מימין */}
-                  <aside className="border-e border-white/5 bg-slate-900/40 h-full">
-                    <Sidebar currentUser={currentUser} />
-                  </aside>
-                  
-                  {/* עמודה 2: אזור התוכן הראשי משמאל */}
-                  <main className="flex min-h-screen flex-col min-w-0 overflow-y-auto">
-                    {/* ה-AppShell מנהל את הניווט הפנימי והתוכן הדינמי */}
-                    <AppShell>
-                      <AppRoutes />
-                    </AppShell>
-                  </main>
-
-                </div>
-              </div>
+              <Layout>
+                <AppRoutes />
+              </Layout>
             </NotificationProvider>
           </ThemeProvider>
         </AuthProvider>
@@ -74,5 +102,3 @@ function App() {
     </ErrorBoundary>
   );
 }
-
-export default App;

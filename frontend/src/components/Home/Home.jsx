@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   ChevronRight,
   Zap,
@@ -55,6 +56,7 @@ function AnimatedCounter({ target }) {
 }
 
 export default function ForumHome() {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [subcategories, setSubcategories] = useState({});
@@ -127,7 +129,7 @@ export default function ForumHome() {
         }
       }
     } else {
-      window.location.href = `/category?categoryId=${id}`;
+      navigate(`/category?categoryId=${id}`);
     }
   };
 
@@ -311,14 +313,14 @@ export default function ForumHome() {
                             <p className="mb-3 text-xs uppercase tracking-widest text-slate-500 font-semibold">Subcategories</p>
                             <div className="space-y-2">
                               {(subcategories[id] || []).map((sub) => (
-                                <a
+                                <Link
                                   key={sub._id}
-                                  href={`/category?categoryId=${sub._id}`}
+                                  to={`/category?categoryId=${sub._id}`}
                                   className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-800/30 p-4 transition-all duration-200 hover:border-cyan-400/50 hover:bg-slate-800/50"
                                 >
                                   <span className="text-sm font-medium text-slate-300">{sub.name}</span>
                                   <span className="text-xs font-semibold text-cyan-400">{sub.postCount || 0}</span>
-                                </a>
+                                </Link>
                               ))}
                             </div>
                           </div>

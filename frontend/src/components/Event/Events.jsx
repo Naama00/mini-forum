@@ -46,35 +46,63 @@ export default function EventsPage() {
   const handleAttend = async (id) => {
     const token = getToken();
     if (!token) return navigate("/auth");
+    const previousEvents = events;
+    const userId = getLoggedInUserFromToken()?.id;
+
+    setEvents((prev) =>
+      prev.map((ev) => {
+        if (ev._id !== id) return ev;
+        // Handle both ID and object attendees
+        const attending = ev.attendees?.some(a => a._id === userId || a === userId);
+        return {
+          ...ev,
+          attendees: attending ? ev.attendees.filter((u) => u._id !== userId && u !== userId) : [...(ev.attendees || []), userId],
+          _attending: !attending,
+        };
+      })
+    );
+
     try {
       const r = await fetch(`${API}/events/${id}/attend`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       const res = await r.json();
-      if (res.success) {
-        setEvents(prev => prev.map(ev => {
-          if (ev._id !== id) return ev;
-          const userId = getLoggedInUserFromToken()?.id;
-          const attending = ev.attendees?.includes(userId);
-          return { ...ev, attendees: attending ? ev.attendees.filter(u => u !== userId) : [...(ev.attendees || []), userId], _attending: !attending };
-        }));
+      if (!r.ok && !res.success) {
+        throw new Error(res.message || 'Failed to update attendance');
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error("Event attendance error:", e);
+      setEvents(previousEvents);
+      alert("שגיאה בעדכון ההרשמה");
+    }
   };
 
   const handleLike = async (id) => {
     const token = getToken();
     if (!token) return navigate("/auth");
+    const previousEvents = events;
+    const userId = getLoggedInUserFromToken()?.id;
+
+    setEvents((prev) =>
+      prev.map((ev) => {
+        if (ev._id !== id) return ev;
+        const liked = ev.likes?.includes(userId);
+        return {
+          ...ev,
+          likes: liked ? ev.likes.filter((u) => u !== userId) : [...(ev.likes || []), userId],
+          _liked: !liked,
+        };
+      })
+    );
+
     try {
       const r = await fetch(`${API}/events/${id}/like`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       const res = await r.json();
-      if (res.success) {
-        setEvents(prev => prev.map(ev => {
-          if (ev._id !== id) return ev;
-          const userId = getLoggedInUserFromToken()?.id;
-          const liked = ev.likes?.includes(userId);
-          return { ...ev, likes: liked ? ev.likes.filter(u => u !== userId) : [...(ev.likes || []), userId], _liked: !liked };
-        }));
+      if (!r.ok) {
+        throw new Error(res.message || res.error || 'Failed to update like');
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      setEvents(previousEvents);
+    }
   };
 
   return (

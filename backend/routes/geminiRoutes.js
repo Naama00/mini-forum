@@ -1,9 +1,12 @@
 // backend/routes/geminiRoutes.js
 const express = require("express");
 const router = express.Router();
-const { handleAIAssist } = require("../controllers/geminiController");
+const { handleAIAssist, handleAIStream } = require("../controllers/geminiController");
 
-// נתיב חשיפת שירותי העזרה של הבינה המלאכותית
+// קיים — תגובה מלאה
 router.post("/assist", handleAIAssist);
+
+// חדש — Server-Sent Events streaming
+router.post("/stream", handleAIStream);
 
 module.exports = router;

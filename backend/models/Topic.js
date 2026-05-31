@@ -9,6 +9,7 @@ const topicSchema = new mongoose.Schema({
     createdAt: Date,
     editedAt: Date,
     votes: Number,
+    views: { type: Number, default: 0 },
     isPinned: Boolean,
     isClosed: Boolean,
     posts: [{

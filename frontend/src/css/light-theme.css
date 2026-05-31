@@ -1,0 +1,199 @@
+/* ===================================================
+   LIGHT THEME
+   =================================================== */
+
+/* When dark-theme class is NOT present, use light theme variables */
+html:not(.dark-theme) {
+  --bg-primary: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-soft: #94a3b8;
+  
+  --surface-border: rgba(0, 0, 0, 0.08);
+  --surface-border-strong: rgba(0, 0, 0, 0.12);
+  --surface-overlay: rgba(255, 255, 255, 0.95);
+  
+  --accent-cyan: #0891b2;
+  --accent-violet: #7c3aed;
+  --accent-lime: #65a30d;
+  
+  --gradient-primary: linear-gradient(135deg, #65a30d 0%, #0891b2 50%, #7c3aed 100%);
+  --gradient-secondary: linear-gradient(135deg, #0891b2 0%, #7c3aed 100%);
+  --gradient-accent: linear-gradient(90deg, #0891b2, #7c3aed);
+  
+  --glass-bg-heavy: rgba(255, 255, 255, 0.95);
+  --glass-bg-medium: rgba(255, 255, 255, 0.85);
+  --glass-bg-light: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  
+  --glow-cyan: 0 0 20px rgba(8, 145, 178, 0.15), 0 0 40px rgba(8, 145, 178, 0.08);
+  --glow-lime: 0 0 20px rgba(101, 163, 13, 0.15), 0 0 40px rgba(101, 163, 13, 0.08);
+  --glow-violet: 0 0 20px rgba(124, 58, 237, 0.15), 0 0 40px rgba(124, 58, 237, 0.08);
+  
+  --depth-1: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --depth-2: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --depth-3: 0 8px 24px rgba(0, 0, 0, 0.08);
+  
+  --noise-opacity: 0;
+}
+
+/* Light theme specific overrides - HIGHER SPECIFICITY */
+html:not(.dark-theme) body {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Override ALL background colors to white in light theme */
+html:not(.dark-theme) * {
+  background-color: transparent !important;
+}
+
+html:not(.dark-theme) body,
+html:not(.dark-theme) .bg-slate-950,
+html:not(.dark-theme) .bg-slate-900,
+html:not(.dark-theme) .bg-slate-900\/30,
+html:not(.dark-theme) .bg-slate-900\/50,
+html:not(.dark-theme) .bg-slate-900\/60,
+html:not(.dark-theme) .bg-slate-800 {
+  background-color: #ffffff !important;
+}
+
+/* Override glass backgrounds */
+html:not(.dark-theme) .glass-card,
+html:not(.dark-theme) .glass-card-futuristic,
+html:not(.dark-theme) .cyber-card,
+html:not(.dark-theme) .section-card,
+html:not(.dark-theme) .sidebar-shell,
+html:not(.dark-theme) header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Override text colors */
+html:not(.dark-theme) .text-slate-100,
+html:not(.dark-theme) .text-slate-200,
+html:not(.dark-theme) .text-slate-300 {
+  color: #0f172a !important;
+}
+
+html:not(.dark-theme) .text-slate-400,
+html:not(.dark-theme) .text-slate-500,
+html:not(.dark-theme) .text-slate-600 {
+  color: #64748b !important;
+}
+
+/* Override borders */
+html:not(.dark-theme) .border-slate-800\/50,
+html:not(.dark-theme) .border-slate-700,
+html:not(.dark-theme) .border-white\/5,
+html:not(.dark-theme) .border-white\/10,
+html:not(.dark-theme) .border-slate-800 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Hide ALL background elements in light theme */
+html:not(.dark-theme) .fixed.inset-0.-z-10,
+html:not(.dark-theme) .home-bg-container,
+html:not(.dark-theme) .home-bg-blob,
+html:not(.dark-theme) .home-bg-blob-1,
+html:not(.dark-theme) .home-bg-blob-2,
+html:not(.dark-theme) .home-bg-blob-3,
+html:not(.dark-theme) .home-cursor-glow,
+html:not(.dark-theme) .home-grid-overlay {
+  display: none !important;
+}
+
+/* Override sidebar and navbar specifically */
+html:not(.dark-theme) .sidebar-shell {
+  background-color: #ffffff !important;
+  border-left-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html:not(.dark-theme) header {
+  background-color: #ffffff !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Override card backgrounds - gradient style only for category cards */
+html:not(.dark-theme) .home-category-card {
+  position: relative !important;
+  background: linear-gradient(135deg, rgba(6,182,212,0.08), rgba(139,92,246,0.08)) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(148,163,184,0.15) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 1.5rem !important;
+}
+
+html:not(.dark-theme) .home-category-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(6,182,212,0.05), rgba(139,92,246,0.05));
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Other cards - simple white with shadow (except stat cards) */
+html:not(.dark-theme) .glass-card,
+html:not(.dark-theme) .glass-card-futuristic,
+html:not(.dark-theme) .cyber-card,
+html:not(.dark-theme) .section-card,
+html:not(.dark-theme) .home-cta-container {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Stat cards - no shadow */
+html:not(.dark-theme) .home-stat-card {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: none !important;
+}
+
+/* Override input backgrounds */
+html:not(.dark-theme) input,
+html:not(.dark-theme) textarea,
+html:not(.dark-theme) .form-input,
+html:not(.dark-theme) .form-textarea,
+html:not(.dark-theme) .cyber-input,
+html:not(.dark-theme) .input-futuristic {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+}
+
+/* Override button backgrounds */
+html:not(.dark-theme) .button-primary,
+html:not(.dark-theme) .cyber-btn-primary {
+  background-color: #65a30d !important;
+  color: #ffffff !important;
+}
+
+/* Gradient text for titles in light theme */
+html:not(.dark-theme) .home-category-title,
+html:not(.dark-theme) .home-category-card h3,
+html:not(.dark-theme) .home-category-card .title,
+html:not(.dark-theme) .home-category-card h2,
+html:not(.dark-theme) .home-category-card .category-title,
+html:not(.dark-theme) h1,
+html:not(.dark-theme) h2,
+html:not(.dark-theme) .hero-title,
+html:not(.dark-theme) .page-title {
+  background-image: linear-gradient(90deg, #0891b2, #7c3aed) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* Ensure gradient text is visible on white background */
+html:not(.dark-theme) .home-gradient-text,
+html:not(.dark-theme) .gradient-text {
+  background-image: linear-gradient(90deg, #0891b2, #7c3aed) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}

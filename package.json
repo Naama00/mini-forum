@@ -36,6 +36,7 @@
     "pino-pretty": "^11.0.0",
     "rate-limit-redis": "^4.3.1",
     "redis": "^5.12.1",
+    "socket.io": "^4.8.1",
     "vite": "^7.3.1"
   }
 }

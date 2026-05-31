@@ -86,7 +86,7 @@ async function getCategoryById(categoryId) {
     }
 
     const topics = await Topic.find({ _id: { $in: category.topics } })
-        .select('title type votes isPinned isClosed createdAt tags posts author')
+        .select('title type votes views isPinned isClosed createdAt tags posts author')
         .lean();
 
     const formattedTopics = topics
@@ -113,10 +113,21 @@ async function getTopicById(topicId) {
     const cached = await cache.get(cacheKey);
     if (cached) {
         logger.debug({ key: cacheKey }, 'Redis cache hit for topic');
+        try {
+            await Topic.findByIdAndUpdate(topicId, { $inc: { views: 1 } });
+            cached.data.views = (cached.data.views || 0) + 1;
+            await cache.set(cacheKey, cached, 300);
+        } catch (err) {
+            logger.warn({ err, topicId }, 'Failed to increment views on cached topic');
+        }
         return cached;
     }
 
-    const topic = await Topic.findById(topicId)
+    const topic = await Topic.findByIdAndUpdate(
+        topicId,
+        { $inc: { views: 1 } },
+        { new: true }
+    )
         .select('-__v')
         .populate('category', 'name _id')
         .lean();

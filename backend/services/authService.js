@@ -42,8 +42,7 @@ async function registerUser(userData) {
 
     await user.save();
 
-    // const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-const token = jwt.sign({ userId: user._id }, 'my-super-secret-local-key-123', { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     return {
         token,
         user: {

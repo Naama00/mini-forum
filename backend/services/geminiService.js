@@ -4,7 +4,6 @@ require("dotenv").config();
 
 let genAI = null;
 
-// איתחול בטוח של הלקוח
 function getGeminiClient() {
   if (!genAI) {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -14,25 +13,17 @@ function getGeminiClient() {
     genAI = new GoogleGenAI({
       apiKey: apiKey || "",
       httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
+        headers: { "User-Agent": "aistudio-build" },
+      },
     });
   }
   return genAI;
 }
 
-/**
- * מחולל תוכן קוד או שיחה מול Gemini לפי הפעולה הנדרשת
- */
-async function generateContent({ action, prompt, extraContext, history }) {
-  const ai = getGeminiClient();
-  let systemInstruction = "";
-  let formattedPrompt = prompt;
-
+// ─── בניית system instruction לפי action ─────────────────────────────────────
+function buildSystemInstruction(action) {
   if (action === "generate-draft") {
-    systemInstruction = `
+    return `
       You are a world-class senior software developer, tech architect, and expert technical blogger.
       Your task is to draft an exceptionally polished, high-calibre, educational article, tutorial, or deep-dive forum topic based on the user's prompt.
       
@@ -49,8 +40,10 @@ async function generateContent({ action, prompt, extraContext, history }) {
          - ## טיפים והמלצות (Expert tips and recommendations)
        6. Return only the Markdown text.
     `;
-  } else if (action === "optimize-code") {
-    systemInstruction = `
+  }
+
+  if (action === "optimize-code") {
+    return `
       You are an elite compiler engineer, principal performance architect, and senior security auditor.
       Your task is to analyze, debug, and optimize the provided code block.
       
@@ -62,18 +55,17 @@ async function generateContent({ action, prompt, extraContext, history }) {
       Mandatory rules:
       1. Write your explanations and optimization summary in professional technological Hebrew.
       2. Keep the code itself clean, secure, and written in pristine, working English.
-      3. Output the fully optimized corrected code in standard Markdown block specifying the correct language (e.g., \`\`\`typescript).
+      3. Output the fully optimized corrected code in standard Markdown block specifying the correct language.
       4. Structure your response clearly:
          - # ניתוח ואיתור בעיות (Analysis and issue identification)
          - ## קוד משופר ואופטימלי (The optimized code block)
          - ## פירוט השינויים והשיפורים (Detailed summary of changes made)
          - ## המלצות נוספות (Additional expert advice)
     `;
-    if (extraContext) {
-      formattedPrompt = `Code to optimize:\n\`\`\`\n${extraContext}\n\`\`\`\n\nUser request/Context: ${prompt}`;
-    }
-  } else if (action === "refine-content") {
-    systemInstruction = `
+  }
+
+  if (action === "refine-content") {
+    return `
       You are an expert technical editor, localization specialist, and tech copywriter.
       Your task is to refine, brush up, and polish the user's drafted text to make it extremely professional, grammatically perfect, and technically precise.
       
@@ -83,41 +75,68 @@ async function generateContent({ action, prompt, extraContext, history }) {
       3. Format into proper readable Markdown (paragraphs, bullet points, correct headers).
       4. Output only the final refined version itself without introductory conversational meta-talk.
     `;
-  } else {
-    // צ'אט מותאם אישית של העוזר (AI Chat Helper)
-    systemInstruction = `
-      You are DevHub AI Co-pilot - a brilliant, engaging, friendly, and expert technological AI assistant.
-      You reside inside a modern high-performance technological forum and help young frontenders, backenders, and devops engineers code better, build faster, and deploy securely.
-      
-      Mandatory rules:
-      1. Answer in fluent, helpful, clear Hebrew.
-      2. Utilize clear Markdown blocks for explanations, lists, and code blocks.
-      3. Be highly technical, concise, precise, and practical. Do not use fluff or excessive preambles.
-    `;
   }
 
-  let contents = formattedPrompt;
+  // default: chat
+  return `
+    You are DevHub AI Co-pilot - a brilliant, engaging, friendly, and expert technological AI assistant.
+    You reside inside a modern high-performance technological forum and help young frontenders, backenders, and devops engineers code better, build faster, and deploy securely.
+    
+    Mandatory rules:
+    1. Answer in fluent, helpful, clear Hebrew.
+    2. Utilize clear Markdown blocks for explanations, lists, and code blocks.
+    3. Be highly technical, concise, precise, and practical. Do not use fluff or excessive preambles.
+  `;
+}
 
-  // אם אנחנו בשיחת צ'אט רציפה ויש היסטוריית הודעות - נמיר אותה למבנה ש-Gemini מצפה לקבל
+// ─── buildContents: מייצר את מבנה contents עבור Gemini ───────────────────────
+function buildContents(action, prompt, extraContext, history) {
   if (action === "chat" && Array.isArray(history)) {
-    contents = history.map((msg) => ({
+    return history.map((msg) => ({
       role: msg.sender === "user" ? "user" : "model",
-      parts: [{ text: msg.text }]
+      parts: [{ text: msg.text }],
     }));
   }
 
+  if ((action === "optimize-code") && extraContext) {
+    return `Code to optimize:\n\`\`\`\n${extraContext}\n\`\`\`\n\nUser request/Context: ${prompt}`;
+  }
+
+  return prompt;
+}
+
+// ─── generateContent: קיים, לא שונה ─────────────────────────────────────────
+async function generateContent({ action, prompt, extraContext, history }) {
+  const ai = getGeminiClient();
+  const systemInstruction = buildSystemInstruction(action);
+  const contents = buildContents(action, prompt, extraContext, history);
+
   const response = await ai.models.generateContent({
     model: "gemini-3.5-flash",
-    contents: contents,
-    config: {
-      systemInstruction,
-      temperature: 1,
-    }
+    contents,
+    config: { systemInstruction, temperature: 1 },
   });
 
   return response.text;
 }
 
+// ─── generateContentStream: חדש — מחזיר AsyncIterable של chunks ──────────────
+async function generateContentStream({ action, prompt, extraContext, history }) {
+  const ai = getGeminiClient();
+  const systemInstruction = buildSystemInstruction(action);
+  const contents = buildContents(action, prompt, extraContext, history);
+
+  // generateContentStream מחזיר AsyncIterable — כל איטרציה היא chunk
+  const stream = await ai.models.generateContentStream({
+    model: "gemini-3.5-flash",
+    contents,
+    config: { systemInstruction, temperature: 1 },
+  });
+
+  return stream;
+}
+
 module.exports = {
-  generateContent
+  generateContent,
+  generateContentStream,
 };

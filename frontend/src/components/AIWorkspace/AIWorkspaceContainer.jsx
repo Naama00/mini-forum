@@ -48,7 +48,8 @@ export default function AIWorkspaceContainer() {
       return Promise.reject(new Error('No authentication token'));
     }
     
-    console.log('Creating topic with data:', topicData);
+    const content = topicData.content || firstPostContent;
+    console.log('Creating topic with data:', { ...topicData, content });
     
     return fetch(`${API_BASE}/api/topics`, {
       method: 'POST',
@@ -58,7 +59,7 @@ export default function AIWorkspaceContainer() {
       },
       body: JSON.stringify({
         title: topicData.title,
-        content: firstPostContent,
+        content,
         categoryId: topicData.categoryId,
         tags: topicData.tags || [],
         type: topicData.type || 'question'

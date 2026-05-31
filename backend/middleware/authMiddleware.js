@@ -9,7 +9,7 @@ if (!JWT_SECRET) {
   console.warn('WARNING: JWT_SECRET is not defined. Using a volatile fallback key for development.');
 }
 
-const EffectiveSecret = JWT_SECRET || 'devhub-temporary-volatile-development-secret-key-12345';
+const EffectiveSecret = JWT_SECRET || 'devhub-secret-key-change-in-production';
 
 /**
  * Express middleware to authenticate requests via JWT.
@@ -43,6 +43,7 @@ module.exports = (req, res, next) => {
     // Sanitized attachment of user context supporting both userId and id from token payload
     req.user = {
       id: decoded.userId || decoded.id,
+      userId: decoded.userId || decoded.id,
       roles: decoded.roles || [],
     };
 

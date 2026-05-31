@@ -1,6 +1,7 @@
 const { Queue, Worker } = require('bullmq');
 const Notification = require('../models/Notification');
 const logger = require('../logger');
+const notificationEvents = require('../notificationEvents');
 
 const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const queueOptions = { connection: { url: redisUrl } };
@@ -23,7 +24,9 @@ function createNotificationResources() {
         return null;
       }
 
-      return Notification.create({ recipient, sender, type, refModel, refId, text });
+      const notification = await Notification.create({ recipient, sender, type, refModel, refId, text });
+      notificationEvents.emit('notificationCreated', notification.toObject ? notification.toObject() : notification);
+      return notification;
     },
     {
       connection: queueOptions.connection,
@@ -53,7 +56,8 @@ async function addNotificationJob(payload) {
 
     if (!isReady || !notificationQueue) {
       logger.warn('Redis notification queue unavailable, writing notification directly');
-      await Notification.create(payload);
+      const notification = await Notification.create(payload);
+      notificationEvents.emit('notificationCreated', notification.toObject ? notification.toObject() : notification);
       return;
     }
 

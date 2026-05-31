@@ -191,46 +191,44 @@ export default function CategoryPage() {
     setCreatingTopic(true);
 
     try {
-  const token = getToken();
+      const token = getToken();
 
-  const r = await fetch(`${API_BASE}/api/topics`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      title: newTopicTitle,
-      content: newTopicContent,
-      categoryId: id,
-    }),
-  });
+      const r = await fetch(`${API_BASE}/api/topics`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: newTopicTitle,
+          content: newTopicContent,
+          categoryId: id,
+        }),
+      });
 
-  // הגנה: אם השרת החזיר שגיאת HTTP (כמו 401 או 500)
-  if (!r.ok) {
-    if (r.status === 401) {
-      alert("פג תוקף ההתחברות, נא להתחבר מחדש");
-      // כאן אפשר גם לנקות טוקן ולהעביר ל-/auth
-    } else {
-      alert("אירעה שגיאה ביצירת הנושא");
+      if (!r.ok) {
+        if (r.status === 401) {
+          alert("פג תוקף ההתחברות, נא להתחבר מחדש");
+        } else {
+          alert("אירעה שגיאה ביצירת הנושא");
+        }
+        return;
+      }
+
+      const res = await r.json();
+
+      if (res.success) {
+        navigate(`/category?topicId=${res.data._id || res.data.id}`);
+      } else {
+        alert(res.message || "יצירת הנושא נכשלה");
+      }
+    } catch (error) {
+      console.error("Error creating topic:", error);
+      alert("שגיאת רשת, נסה שנית מאוחר יותר");
+    } finally {
+      setCreatingTopic(false);
     }
-    return; // עוצר את המשך הפונקציה
-  }
-
-  const res = await r.json();
-
-  if (res.success) {
-    // שימוש ב-navigate של React Router במקום רענון עמוד מלא
-    navigate(`/category?topicId=${res.data._id || res.data.id}`);
-  } else {
-    alert(res.message || "יצירת הנושא נכשלה");
-  }
-} catch (error) {
-  console.error("Error creating topic:", error);
-  alert("שגיאת רשת, נסה שנית מאוחר יותר");
-} finally {
-  setCreatingTopic(false);
-}
+  };
 
   /* ───────────────────────────────────────────── */
 
@@ -452,7 +450,7 @@ export default function CategoryPage() {
                             <div className="text-sm text-slate-400 flex items-center gap-2">
                               <MessageSquare className="w-4 h-4" />
 
-                              {t.postCount || 0}
+                              {t.posts?.length || 0}
                             </div>
 
                             <div className="text-sm text-slate-400 flex items-center gap-2">

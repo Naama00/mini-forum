@@ -41,18 +41,31 @@ export default function JobsPage() {
   const handleLike = async (id) => {
     const token = getToken();
     if (!token) return navigate("/auth");
+    const previousJobs = jobs;
+    const userId = getLoggedInUserFromToken()?.id;
+
+    setJobs((prev) =>
+      prev.map((job) => {
+        if (job._id !== id) return job;
+        const liked = job.likes?.includes(userId);
+        return {
+          ...job,
+          likes: liked ? job.likes.filter((u) => u !== userId) : [...(job.likes || []), userId],
+          _liked: !liked,
+        };
+      })
+    );
+
     try {
       const r = await fetch(`${API}/jobs/${id}/like`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       const res = await r.json();
-      if (res.success) {
-        setJobs(prev => prev.map(job => {
-          if (job._id !== id) return job;
-          const userId = getLoggedInUserFromToken()?.id;
-          const liked = job.likes?.includes(userId);
-          return { ...job, likes: liked ? job.likes.filter(u => u !== userId) : [...(job.likes || []), userId], _liked: !liked };
-        }));
+      if (!r.ok) {
+        throw new Error(res.message || res.error || 'Failed to update like');
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      setJobs(previousJobs);
+    }
   };
 
   return (

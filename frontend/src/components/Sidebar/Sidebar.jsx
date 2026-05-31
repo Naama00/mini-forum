@@ -6,11 +6,11 @@ import './Sidebar.css';
 const API_BASE = 'http://localhost:5000';
 
 const NAV = [
-  { to: '/',              icon: '⌂',  label: 'דף הבית'  },
-  { to: '/articles',      icon: '◎',  label: 'מאמרים'   },
-  { to: '/events',        icon: '◆',  label: 'אירועים'  },
-  { to: '/jobs',          icon: '◇',  label: 'משרות'    },
-  { to: '/notifications', icon: '◐',  label: 'התראות'   },
+  { to: '/',              icon: '⌂',  label: 'דף הבית'    },
+  { to: '/articles',      icon: '◎',  label: 'מאמרים'     },
+  { to: '/events',        icon: '◆',  label: 'אירועים'    },
+  { to: '/jobs',          icon: '◇',  label: 'משרות'      },
+  { to: '/notifications', icon: '◐',  label: 'התראות'     },
 ];
 
 const TAGS = ['React', 'Node.js', 'Cyber', 'AI', 'Career', 'DevOps'];
@@ -23,6 +23,7 @@ export default function Sidebar() {
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/categories`)
@@ -31,26 +32,37 @@ export default function Sidebar() {
       .catch(() => setLoading(false));
   }, []);
 
-  const handleLogout = () => { if (logout) logout(); navigate('/auth'); };
-
   return (
-    <aside className="sidebar-shell sidebar-scroll" dir="rtl">
-
-      {/* ── לוגו ── */}
-      <div className="sidebar-section">
-        <Link to="/" className="sidebar-brand">
-          <span className="sidebar-brand-icon">⬡</span>
-          <span>Dev<span className="sidebar-brand-accent">Hub</span></span>
-        </Link>
-        <p className="sidebar-subtitle">// COMMUNITY TERMINAL v2.6</p>
-      </div>
+    <>
+      <button
+        className="sidebar-toggle"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        aria-label={isCollapsed ? 'פתח תפריט' : 'סגור תפריט'}
+      >
+        {isCollapsed ? (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )}
+      </button>
+      <div
+        className={`sidebar-backdrop ${!isCollapsed ? 'visible' : ''}`}
+        onClick={() => setIsCollapsed(true)}
+      />
+      <aside className={`sidebar-shell sidebar-scroll ${isCollapsed ? 'collapsed' : ''}`} dir="rtl">
 
       {/* ── ניווט עיקרי ── */}
       <div className="sidebar-section">
         <p className="sidebar-label">ניווט עיקרי</p>
         <ul className="sidebar-nav">
           {NAV.map(item => {
-            const isActive = item.to === '/' ? location.pathname === '/' : location.pathname === item.to;
+            const isActive = item.to === '/'
+              ? location.pathname === '/'
+              : location.pathname.startsWith(item.to);
             return (
               <li key={item.to}>
                 <Link to={item.to} className={`sidebar-link${isActive ? ' active' : ''}`}>
@@ -62,7 +74,10 @@ export default function Sidebar() {
           })}
           {isLoggedIn && (
             <li>
-              <Link to="/ai-workspace" className={`sidebar-link${location.pathname === '/ai-workspace' ? ' active' : ''}`}>
+              <Link
+                to="/ai-workspace"
+                className={`sidebar-link${location.pathname === '/ai-workspace' ? ' active' : ''}`}
+              >
                 <span className="sidebar-icon">🤖</span>
                 <span className="flex-1">AI Workspace</span>
               </Link>
@@ -81,10 +96,15 @@ export default function Sidebar() {
             {categories.map(cat => {
               const catId = cat.id || cat._id;
               const searchParams = new URLSearchParams(location.search);
-              const isSelected = location.pathname === '/category' && searchParams.get('categoryId') === catId;
+              const isSelected =
+                location.pathname === '/category' &&
+                searchParams.get('categoryId') === catId;
               return (
                 <li key={catId}>
-                  <Link to={`/category?categoryId=${catId}`} className={`sidebar-category-item${isSelected ? ' active' : ''}`}>
+                  <Link
+                    to={`/category?categoryId=${catId}`}
+                    className={`sidebar-category-item${isSelected ? ' active' : ''}`}
+                  >
                     <span className="sidebar-category-marker" />
                     <span className="flex-1 truncate">{cat.name}</span>
                   </Link>
@@ -100,29 +120,44 @@ export default function Sidebar() {
         <p className="sidebar-label">תגיות חמות</p>
         <div className="sidebar-tags">
           {TAGS.map(tag => (
-            <Link key={tag} to={`/search?tag=${encodeURIComponent(tag)}`} className="sidebar-tag">
+            <Link
+              key={tag}
+              to={`/search?tag=${encodeURIComponent(tag)}`}
+              className="sidebar-tag"
+            >
               #{tag}
             </Link>
           ))}
         </div>
       </div>
 
-      {/* ── משתמש ── */}
+      {/* ── פאנל משתמש ── */}
       <div className="sidebar-user-panel">
-        <button onClick={() => isLoggedIn ? navigate(`/profile/${user._id}`) : navigate('/auth')} className="sidebar-user-btn">
+        <button
+          onClick={() =>
+            isLoggedIn ? navigate(`/profile/${user._id}`) : navigate('/auth')
+          }
+          className="sidebar-user-btn"
+        >
           <div className="sidebar-user-avatar">
-            {isLoggedIn ? user.name?.slice(0, 2).toUpperCase() : '??'}
+            {isLoggedIn
+              ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
+              : '??'}
           </div>
           <div className="flex-1 min-w-0 text-right">
             {isLoggedIn ? (
               <>
-                <p className="sidebar-user-name">{user.name}</p>
-                <p className="sidebar-user-meta">מחובר — לחץ לפרופיל</p>
+                <p className="sidebar-user-name">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="sidebar-user-meta">לחץ לפרופיל</p>
               </>
             ) : (
               <>
                 <p className="sidebar-user-name">מצב אורח</p>
-                <p className="sidebar-user-meta sidebar-user-meta--cta">לחץ להתחבר</p>
+                <p className="sidebar-user-meta sidebar-user-meta--cta">
+                  לחץ להתחבר
+                </p>
               </>
             )}
           </div>
@@ -137,5 +172,6 @@ export default function Sidebar() {
       </div>
 
     </aside>
+    </>
   );
 }

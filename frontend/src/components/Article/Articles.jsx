@@ -60,27 +60,33 @@ export default function ArticlesPage() {
   const handleLike = async (id) => {
     const token = getToken();
     if (!token) return navigate("/auth");
+    const previousArticles = articles;
+
+    setArticles((prev) =>
+      prev.map((a) =>
+        a._id === id
+          ? {
+              ...a,
+              _liked: !a._liked,
+              likes: a._liked
+                ? (a.likes || []).slice(0, -1)
+                : [...(a.likes || []), "me"],
+            }
+          : a
+      )
+    );
+
     try {
-      setArticles((prev) =>
-        prev.map((a) =>
-          a._id === id
-            ? {
-                ...a,
-                _liked: !a._liked,
-                likes: a._liked
-                  ? (a.likes || []).slice(0, -1)
-                  : [...(a.likes || []), "me"],
-              }
-            : a
-        )
-      );
-      await fetch(`${API}/articles/${id}/like`, {
+      const res = await fetch(`${API}/articles/${id}/like`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) {
+        throw new Error('Failed to toggle like');
+      }
     } catch (e) {
       console.error(e);
-      fetchArticles();
+      setArticles(previousArticles);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { getTheme, setTheme } from '../utils/storage';
 
 /**
@@ -7,6 +7,16 @@ import { getTheme, setTheme } from '../utils/storage';
  */
 export function useThemeLogic() {
   const [theme, setThemeState] = useState(() => getTheme());
+
+  // Apply theme on mount
+  useEffect(() => {
+    const savedTheme = getTheme();
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark-theme');
+    } else {
+      document.documentElement.classList.remove('dark-theme');
+    }
+  }, []);
 
   const toggleTheme = useCallback(() => {
     const newTheme = theme === 'light' ? 'dark' : 'light';

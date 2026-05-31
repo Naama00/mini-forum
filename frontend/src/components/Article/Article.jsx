@@ -198,7 +198,7 @@ export default function ArticlePage() {
                 <div className="space-y-4">
                   {article.comments?.map((comment, idx) => {
                     const cAuthor =
-                      comment.user?.firstName || comment.authorName || "אנונימי";
+                      comment.author?.firstName || comment.authorName || "אנונימי";
                     return (
                       <div key={comment._id || idx} className="section-card section-card-md">
                         <div className="flex items-center justify-between mb-4">

@@ -45,10 +45,19 @@ export default function EventPage() {
     try {
       const r = await fetch(`${API}/events/${id}/attend`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       const res = await r.json();
-      if (r.ok) setEvent(res.data ? res.data : res);
-      else alert(res.message || "פעולת ההרשמה נכשלה");
-    } catch { alert("שגיאת שרת"); }
-    finally { setSubmitting(false); }
+      if (r.ok) {
+        // Handle different response structures
+        const updatedEvent = res.data || res;
+        setEvent(updatedEvent);
+      } else {
+        alert(res.message || "פעולת ההרשמה נכשלה");
+      }
+    } catch (err) {
+      console.error("Event registration error:", err);
+      alert("שגיאת שרת");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">טוען אירוע...</div>;

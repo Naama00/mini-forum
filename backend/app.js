@@ -1,3 +1,4 @@
+const http = require('http');
 const express = require('express');
 const dotenv = require("dotenv");
 dotenv.config();
@@ -10,6 +11,8 @@ const errorMiddleware = require('./middleware/errorMiddleware');
 const { authLimiter, topicLimiter, postLimiter, commentLimiter, searchLimiter, generalLimiter } = require('./middleware/rateLimitMiddleware');
 const { connectRedis } = require('./cache');
 const { initializeNotificationQueue } = require('./queues/notificationQueue');
+const notificationEvents = require('./notificationEvents');
+const { initSocket, getSocket } = require('./socket');
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -25,6 +28,9 @@ const userRoutes = require('./routes/userRoutes');
 const geminiRoutes = require("./routes/geminiRoutes");
 
 const app = express();
+const server = http.createServer(app);
+const io = initSocket(server);
+
 const PORT = process.env.PORT || 5000;
 const url = 'mongodb://127.0.0.1:27017/forumDB';
 
@@ -33,8 +39,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(pinoHttp);
 
-// Apply general rate limiter to all routes
-app.use(generalLimiter);
+// Apply general rate limiter only to API routes
+app.use('/api', generalLimiter);
 
 async function startServer() {
     try {
@@ -63,8 +69,9 @@ async function startServer() {
         logger.warn('Skipping notification queue initialization because Redis is unavailable');
     }
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         logger.info({ port: PORT }, '🚀 שרת הפורום פעיל');
+        logger.info('🚀 WebSocket support enabled');
         logger.info('📚 API Endpoints:');
         logger.info('   GET  /api/categories');
         logger.info('   GET  /api/categories/:categoryId');
@@ -80,6 +87,12 @@ async function startServer() {
         logger.info('   POST /api/auth/google');
     });
 }
+
+notificationEvents.on('notificationCreated', (notification) => {
+    const recipientId = notification.recipient?.toString?.();
+    if (!recipientId) return;
+    io.to(`user:${recipientId}`).emit('notification', notification);
+});
 
 startServer();
 

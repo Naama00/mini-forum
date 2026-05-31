@@ -15,10 +15,12 @@ import {
 } from 'lucide-react';
 import styles from './AIWorkspace.module.css';
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 /**
- * AIWorkspace Component - Streamlined & Modularized
- * Uses global styles where possible, encapsulated remaining styles in CSS Module.
- * ALL ORIGINAL LOGIC PRESERVED 100%.
+ * AIWorkspace Component
+ * שינוי יחיד: handleSubmit עבר ל-SSE streaming.
+ * כל שאר הלוגיקה והעיצוב — ללא שינוי.
  */
 export default function AIWorkspace({
   currentUser,
@@ -27,9 +29,6 @@ export default function AIWorkspace({
   onAddArticle,
   onNavigate,
 }) {
-  // =========================
-  // ORIGINAL LOGIC (UNCHANGED)
-  // =========================
   const [action, setAction] = useState(() => {
     return localStorage.getItem('devhub_workspace_action') || 'draft';
   });
@@ -52,6 +51,8 @@ export default function AIWorkspace({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // ─── חדש: ref לביטול stream פעיל ───────────────────────────────────────
+  const abortControllerRef = useRef(null);
   const workspaceRef = useRef(null);
 
   useEffect(() => {
@@ -76,19 +77,24 @@ export default function AIWorkspace({
     }
   }, [categories, selectedCategory]);
 
+  // ניקוי stream אם הקומפוננטה נסגרת באמצע
+  useEffect(() => {
+    return () => abortControllerRef.current?.abort();
+  }, []);
+
   const handleMouseMove = (e) => {
     if (!workspaceRef.current) return;
     const cards = workspaceRef.current.querySelectorAll(`.${styles.containerWithGlow}`);
     cards.forEach((card) => {
       const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty('--mouse-x', `${x}px`);
-      card.style.setProperty('--mouse-y', `${y}px`);
+      card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+      card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
     });
   };
 
   const handleClear = () => {
+    // ביטול stream פעיל אם קיים
+    abortControllerRef.current?.abort();
     setPrompt('');
     setCodeContext('');
     setResult('');
@@ -99,17 +105,24 @@ export default function AIWorkspace({
     localStorage.removeItem('devhub_workspace_result');
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // handleSubmit — שדרוג ל-SSE streaming
+  // ─────────────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
 
+    // ביטול בקשה קודמת אם קיימת
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
     setLoading(true);
     setError('');
     setSuccessMessage('');
-    setResult('');
+    setResult('');        // מאפס את התצוגה לפני תחילת stream חדש
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/generate', {
+      const response = await fetch(`${API}/gemini/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,18 +131,61 @@ export default function AIWorkspace({
         body: JSON.stringify({
           action,
           prompt,
-          codeContext: action === 'optimize' || action === 'explain' ? codeContext : undefined,
+          extraContext: action === 'optimize' || action === 'explain' ? codeContext : undefined,
         }),
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.message || 'שגיאה בייצור התוכן מה-AI');
       }
 
-      setResult(data.result);
+      // ── קריאת SSE ידנית מתוך ReadableStream ─────────────────────────────
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE מגיע כ: "event: X\ndata: {...}\n\n"
+        // מפצלים לפי שורה ריקה כפולה
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop(); // השאר האחרון עלול להיות חלקי
+
+        for (const part of parts) {
+          const lines = part.split('\n');
+          let eventType = 'message';
+          let dataLine = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+            if (line.startsWith('data: '))  dataLine  = line.slice(6).trim();
+          }
+
+          if (!dataLine) continue;
+
+          let parsed;
+          try { parsed = JSON.parse(dataLine); } catch { continue; }
+
+          if (eventType === 'chunk' && parsed.text) {
+            // צרף כל chunk לתוצאה — React יעדכן רינדור
+            setResult((prev) => prev + parsed.text);
+          }
+
+          if (eventType === 'error') {
+            throw new Error(parsed.message || 'שגיאה בזרם ה-AI');
+          }
+
+          // eventType === 'done' — הסתיים בהצלחה, הלולאה תצא ב-done=true
+        }
+      }
     } catch (err) {
+      if (err.name === 'AbortError') return; // ביטול מכוון — לא שגיאה
       console.error(err);
       setError(err.message || 'חיבור לשרת ה-AI נכשל. ודא שהשרת רץ.');
     } finally {
@@ -137,6 +193,7 @@ export default function AIWorkspace({
     }
   };
 
+  // ─── handlePublish: ללא שינוי ────────────────────────────────────────────
   const handlePublish = async () => {
     if (!result) return;
     setError('');
@@ -147,24 +204,12 @@ export default function AIWorkspace({
       if (title.length >= 50) title += '...';
 
       if (action === 'draft') {
-        if (!onAddTopic) {
-          throw new Error('פונקציית פרסום פוסט לא זמינה בקומפוננטה זו');
-        }
-        await onAddTopic({
-          title,
-          content: result,
-          categoryId: selectedCategory,
-        });
+        if (!onAddTopic) throw new Error('פונקציית פרסום פוסט לא זמינה בקומפוננטה זו');
+        await onAddTopic({ title, content: result, categoryId: selectedCategory });
         setSuccessMessage('הטיוטה פורסמה בהצלחה כנושא חדש בפורום!');
       } else {
-        if (!onAddArticle) {
-          throw new Error('פונקציית שמירת מאמר לא זמינה בקומפוננטה זו');
-        }
-        await onAddArticle({
-          title: `ניתוח AI: ${title}`,
-          content: result,
-          tags: [action],
-        });
+        if (!onAddArticle) throw new Error('פונקציית שמירת מאמר לא זמינה בקומפוננטה זו');
+        await onAddArticle({ title: `ניתוח AI: ${title}`, content: result, tags: [action] });
         setSuccessMessage('הניתוח נשמר בהצלחה בארכיון המאמרים שלך!');
       }
     } catch (err) {
@@ -172,9 +217,12 @@ export default function AIWorkspace({
     }
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // JSX — ללא שינוי פרט לשני מקומות מסומנים
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div ref={workspaceRef} onMouseMove={handleMouseMove} className={styles.workspaceContainer}>
-      
+
       {/* ── HEADER SECTION ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-5">
         <div>
@@ -217,18 +265,18 @@ export default function AIWorkspace({
 
       {/* ── MAIN WORKSPACE CONTENT ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         {/* LEFT COLUMN: INPUT FORM */}
         <form onSubmit={handleSubmit} className="lg:col-span-5 space-y-5">
           <div className={`glass-card section-card-lg ${styles.containerWithGlow} relative overflow-hidden`}>
             <div className={styles.glowOverlay} />
-            
+
             <div className="flex items-center justify-between mb-4">
               <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-cyan-400" />
-                {action === 'draft' && 'על מה תרצה שהפוסט ידבר?'}
+                {action === 'draft'    && 'על מה תרצה שהפוסט ידבר?'}
                 {action === 'optimize' && 'הנחיות מיוחדות לאופטימיזציה'}
-                {action === 'explain' && 'מה תרצה שננתח ונבין בקוד?'}
+                {action === 'explain'  && 'מה תרצה שננתח ונבין בקוד?'}
               </label>
 
               <button
@@ -253,7 +301,6 @@ export default function AIWorkspace({
               required
             />
 
-            {/* Code Context Area for Code Actions */}
             {(action === 'optimize' || action === 'explain') && (
               <div className="space-y-2 mt-4">
                 <label className="text-xs font-semibold text-slate-400 block">
@@ -269,30 +316,32 @@ export default function AIWorkspace({
               </div>
             )}
 
-            {/* Action Footer */}
             <div className="flex items-center justify-between gap-4 mt-5 pt-4 border-t border-white/5">
               <span className="text-xs text-slate-500 flex items-center gap-1.5">
                 <Bot className="w-3.5 h-3.5" />
                 DevHub AI Model v4.0
               </span>
 
-              <button
-                type="submit"
-                disabled={loading || !prompt.trim()}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-sm hover:shadow-lg hover:shadow-cyan-500/20 disabled:opacity-40 disabled:hover:shadow-none transition-all duration-300 flex items-center gap-2 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    מייצר פתרון...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    שגר ל-AI
-                  </>
-                )}
-              </button>
+              {/* ── [שינוי] כפתור הגשה: כשטוען מציג "עצור" ─────────────────── */}
+              {loading ? (
+                <button
+                  type="button"
+                  onClick={() => abortControllerRef.current?.abort()}
+                  className="px-5 py-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-sm hover:bg-rose-500/30 transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <span className="w-3 h-3 rounded-sm bg-rose-400 inline-block" />
+                  עצור
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!prompt.trim()}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-sm hover:shadow-lg hover:shadow-cyan-500/20 disabled:opacity-40 disabled:hover:shadow-none transition-all duration-300 flex items-center gap-2 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  שגר ל-AI
+                </button>
+              )}
             </div>
           </div>
 
@@ -326,10 +375,9 @@ export default function AIWorkspace({
           </div>
         </form>
 
-        {/* RIGHT COLUMN: AI OUTPUT & OUTPUT MANAGEMENT */}
+        {/* RIGHT COLUMN: AI OUTPUT */}
         <div className="lg:col-span-7 space-y-4">
-          
-          {/* Error Messaging */}
+
           {error && (
             <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-rose-500" />
@@ -337,7 +385,6 @@ export default function AIWorkspace({
             </div>
           )}
 
-          {/* Success Messaging */}
           {successMessage && (
             <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -345,19 +392,24 @@ export default function AIWorkspace({
             </div>
           )}
 
-          {/* AI Result Presentation Terminal */}
           <div className={`glass-card section-card-lg ${styles.containerWithGlow} relative overflow-hidden min-h-[360px] flex flex-col`}>
             <div className={styles.glowOverlay} />
-            
+
             <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
               <div className="flex items-center gap-2">
+                {/* ── [שינוי] אינדיקטור streaming: מהבהב בזמן קריאה ─────── */}
                 <div className={`w-2 h-2 rounded-full ${loading ? 'bg-cyan-400 animate-ping' : result ? 'bg-emerald-400' : 'bg-slate-600'}`} />
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  {loading ? 'AI Engine Processing...' : 'AI Generated Response'}
+                  {loading ? 'AI Streaming...' : result ? 'AI Generated Response' : 'AI Engine Idle'}
                 </span>
+                {loading && result && (
+                  <span className="text-xs text-slate-500 font-mono">
+                    {result.length} תווים
+                  </span>
+                )}
               </div>
 
-              {result && (
+              {result && !loading && (
                 <div className="flex items-center gap-2">
                   {action === 'draft' && categories.length > 0 && (
                     <select
@@ -383,15 +435,29 @@ export default function AIWorkspace({
               )}
             </div>
 
-            {/* Dynamic Content Display State */}
-            {loading && !result ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-500 py-12">
-                <Zap className="w-8 h-8 text-cyan-500/40 animate-bounce" />
-                <p className="text-sm">ה-Core של DevHub מעבד כעת את הנתונים ומנתח את בקשתך...</p>
-              </div>
-            ) : result ? (
+            {/* ── [שינוי] תצוגת תוכן: מציגה בזמן אמת גם בזמן streaming ──── */}
+            {result ? (
               <div className={`flex-1 overflow-y-auto max-h-[500px] pr-1 ${styles.resultMarkdown}`}>
                 <Markdown>{result}</Markdown>
+                {/* cursor מהבהב בסוף כשה-stream עדיין רץ */}
+                {loading && (
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '2px',
+                      height: '1.1em',
+                      background: 'var(--accent-cyan, #00e5ff)',
+                      verticalAlign: 'text-bottom',
+                      marginRight: '2px',
+                      animation: 'blink 0.8s step-end infinite',
+                    }}
+                  />
+                )}
+              </div>
+            ) : loading ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-500 py-12">
+                <Zap className="w-8 h-8 text-cyan-500/40 animate-bounce" />
+                <p className="text-sm">ה-Core של DevHub מעבד כעת את הנתונים...</p>
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-500 py-12 text-center">
@@ -404,8 +470,15 @@ export default function AIWorkspace({
             )}
           </div>
         </div>
-
       </div>
+
+      {/* cursor blink keyframe */}
+      <style>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
