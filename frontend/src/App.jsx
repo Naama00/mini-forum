@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -44,11 +44,16 @@ function useSidebar() {
 }
 
 // ── Layout wrapper שמחליט אם להציג סיידבר ──────────
-function Layout({ children }) {
+function Layout({ children, isCollapsed, setIsCollapsed }) {
   const showSidebar = useSidebar();
 
   return (
-    <AppShell sidebar={showSidebar ? <Sidebar /> : null}>
+    <AppShell
+      sidebar={showSidebar ? <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /> : null}
+      isSidebarOpen={showSidebar && !isCollapsed}
+      isCollapsed={isCollapsed}
+      setIsCollapsed={setIsCollapsed}
+    >
       {children}
     </AppShell>
   );
@@ -86,13 +91,18 @@ function AppRoutes() {
 
 // ── Root ──────────────────────────────────────────────
 export default function App() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
             <NotificationProvider>
-              <Layout>
+              <Layout
+                isCollapsed={isCollapsed}
+                setIsCollapsed={setIsCollapsed}
+              >
                 <AppRoutes />
               </Layout>
             </NotificationProvider>

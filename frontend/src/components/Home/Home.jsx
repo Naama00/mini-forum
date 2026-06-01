@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
 import {
   ChevronRight,
   Zap,
@@ -7,6 +8,7 @@ import {
   Gauge,
   Radio,
 } from "lucide-react";
+import authFetch from '../../services/api';
 import styles from'./Home.module.css';
 
 
@@ -57,27 +59,45 @@ function AnimatedCounter({ target }) {
 
 export default function ForumHome() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
-  const [subcategories, setSubcategories] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+    error: categoriesFetchError,
+  } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const result = await authFetch.get('/categories');
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to load categories');
+      }
+      return result.data || [];
+    },
+    staleTime: 1000 * 60 * 2,
+  });
+
+  const {
+    data: expandedCategory,
+    isLoading: expandedLoading,
+    isError: expandedError,
+    error: expandedFetchError,
+  } = useQuery({
+    queryKey: ['category', expandedId],
+    queryFn: async () => {
+      const result = await authFetch.get(`/categories/${expandedId}`);
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to load category details');
+      }
+      return result.data || null;
+    },
+    enabled: Boolean(expandedId),
+    staleTime: 1000 * 60 * 2,
+  });
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/api/categories`)
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.success) setCategories(res.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Connection error");
-        setLoading(false);
-      });
-  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -100,7 +120,7 @@ export default function ForumHome() {
     };
   }, []);
 
-  const handleCategoryClick = async (cat, e) => {
+  const handleCategoryClick = (cat, e) => {
     const id = cat.id || cat._id;
 
     if (!id) return;
@@ -114,20 +134,6 @@ export default function ForumHome() {
       }
 
       setExpandedId(id);
-
-      if (!subcategories[id]) {
-        try {
-          const res = await fetch(`${API_BASE}/api/categories/${id}`);
-          const data = await res.json();
-
-          setSubcategories((p) => ({
-            ...p,
-            [id]: data.data?.subCategories || [],
-          }));
-        } catch {
-          // silent
-        }
-      }
     } else {
       navigate(`/category?categoryId=${id}`);
     }
@@ -137,14 +143,14 @@ export default function ForumHome() {
     <>
       <div className="page-shell">
         {/* Background */}
-        <div className="home-bg-container">
-          <div className="home-bg-blob home-bg-blob-1" />
-          <div className="home-bg-blob home-bg-blob-2" />
-          <div className="home-bg-blob home-bg-blob-3" />
+        <div className={styles['home-bg-container']}>
+          <div className={`${styles['home-bg-blob']} ${styles['home-bg-blob-1']}`} />
+          <div className={`${styles['home-bg-blob']} ${styles['home-bg-blob-2']}`} />
+          <div className={`${styles['home-bg-blob']} ${styles['home-bg-blob-3']}`} />
 
           {/* Cursor Glow */}
           <div
-            className="home-cursor-glow"
+            className={styles['home-cursor-glow']}
             style={{
               left: `${mousePos.x - 160}px`,
               top: `${mousePos.y - 160}px`,
@@ -152,24 +158,23 @@ export default function ForumHome() {
           />
 
           {/* Grid */}
-          <div className="home-grid-overlay" style={{ transform: `translateY(${scrollY * 0.5}px)` }} />
+          <div className={styles['home-grid-overlay']} style={{ transform: `translateY(${scrollY * 0.5}px)` }} />
         </div>
 
         {/* Hero */}
-        <section className="home-hero-section">
+        <section className={styles['home-hero-section']}>
           <div className="max-w-6xl mx-auto">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-6 mx-auto">
                 <Gauge className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-mono text-cyan-400">
                   Real-Time Discussion Platform
                 </span>
               </div>
 
-              <h2 className="text-6xl lg:text-7xl font-black mb-6 leading-tight">
-                <span className="text-white">Where Developers</span>
-                <br />
-                <span className="home-gradient-text">
+              <h2 className="text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-[-0.03em] max-w-4xl mx-auto">
+                <span className={`${styles['home-hero-title-line']} block`}>Where Developers</span>
+                <span className={`${styles['home-gradient-text']} block`}>
                   Build The Future
                 </span>
               </h2>
@@ -179,7 +184,7 @@ export default function ForumHome() {
                 discussions, architecture, AI, web systems and innovation.
               </p>
 
-              <div className="flex gap-4 flex-wrap">
+              <div className="flex justify-center gap-4 flex-wrap">
                 <button className="button-primary px-8 py-4 rounded-xl hover:shadow-xl hover:shadow-cyan-500/30 duration-300">
                   <Zap className="w-5 h-5" />
                   Explore Discussions
@@ -199,7 +204,7 @@ export default function ForumHome() {
                 { label: "Topics", val: "45K" },
                 { label: "Communities", val: "400" },
               ].map((stat, i) => (
-                <div key={i} className="home-stat-card">
+                <div key={i} className={styles['home-stat-card']}>
                   <div className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2">
                     <AnimatedCounter target={stat.val} />
                     <span className="text-lg">+</span>
@@ -214,7 +219,7 @@ export default function ForumHome() {
         </section>
 
         {/* Categories */}
-        <section className="home-categories-section">
+        <section className={styles['home-categories-section']}>
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 rounded-full bg-gradient-to-b from-cyan-500 to-violet-500" />
@@ -223,18 +228,18 @@ export default function ForumHome() {
               </h3>
             </div>
 
-            {loading ? (
+            {categoriesLoading ? (
               <div className="flex items-center justify-center py-24">
                 <div className="space-y-3 text-center">
                   <Zap className="w-8 h-8 text-cyan-400 animate-pulse mx-auto" />
                   <p className="text-sm font-mono uppercase tracking-widest text-slate-500">
-                    Initializing database...
+                    Loading categories...
                   </p>
                 </div>
               </div>
-            ) : error ? (
+            ) : categoriesError ? (
               <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-center text-red-400">
-                {error}
+                {categoriesFetchError?.message || 'Failed to load categories.'}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -248,7 +253,7 @@ export default function ForumHome() {
                       onClick={(e) => handleCategoryClick(cat, e)}
                       className={`home-category-card ${isExpanded ? 'expanded' : ''}`}
                     >
-                      <div className="home-category-hover-glow" />
+                      <div className={styles['home-category-hover-glow']} />
                       <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-cyan-400 via-blue-500 to-violet-500" />
 
                       <div className="relative z-10 p-8">
@@ -312,7 +317,7 @@ export default function ForumHome() {
                           <div className="mt-6 border-t border-slate-800 pt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                             <p className="mb-3 text-xs uppercase tracking-widest text-slate-500 font-semibold">Subcategories</p>
                             <div className="space-y-2">
-                              {(subcategories[id] || []).map((sub) => (
+                              {(expandedCategory?.subCategories || []).map((sub) => (
                                 <Link
                                   key={sub._id}
                                   to={`/category?categoryId=${sub._id}`}
@@ -335,10 +340,10 @@ export default function ForumHome() {
         </section>
 
         {/* CTA */}
-        <section className="home-cta-section">
+        <section className={styles['home-cta-section']}>
           <div className="max-w-7xl mx-auto">
-            <div className="home-cta-container">
-              <div className="home-cta-content">
+            <div className={styles['home-cta-container']}>
+              <div className={styles['home-cta-content']}>
                 <h3 className="text-4xl font-black text-white mb-4">Ready to join the future?</h3>
                 <p className="text-lg text-slate-400 mb-8">Connect with developers, share ideas and explore advanced tech discussions.</p>
                <button className="button-primary px-8 py-4 rounded-xl hover:shadow-xl hover:shadow-cyan-500/30 duration-300">
@@ -350,7 +355,7 @@ export default function ForumHome() {
         </section>
 
         {/* Footer */}
-        <footer className="home-footer">
+        <footer className={styles['home-footer']}>
           <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-lg font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
               DEV.HUB

@@ -11,6 +11,8 @@ const TOPIC_TYPES = [
   { value: "announcement", label: "הכרזה", icon: "◉" },
 ];
 
+const PRESET_TAGS = ["React", "JavaScript", "UI", "Backend", "Bug", "Feature"];
+
 export default function NewTopic() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -33,12 +35,7 @@ export default function NewTopic() {
     if (!user) navigate('/auth');
   }, [user]);
 
-  const NEWTOPIC_STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;700;800&display=swap');
-    :root{ --bg-dark:#0a0a0c; --accent:#ccff00; --glass: rgba(255,255,255,0.03); --border-glass: rgba(204,255,0,0.12)}
-    .glass-card{ background:var(--glass); backdrop-filter: blur(12px); border:1px solid var(--border-glass); }
-    .dh-grid-bg{ position:fixed; inset:0; background-image: radial-gradient(circle at 2px 2px, rgba(204,255,0,0.03) 1px, transparent 0); background-size:40px 40px; z-index:-1 }
-  `;
+  // use global styles and existing theme variables; keep markup simple here
 
   // טעינת קטגוריות
   useEffect(() => {
@@ -68,6 +65,13 @@ export default function NewTopic() {
 
   const removeTag = (tag) => {
     setForm((p) => ({ ...p, tags: p.tags.filter((t) => t !== tag) }));
+  };
+
+  const addPresetTag = (tag) => {
+    if (!form.tags.includes(tag) && form.tags.length < 5) {
+      setForm((p) => ({ ...p, tags: [...p.tags, tag] }));
+      setTagInput("");
+    }
   };
 
   const handleSubmit = async () => {
@@ -110,42 +114,31 @@ export default function NewTopic() {
 
   return (
     <>
-      <style>{NEWTOPIC_STYLES}</style>
-      <div className="dh-grid-bg" />
-      <div className="w-full min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 rtl" dir="rtl">
-      {/* Header */}
-      <header className="border-b border-white/8 bg-gray-950/50">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-4">
-              <div className="flex items-center justify-between mb-4">
-            <a href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded" style={{background:'#0a0a0c', border:'1px solid rgba(204,255,0,0.12)'}}>
-                <div className="w-full h-full flex items-center justify-center text-sm font-black text-[#ccff00]">DH</div>
-              </div>
-              <span className="text-white font-bold">Dev<span className="text-[#ccff00]">Hub</span></span>
-            </a>
-            <nav className="flex items-center gap-2 text-sm text-slate-400">
-              <a href="/" className="hover:text-cyan-500">בית</a>
-              <span className="text-white/30">/</span>
-              {preselectedCategory && (
-                <>
-                  <a href={`/category?categoryId=${preselectedCategory}`} className="hover:text-cyan-500">קטגוריה</a>
-                  <span className="text-white/30">/</span>
-                </>
-              )}
-              <span className="text-slate-400">נושא חדש</span>
-            </nav>
-          </div>
+      <div className="relative w-full min-h-screen bg-slate-950 text-slate-100 overflow-hidden" dir="rtl">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-96">
+          <div className="absolute -left-24 top-16 h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl" />
+          <div className="absolute right-0 top-28 h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-full bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.14),_transparent_55%)]" />
         </div>
-      </header>
+        <main className="relative max-w-6xl mx-auto px-4 md:px-6 py-12">
+        <div className="max-w-3xl mx-auto text-center mb-10">
+          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-4 mx-auto">
+            <span className="text-sm font-mono text-cyan-400">Real-Time Discussion Platform</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
+            <span className="block text-white">פתח דיון חדש</span>
+            <span className="block" style={{ backgroundImage: 'linear-gradient(90deg,#06b6d4,#8b5cf6,#ec4899)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              שתף את הרעיון או השאלה שלך
+            </span>
+          </h1>
+        </div>
 
-      <main className="max-w-[1200px] mx-auto px-6 md:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
 
           {/* FORM */}
-          <div>
-            <div className="mb-8">
+          <div className="bg-slate-900/60 border border-slate-700/40 backdrop-blur-lg p-6 rounded-2xl">
+            <div className="mb-6 text-center">
               <div className="text-slate-400 text-xs font-mono uppercase tracking-widest mb-2">// יצירת נושא חדש</div>
-              <h1 className="text-4xl font-bold text-white">פתח דיון חדש</h1>
             </div>
 
             {/* TYPE */}
@@ -155,7 +148,7 @@ export default function NewTopic() {
                 {TOPIC_TYPES.map((t) => (
                   <button
                     key={t.value}
-                    className={`px-4 py-3 rounded border-2 font-medium transition-colors ${form.type === t.value ? "bg-[#ccff00]/10 text-[#ccff00] border-[#ccff00]/30" : "bg-white/3 border-white/8 text-slate-300 hover:bg-white/5"}`}
+                    className={`px-4 py-3 rounded-3xl border-2 font-medium transition-colors ${form.type === t.value ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" : "bg-slate-950/50 border-slate-700/40 text-slate-300 hover:bg-slate-900/70"}`}
                     onClick={() => setForm((p) => ({ ...p, type: t.value }))}
                     type="button"
                   >
@@ -170,7 +163,7 @@ export default function NewTopic() {
             <div className="mb-8">
               <label className="text-slate-300 text-sm font-medium mb-2 block">קטגוריה <span className="text-rose-500">*</span></label>
               <select
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00]/30"
+                className="w-full bg-slate-950/50 border border-slate-700/40 text-slate-200 px-3.5 py-3 rounded-3xl focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25"
                 name="categoryId"
                 value={form.categoryId}
                 onChange={handleChange}
@@ -186,7 +179,7 @@ export default function NewTopic() {
             <div className="mb-8">
               <label className="text-slate-300 text-sm font-medium mb-2 block">כותרת <span className="text-rose-500">*</span></label>
               <input
-                className="w-full bg-white/3 border border-white/8 text-slate-200 px-3.5 py-2.75 rounded focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00]/30"
+                className="w-full bg-slate-950/50 border border-slate-700/40 text-slate-200 px-3.5 py-3 rounded-3xl focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25"
                 name="title"
                 placeholder="מה השאלה או הנושא שלך?"
                 value={form.title}
@@ -199,7 +192,7 @@ export default function NewTopic() {
             {/* CONTENT */}
             <div className="mb-8">
               <label className="text-slate-300 text-sm font-medium mb-2 block">תוכן <span className="text-rose-500">*</span></label>
-              <div className="glass-card p-3 rounded">
+              <div className="bg-slate-950/60 border border-slate-700/40 backdrop-blur-xl p-3 rounded-3xl shadow-[0_30px_80px_-40px_rgba(0,0,0,0.55)]">
               <MarkdownEditor
                 value={form.content}
                 onChange={(v) => setForm(p => ({ ...p, content: v }))}
@@ -213,16 +206,22 @@ export default function NewTopic() {
             {/* TAGS */}
             <div className="mb-8">
               <label className="text-slate-300 text-sm font-medium mb-2 block">תגיות <span className="text-slate-500 text-xs font-normal">(עד 5, לחץ Enter להוספה)</span></label>
-              <div className="flex flex-wrap gap-2 bg-white/3 border border-white/8 px-3.5 py-2.5 min-h-12 items-center rounded rtl">
+              <div className="flex flex-wrap gap-2 bg-slate-950/50 border border-slate-700/40 px-3.5 py-2.5 min-h-12 items-center rounded-3xl rtl">
                 {form.tags.map((tag) => (
-                  <span key={tag} className="bg-[#ccff00]/20 text-[#ccff00] px-2.5 py-1.5 rounded text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
-                    {tag}
-                    <button className="font-bold hover:text-cyan-200" onClick={() => removeTag(tag)}>×</button>
+                  <span key={tag} className="rounded-full border border-slate-700/50 bg-slate-900/70 px-3 py-1 text-xs text-slate-200 flex items-center gap-2 transition-all">
+                    <span>{tag}</span>
+                    <button
+                      className="rounded-full p-1 text-slate-400 hover:text-cyan-300 transition-colors"
+                      onClick={() => removeTag(tag)}
+                      type="button"
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
                 {form.tags.length < 5 && (
                   <input
-                    className="flex-1 bg-transparent text-slate-200 outline-none placeholder-slate-400 text-sm min-w-16"
+                    className="flex-1 bg-transparent text-slate-200 outline-none placeholder:text-slate-500 placeholder:text-sm text-sm min-w-16 py-1"
                     placeholder={form.tags.length === 0 ? "הוסף תגית..." : ""}
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
@@ -230,20 +229,39 @@ export default function NewTopic() {
                   />
                 )}
               </div>
+
+              <div className="mt-3 text-slate-300 text-xs font-medium">תגיות מוכנות</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {PRESET_TAGS.map((tag) => {
+                  const isActive = form.tags.includes(tag);
+                  const isDisabled = !isActive && form.tags.length >= 5;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => addPresetTag(tag)}
+                      disabled={isDisabled}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${isActive ? "border border-cyan-500/40 bg-cyan-500/15 text-cyan-200 shadow-[0_10px_30px_-20px_rgba(56,189,248,0.65)]" : "border border-slate-700/40 bg-slate-950/60 text-slate-200 hover:border-cyan-500/30 hover:bg-slate-900/80"} ${isDisabled ? "opacity-60 cursor-not-allowed hover:border-slate-700 hover:bg-slate-950" : ""}`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {error && <div className="bg-rose-500/15 border border-rose-500/40 text-rose-400 px-5 py-3 rounded-lg mb-6">{error}</div>}
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                className="px-6 py-2.75 bg-white/3 border border-white/8 text-slate-200 font-sans font-bold uppercase tracking-widest rounded hover:bg-white/5"
+                className="w-full sm:w-auto px-6 py-3 bg-white/5 border border-slate-700/40 text-slate-200 font-sans font-bold uppercase tracking-widest rounded-2xl hover:bg-white/10 transition"
                 onClick={() => navigate(preselectedCategory ? `/category?categoryId=${preselectedCategory}` : "/")}
                 type="button"
               >
                 ביטול
               </button>
               <button
-                className={`px-6 py-2.75 bg-[#ccff00] text-black font-sans font-bold uppercase tracking-widest rounded hover:bg-[#bfff00] disabled:opacity-50 disabled:cursor-not-allowed ${loading ? "opacity-50" : ""}`}
+                className={`w-full sm:w-auto button-primary disabled:opacity-50 disabled:cursor-not-allowed ${loading ? "opacity-50" : ""}`}
                 onClick={handleSubmit}
                 disabled={loading}
                 type="button"
@@ -255,8 +273,8 @@ export default function NewTopic() {
 
           {/* TIPS SIDEBAR */}
           <div>
-            <div className="bg-white/2 border border-white/7 px-5 py-5 rounded-lg sticky top-20">
-              <div className="text-slate-300 font-bold text-sm mb-4 font-mono text-slate-400 text-xs uppercase tracking-widest">// טיפים לפוסט טוב</div>
+            <div className="bg-slate-900/65 border border-slate-700/40 px-5 py-5 rounded-3xl sticky top-20 backdrop-blur-xl shadow-[0_20px_80px_-40px_rgba(0,0,0,0.55)]">
+              <div className="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mb-4">// טיפים לפוסט טוב</div>
               <div className="space-y-3">
                 {[
                   { icon: "◇", text: "כותרת ברורה וממוקדת" },
@@ -273,8 +291,8 @@ export default function NewTopic() {
               </div>
             </div>
 
-            <div className="bg-white/2 border border-white/7 px-5 py-5 rounded-lg">
-              <div className="text-slate-300 font-bold text-sm mb-4 font-mono text-slate-400 text-xs uppercase tracking-widest">// כללי הקהילה</div>
+            <div className="bg-slate-900/65 border border-slate-700/40 px-5 py-5 rounded-3xl backdrop-blur-xl shadow-[0_20px_80px_-40px_rgba(0,0,0,0.55)]">
+              <div className="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] mb-4">// כללי הקהילה</div>
               <div className="space-y-2">
                 {[
                   "כבד את חברי הקהילה",

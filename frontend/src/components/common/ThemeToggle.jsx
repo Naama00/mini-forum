@@ -6,10 +6,20 @@ import { useTheme } from '../../hooks/useTheme';
  */
 export function ThemeToggle() {
   const { isDarkMode, toggleTheme } = useTheme();
+  const lightModeButtonStyle = !isDarkMode
+    ? {
+        border: '1px solid rgba(148,163,184,0.25)',
+        background: 'rgba(10,12,22,0.45)',
+        color: '#94a3b8',
+        backdropFilter: 'blur(12px)',
+        transition: 'all 0.2s ease',
+      }
+    : {};
 
   return (
     <button
-      className="p-2 text-slate-400 hover:text-cyan-500 transition-colors rounded"
+      className="p-2 rounded-2xl border border-slate-700 bg-slate-900/60 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-300 transition-all"
+      style={lightModeButtonStyle}
       onClick={toggleTheme}
       title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
       aria-label="Toggle theme"
@@ -27,8 +37,13 @@ export function ThemeToggle() {
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" strokeWidth="2" strokeLinecap="round" />
         </svg>
       ) : (
-        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        <svg className="w-5 h-5 stroke-current" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       )}
     </button>

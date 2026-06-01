@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks';
-import { getToken } from '../../utils/storage';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import authFetch from '../../services/api';
 import AIWorkspace from './AIWorkspace';
 import { Loading } from '../common/Loading';
-
-const API_BASE = 'http://localhost:5000';
 
 /**
  * Container component for AIWorkspace
@@ -14,115 +13,110 @@ const API_BASE = 'http://localhost:5000';
 export default function AIWorkspaceContainer() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Debug logging
-  console.log('AIWorkspaceContainer mounted:', { user, hasToken: !!getToken() });
+  console.log('AIWorkspaceContainer mounted:', { user });
 
-  // Fetch categories on component mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/api/categories`);
-        const data = await response.json();
-        if (data.success && Array.isArray(data.data)) {
-          setCategories(data.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-        setCategories([]);
-      } finally {
-        setLoading(false);
+  const {
+    data: categories,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await authFetch.get('/categories');
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to load categories');
       }
-    };
+      return response.data || [];
+    },
+    staleTime: 1000 * 60 * 2,
+  });
 
-    fetchCategories();
-  }, []);
+  const topicMutation = useMutation({
+    mutationFn: async ({ title, content, categoryId, tags, type }) => {
+      const response = await authFetch.post('/topics', {
+        title,
+        content,
+        categoryId,
+        tags,
+        type,
+      });
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to create topic');
+      }
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['topics']);
+      queryClient.invalidateQueries(['categories']);
+    },
+  });
+
+  const articleMutation = useMutation({
+    mutationFn: async ({ title, content, summary, image, tags }) => {
+      const response = await authFetch.post('/articles', {
+        title,
+        content,
+        summary,
+        image,
+        tags,
+      });
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to create article');
+      }
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['articles']);
+    },
+  });
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (isError) {
+    console.error('Failed to load AIWorkspace categories:', error);
+  }
 
   // Handle adding a new topic
-  const handleAddTopic = (topicData, firstPostContent) => {
-    const token = getToken();
-    if (!token) {
-      alert('אתה חייב להיות מחובר כדי ליצור דיון');
-      return Promise.reject(new Error('No authentication token'));
-    }
-    
+  const handleAddTopic = async (topicData, firstPostContent) => {
     const content = topicData.content || firstPostContent;
-    console.log('Creating topic with data:', { ...topicData, content });
-    
-    return fetch(`${API_BASE}/api/topics`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
+    try {
+      const topic = await topicMutation.mutateAsync({
         title: topicData.title,
         content,
         categoryId: topicData.categoryId,
         tags: topicData.tags || [],
-        type: topicData.type || 'question'
-      })
-    })
-      .then(res => {
-        console.log('Response status:', res.status);
-        return res.json().then(data => ({ status: res.status, data }));
-      })
-      .then(({ status, data }) => {
-        console.log('Response data:', data);
-        if (status === 201 || status === 200 || data.success) {
-          return data.data?._id || data.data?.id || data._id || data.id;
-        }
-        throw new Error(data.message || data.error || 'Failed to create topic');
-      })
-      .catch(error => {
-        console.error('Error creating topic:', error);
-        alert('שגיאה ביצירת דיון: ' + error.message);
-        return null;
+        type: topicData.type || 'question',
       });
+      return topic?._id || topic?.id || null;
+    } catch (err) {
+      console.error('Error creating topic:', err);
+      alert('שגיאה ביצירת דיון: ' + err.message);
+      return null;
+    }
   };
 
   // Handle adding a new article
-  const handleAddArticle = (articleData) => {
-    const token = getToken();
-    if (!token) {
-      alert('אתה חייב להיות מחובר כדי ליצור מאמר');
-      return Promise.reject(new Error('No authentication token'));
-    }
-    
-    console.log('Creating article with data:', articleData);
-    
-    return fetch(`${API_BASE}/api/articles`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
+  const handleAddArticle = async (articleData) => {
+    try {
+      const article = await articleMutation.mutateAsync({
         title: articleData.title,
         content: articleData.content,
         summary: articleData.summary || '',
         image: articleData.image || '',
-        tags: articleData.tags || []
-      })
-    })
-      .then(res => {
-        console.log('Response status:', res.status);
-        return res.json().then(data => ({ status: res.status, data }));
-      })
-      .then(({ status, data }) => {
-        console.log('Response data:', data);
-        if (status === 201 || status === 200 || data.success) {
-          return data.data?._id || data.data?.id || data._id || data.id;
-        }
-        throw new Error(data.message || data.error || 'Failed to create article');
-      })
-      .catch(error => {
-        console.error('Error creating article:', error);
-        alert('שגיאה ביצירת מאמר: ' + error.message);
-        return null;
+        tags: articleData.tags || [],
       });
+      return article?._id || article?.id || null;
+    } catch (err) {
+      console.error('Error creating article:', err);
+      alert('שגיאה ביצירת מאמר: ' + err.message);
+      return null;
+    }
   };
 
   // Handle navigation
@@ -138,7 +132,7 @@ export default function AIWorkspaceContainer() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <Loading />;
   }
 

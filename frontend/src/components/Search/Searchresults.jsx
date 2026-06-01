@@ -254,16 +254,21 @@ function ResultCard({ item, section, config }) {
 ══════════════════════════════════════════ */
 export default function SearchResults() {
   const [searchParams] = useSearchParams();
-  const query = searchParams.get("q") || "";
+  const q = searchParams.get("q") || "";
+  const tag = searchParams.get("tag") || "";
+  const query = q || tag;
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
-    if (!query) return;
+    if (!query.trim()) return;
     setLoading(true);
     setActiveTab("all");
-    fetch(`${API}/search?q=${encodeURIComponent(query)}`)
+    const params = new URLSearchParams();
+    if (q.trim()) params.set("q", q.trim());
+    if (!q.trim() && tag.trim()) params.set("tag", tag.trim());
+    fetch(`${API}/search?${params.toString()}`)
       .then((r) => r.json())
       .then((data) => setResults(data.results || {}))
       .catch((e) => console.error(e))

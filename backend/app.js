@@ -22,6 +22,7 @@ const jobRoutes = require('./routes/jobRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const dataRoutes = require('./routes/dataRoutes');
+const debugRoutes = require('./routes/debugRoutes');
 const topicRoutes = require('./routes/topicRoutes');
 const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -115,6 +116,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api', dataRoutes);
 app.use("/api/gemini", geminiRoutes);
+// Debug routes (only enabled in non-production)
+if (process.env.NODE_ENV !== 'production') {
+    app.use('/api/debug', debugRoutes);
+}
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ success: false, message: 'Endpoint לא נמצא' });

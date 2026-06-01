@@ -1,121 +1,46 @@
-import { getToken, getLoggedInUserFromToken } from '../utils/storage';
 import { API_BASE_URL } from '../utils/constants';
+import { getToken } from '../utils/storage';
 import { getErrorMessage } from '../utils/errors';
 
-/**
- * Axios-like API client
- */
-class APIClient {
-  constructor(baseURL = API_BASE_URL) {
-    this.baseURL = baseURL;
-    this.interceptors = {
-      request: [],
-      response: [],
-    };
+export async function authFetch(endpoint, options = {}) {
+  const token = getToken();
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
-  /**
-   * Make HTTP request
-   */
-  async request(endpoint, options = {}) {
-    let config = {
-      headers: {},
-      ...options,
-    };
+  const fetchOptions = {
+    method: options.method || 'GET',
+    headers,
+  };
 
-    // Add JWT token if available
-    const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    config.headers['Content-Type'] = config.headers['Content-Type'] || 'application/json';
-
-    // Build final URL (remove body from GET requests)
-    const url = this.baseURL + endpoint;
-    
-    const fetchOptions = {
-      method: config.method || 'GET',
-      headers: config.headers,
-    };
-
-    // Only add body for non-GET requests
-    if (config.method && config.method !== 'GET' && config.body) {
-      fetchOptions.body = JSON.stringify(config.body);
-    }
-
-    try {
-      const response = await fetch(url, fetchOptions);
-
-      // Parse response
-      const data = await response.json().catch(() => ({}));
-
-      // Check if response is ok
-      if (!response.ok) {
-        const error = new Error(getErrorMessage(data));
-        error.status = response.status;
-        error.response = { status: response.status, data };
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
+  if (options.body != null && fetchOptions.method !== 'GET') {
+    fetchOptions.body = JSON.stringify(options.body);
   }
 
-  /**
-   * GET request
-   */
-  get(endpoint, options = {}) {
-    return this.request(endpoint, {
-      ...options,
-      method: 'GET',
-    });
+  const response = await fetch(url, fetchOptions);
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = new Error(getErrorMessage(data));
+    error.status = response.status;
+    error.response = { status: response.status, data };
+    throw error;
   }
 
-  /**
-   * POST request
-   */
-  post(endpoint, body = {}, options = {}) {
-    return this.request(endpoint, {
-      ...options,
-      method: 'POST',
-      body,
-    });
-  }
-
-  /**
-   * PUT request
-   */
-  put(endpoint, body = {}, options = {}) {
-    return this.request(endpoint, {
-      ...options,
-      method: 'PUT',
-      body,
-    });
-  }
-
-  /**
-   * PATCH request
-   */
-  patch(endpoint, body = {}, options = {}) {
-    return this.request(endpoint, {
-      ...options,
-      method: 'PATCH',
-      body,
-    });
-  }
-
-  /**
-   * DELETE request
-   */
-  delete(endpoint, options = {}) {
-    return this.request(endpoint, {
-      ...options,
-      method: 'DELETE',
-    });
-  }
+  return data;
 }
 
-export default new APIClient();
+authFetch.get = (endpoint, options = {}) => authFetch(endpoint, { ...options, method: 'GET' });
+authFetch.post = (endpoint, body = {}, options = {}) => authFetch(endpoint, { ...options, method: 'POST', body });
+authFetch.put = (endpoint, body = {}, options = {}) => authFetch(endpoint, { ...options, method: 'PUT', body });
+authFetch.patch = (endpoint, body = {}, options = {}) => authFetch(endpoint, { ...options, method: 'PATCH', body });
+authFetch.delete = (endpoint, options = {}) => authFetch(endpoint, { ...options, method: 'DELETE' });
+
+export default authFetch;

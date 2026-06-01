@@ -60,7 +60,7 @@ async function search(query, type = 'all', limit = 5) {
         searchModel(
             'topics',
             Topic,
-            { $or: [{ title: regex }, { content: regex }] },
+            { $or: [{ title: regex }, { content: regex }, { tags: regex }] },
             'title createdAt votes',
             ['author', 'username firstName lastName']
         ),

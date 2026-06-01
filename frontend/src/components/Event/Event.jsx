@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import Breadcrumb from '../Breadcrumb';
 import MarkdownRenderer from "../MarkdownRenderer";
 import { useAuth } from "../../hooks";
-import { getToken, getLoggedInUserFromToken } from "../../utils/storage";
+import { getToken, getUser } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";
 
 const API = "http://localhost:5000/api";
@@ -45,10 +45,11 @@ export default function EventPage() {
     try {
       const r = await fetch(`${API}/events/${id}/attend`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       const res = await r.json();
-      if (r.ok) {
-        // Handle different response structures
-        const updatedEvent = res.data || res;
-        setEvent(updatedEvent);
+      if (r.ok && res.success) {
+        // Re-fetch the full event to get populated attendees with names
+        const eventRes = await fetch(`${API}/events/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const eventData = await eventRes.json();
+        setEvent(eventData.data || eventData);
       } else {
         alert(res.message || "פעולת ההרשמה נכשלה");
       }
@@ -74,9 +75,10 @@ export default function EventPage() {
   );
 
   const isPast = new Date(event.date) < new Date();
-  const currentUserId = user?._id || getLoggedInUserFromToken()?.id;
-  const isAttending = event.attendees?.some(a => a._id === currentUserId || a === currentUserId);
-  const isAuthor = event.author?._id === currentUserId;
+  const storedUser = getUser();
+  const currentUserId = user?._id || storedUser?._id || storedUser?.id;
+  const isAttending = event.attendees?.some(a => a && (a._id ? a._id.toString() : a.toString()) === currentUserId?.toString());
+  const isAuthor = event.author?._id?.toString() === currentUserId?.toString();
 
   return (
     <div dir="rtl" className="page-shell">
@@ -168,11 +170,14 @@ export default function EventPage() {
                 <p className="text-slate-500 text-sm">אין משתתפים רשומים לאירוע זה עדיין.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {event.attendees.slice(0, 12).map((attendee, idx) => (
-                    <div key={idx} className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 flex items-center justify-center text-slate-950 font-black text-sm" title={attendee.firstName || "חבר קהילה"}>
-                      {attendee.firstName?.[0]?.toUpperCase() || "?"}
-                    </div>
-                  ))}
+                  {event.attendees.slice(0, 12).map((attendee, idx) => {
+                    const name = attendee?.firstName || attendee?.username || null;
+                    return (
+                      <div key={idx} className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 flex items-center justify-center text-slate-950 font-black text-sm" title={name || "חבר קהילה"}>
+                        {name?.[0]?.toUpperCase() || "?"}
+                      </div>
+                    );
+                  })}
                   {event.attendees.length > 12 && (
                     <div className="h-10 px-3 rounded-xl border border-slate-700 bg-slate-900/50 flex items-center text-xs text-slate-400">
                       +{event.attendees.length - 12} נוספים

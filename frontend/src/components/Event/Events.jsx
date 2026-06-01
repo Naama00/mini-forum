@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Breadcrumb from '../Breadcrumb';
 import MarkdownRenderer from "../MarkdownRenderer";
 import { useAuth } from "../../hooks";
-import { getToken, getLoggedInUserFromToken } from "../../utils/storage";
+import { getToken, getUser } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";
 
 const API = "http://localhost:5000/api";
@@ -47,27 +47,42 @@ export default function EventsPage() {
     const token = getToken();
     if (!token) return navigate("/auth");
     const previousEvents = events;
-    const userId = getLoggedInUserFromToken()?.id;
+    const tokenUser = getUser();
+    const userId = tokenUser?._id || tokenUser?.id;
+    console.log("userId from token:", userId);
+    console.log("attendees of event:", events.find(e => e._id === id)?.attendees);
 
+    // Optimistic update — normalise both object-attendees and string-attendees
     setEvents((prev) =>
       prev.map((ev) => {
         if (ev._id !== id) return ev;
-        // Handle both ID and object attendees
-        const attending = ev.attendees?.some(a => a._id === userId || a === userId);
+        const attending = ev.attendees?.some(
+          (a) => a && (a._id ? a._id.toString() : a.toString()) === userId
+        );
         return {
           ...ev,
-          attendees: attending ? ev.attendees.filter((u) => u._id !== userId && u !== userId) : [...(ev.attendees || []), userId],
-          _attending: !attending,
+          attendees: attending
+            ? ev.attendees.filter(
+                (a) => a && (a._id ? a._id.toString() : a.toString()) !== userId
+              )
+            : [...(ev.attendees || []), userId],
         };
       })
     );
 
     try {
-      const r = await fetch(`${API}/events/${id}/attend`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(`${API}/events/${id}/attend`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const res = await r.json();
-      if (!r.ok && !res.success) {
-        throw new Error(res.message || 'Failed to update attendance');
+      if (!r.ok || !res.success) {
+        throw new Error(res.message || "Failed to update attendance");
       }
+      // Sync with server's real attendees list
+      setEvents((prev) =>
+        prev.map((ev) => (ev._id === id ? { ...ev, attendees: res.attendees } : ev))
+      );
     } catch (e) {
       console.error("Event attendance error:", e);
       setEvents(previousEvents);
@@ -79,7 +94,8 @@ export default function EventsPage() {
     const token = getToken();
     if (!token) return navigate("/auth");
     const previousEvents = events;
-    const userId = getLoggedInUserFromToken()?.id;
+    const tokenUser = getUser();
+    const userId = tokenUser?._id || tokenUser?.id;
 
     setEvents((prev) =>
       prev.map((ev) => {
@@ -176,6 +192,14 @@ export default function EventsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {events.map(event => {
                 const past = isPast(event.date);
+                const tokenUser = getUser();
+                const currentUserId = tokenUser?._id || tokenUser?.id;
+                const isAttending = event.attendees?.some(
+                  (a) => a && (a._id ? a._id.toString() : a.toString()) === currentUserId
+                );
+                const isLiked = event.likes?.some(
+                  (u) => u && (u._id ? u._id.toString() : u.toString()) === currentUserId
+                );
                 return (
                   <div key={event._id} className="group section-card section-card-md section-shadow-hover flex flex-col justify-between min-h-[280px]">
                     <div>
@@ -204,17 +228,17 @@ export default function EventsPage() {
                         <button
                           onClick={() => handleAttend(event._id)}
                           className={`flex-1 py-2 rounded-2xl text-sm font-semibold transition-all border ${
-                            event._attending
+                            isAttending
                               ? "border-cyan-400 bg-cyan-500/20 text-cyan-300"
                               : "border-slate-700 bg-slate-900/50 text-slate-300 hover:border-cyan-500/50"
                           }`}
                         >
-                          {event._attending ? "✓ נרשמת" : "הירשם"}
+                          {isAttending ? "✓ נרשמת" : "הירשם"}
                         </button>
                       )}
                       <button
                         onClick={() => handleLike(event._id)}
-                        className={`flex items-center gap-1 text-slate-400 hover:text-pink-400 transition-colors px-2 ${event._liked ? "text-pink-400" : ""}`}
+                        className={`flex items-center gap-1 text-slate-400 hover:text-pink-400 transition-colors px-2 ${isLiked ? "text-pink-400" : ""}`}
                       >
                         ♥ <span>{event.likes?.length || 0}</span>
                       </button>

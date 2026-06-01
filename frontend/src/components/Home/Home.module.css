@@ -1,12 +1,33 @@
 
 
-.home-gradient-text {
-  background-image: var(--gradient-secondary);
+.home-hero-title-line {
+  display: inline-block;
+  transition: color 0.25s ease;
+}
+
+html:not(.dark-theme) .home-hero-title-line {
+  background-image: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
+}
+
+.home-gradient-text {
+  display: inline-block;
+  background-image: linear-gradient(90deg, #22d3ee, #8b5cf6) !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
   background-size: 200% 200%;
+  background-position: 0 50%;
   animation: gradientShift 4s ease infinite;
+}
+
+/* keep the bottom line colorful in dark theme and custom gradient in light theme */
+html:not(.dark-theme) .home-gradient-text {
+  background-image: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899) !important;
 }
 
 .home-hero-section {

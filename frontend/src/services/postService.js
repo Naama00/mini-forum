@@ -24,7 +24,7 @@ export const postService = {
   /**
    * Update post
    */
-  update: (id, data) => api.put(`/posts/${id}`, { content: data.content }),
+  update: (id, data) => api.patch(`/posts/${id}`, { content: data.content }),
 
   /**
    * Delete post

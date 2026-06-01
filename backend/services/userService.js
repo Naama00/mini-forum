@@ -1,4 +1,5 @@
 const { User } = require('../models/User');
+const cache = require('../cache');
 
 /**
  * Format public user data - remove sensitive fields
@@ -36,6 +37,8 @@ async function updateUser(userId, requestingUserId, updateData) {
     if (!updated) {
         throw new Error('משתמש לא נמצא');
     }
+
+    await cache.del(`user:${userId}`);
 
     return formatPublicUserData(updated);
 }

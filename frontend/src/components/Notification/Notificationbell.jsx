@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Bell } from "lucide-react";
 import { io } from "socket.io-client";
 import { getToken } from "../../utils/storage";
 
@@ -185,33 +186,38 @@ export default function NotificationBell() {
         aria-label="התראות"
         style={{
           position: "relative",
-          border: `1px solid ${open ? "rgba(0,229,255,0.3)" : "var(--surface-border)"}`,
+          border: `1px solid ${open ? "rgba(56,189,248,0.45)" : "rgba(148,163,184,0.25)"}`,
           borderRadius: "0.75rem",
-          padding: "0.45rem 0.6rem",
+          padding: "0.45rem 0.8rem",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: open ? "var(--accent-cyan)" : "var(--text-muted)",
-          background: open ? "rgba(0,229,255,0.06)" : "rgba(10,12,22,0.4)",
+          color: open ? "#22d3ee" : "#a5b4fc",
+          background: open ? "rgba(56,189,248,0.08)" : "rgba(10,12,22,0.45)",
           backdropFilter: "blur(12px)",
           transition: "all 0.2s ease",
-          boxShadow: open ? "0 0 14px rgba(0,229,255,0.1)" : "none",
+          boxShadow: open ? "0 0 20px rgba(34,211,238,0.15)" : "0 0 0 1px transparent",
         }}
         onMouseEnter={e => {
           if (!open) {
-            e.currentTarget.style.borderColor = "rgba(0,229,255,0.25)";
-            e.currentTarget.style.color = "#e2e8f0";
+            e.currentTarget.style.borderColor = "rgba(56,189,248,0.35)";
+            e.currentTarget.style.color = "#cffafe";
           }
         }}
         onMouseLeave={e => {
           if (!open) {
-            e.currentTarget.style.borderColor = "var(--surface-border)";
-            e.currentTarget.style.color = "var(--text-muted)";
+            e.currentTarget.style.borderColor = "rgba(148,163,184,0.25)";
+            e.currentTarget.style.color = "#a5b4fc";
           }
         }}
       >
-        <span style={{ fontSize: "1rem", lineHeight: 1, fontFamily: "Assistant" }}>◐</span>
+        <Bell
+          size={18}
+          weight="duotone"
+          color={open ? "#22d3ee" : "#94a3b8"}
+          style={{ filter: open ? "drop-shadow(0 0 4px rgba(34,211,238,0.6))" : "none" }}
+        />
 
         {/* Badge */}
         {unread > 0 && (

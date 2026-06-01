@@ -109,6 +109,8 @@ export default function CategoryPage() {
   const [topics, setTopics] = useState([]);
   const [topic, setTopic] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editingContent, setEditingContent] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -547,10 +549,105 @@ export default function CategoryPage() {
                     </div>
 
                     <div className="prose prose-invert max-w-none">
-                      <MarkdownRenderer
-                        source={post.content}
-                      />
+                      {editingPostId === (post._id || post.id) ? (
+                        <div>
+                          <MarkdownEditor
+                            value={editingContent}
+                            onChange={setEditingContent}
+                          />
+
+                          <div className="flex gap-2 justify-end mt-3">
+                            <button
+                              onClick={async () => {
+                                const id = post._id || post.id;
+                                try {
+                                  const token = getToken();
+                                  const r = await fetch(`${API_BASE}/api/posts/${id}`, {
+                                    method: "PATCH",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({ content: editingContent }),
+                                  });
+
+                                  const res = await r.json();
+
+                                  if (res.success) {
+                                    setPosts((prev) => prev.map((p) => (p._id === id || p.id === id ? res.data : p)));
+                                    setEditingPostId(null);
+                                    setEditingContent("");
+                                  } else {
+                                    alert(res.message || "עדכון נכשל");
+                                  }
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("שגיאת רשת");
+                                }
+                              }}
+                              className="button-primary"
+                            >
+                              שמור
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setEditingPostId(null);
+                                setEditingContent("");
+                              }}
+                              className="button-secondary"
+                            >
+                              בטל
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <MarkdownRenderer source={post.content} />
+                      )}
                     </div>
+                    
+                    {/* Edit / Delete controls for post author */}
+                    {user && (getAuthorId(post) === user._id || getAuthorId(post) === user.id) && (
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={() => {
+                            setEditingPostId(post._id || post.id);
+                            setEditingContent(post.content || "");
+                          }}
+                          className="button-secondary"
+                        >
+                          ערוך
+                        </button>
+
+                        <button
+                          onClick={async () => {
+                            if (!confirm('האם אתה בטוח שברצונך למחוק את הפוסט?')) return;
+                            const id = post._id || post.id;
+                            try {
+                              const token = getToken();
+                              const r = await fetch(`${API_BASE}/api/posts/${id}`, {
+                                method: 'DELETE',
+                                headers: { Authorization: `Bearer ${token}` },
+                              });
+
+                              const res = await r.json();
+
+                              if (res.success) {
+                                setPosts((prev) => prev.filter((p) => !(p._id === id || p.id === id)));
+                              } else {
+                                alert(res.message || 'מחיקה נכשלה');
+                              }
+                            } catch (err) {
+                              console.error(err);
+                              alert('שגיאת רשת');
+                            }
+                          }}
+                          className="px-4 py-2 rounded-2xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-semibold"
+                        >
+                          מחק
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

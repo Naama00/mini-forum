@@ -45,6 +45,7 @@ async function createTopic({ title, content, type, categoryId, tags }, userId) {
   await Category.findByIdAndUpdate(categoryId, { $push: { topics: topic._id } });
   await User.findByIdAndUpdate(userId, { $push: { 'links.topics': topic._id } });
 
+  await cache.del(`user:${userId}`);
   await cache.del('categories:all');
   await cache.del(`category:${categoryId}`);
   await cache.invalidate('trending:');

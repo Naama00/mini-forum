@@ -1,6 +1,7 @@
 const { Post } = require('../models/Post');
 const { Topic } = require('../models/Topic');
 const { User } = require('../models/User');
+const cache = require('../cache');
 
 /**
  * Format public user data - remove sensitive fields
@@ -47,6 +48,7 @@ async function createPost(content, topicId, userId) {
         content: content.trim(),
         numberOfVotes: 0,
         author: author.toObject(),
+        topicId,
         createdAt: new Date(),
         isSolution: false,
         respondsTo: []
@@ -56,6 +58,9 @@ async function createPost(content, topicId, userId) {
     // Link post to topic and user
     await Topic.findByIdAndUpdate(topicId, { $push: { posts: post._id } });
     await User.findByIdAndUpdate(userId, { $push: { 'links.posts': post._id } });
+
+    await cache.del(`user:${userId}`);
+    await cache.del(`topic:${topicId}`);
 
     return {
         success: true,
@@ -110,6 +115,10 @@ async function deletePost(postId, userId) {
     // Remove from topic and user links
     await Topic.updateMany({}, { $pull: { posts: post._id } });
     await User.updateMany({}, { $pull: { 'links.posts': post._id } });
+    await cache.del(`user:${post.author._id.toString()}`);
+    if (post.topicId) {
+        await cache.del(`topic:${post.topicId.toString()}`);
+    }
 
     return {
         success: true,

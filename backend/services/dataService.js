@@ -46,14 +46,30 @@ async function getCategories() {
         }
 
         const categories = await Category.find()
-            .populate('subCategories', 'name description icon')
+            .populate('subCategories', 'name description icon topics')
             .select('-__v')
             .lean();
 
+        // Add topic counts for main categories and subcategories for frontend display
+        const enriched = categories.map(cat => {
+            const topicCount = (cat.topics || []).length;
+
+            const subCategories = (cat.subCategories || []).map(sub => ({
+                ...sub,
+                postCount: (sub.topics || []).length
+            }));
+
+            return {
+                ...cat,
+                topicCount,
+                subCategories
+            };
+        });
+
         const result = {
             success: true,
-            data: categories,
-            count: categories.length
+            data: enriched,
+            count: enriched.length
         };
 
         await cache.set(cacheKey, result, 300);

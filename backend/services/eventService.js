@@ -30,7 +30,7 @@ async function getAllEvents({ tag, search, upcoming, page = 1, limit = 10 }) {
 async function getEventById(id) {
   const event = await Event.findById(id)
     .populate('author', 'username avatar')
-    .populate('attendees', 'username avatar')
+    .populate('attendees', 'firstName lastName username avatar')
     .populate('comments.author', 'firstName lastName icon');
 
   if (!event) throw new Error('אירוע לא נמצא');
@@ -107,10 +107,24 @@ async function attendEvent(id, userId) {
   const event = await Event.findById(id);
   if (!event) throw new Error('אירוע לא נמצא');
 
-  const attending = event.attendees.includes(userId);
-  attending ? event.attendees.pull(userId) : event.attendees.push(userId);
+  // Use toString() to safely compare ObjectId with string
+  const attending = event.attendees.some(a => a.toString() === userId.toString());
+
+  if (attending) {
+    event.attendees = event.attendees.filter(a => a.toString() !== userId.toString());
+  } else {
+    event.attendees.push(userId);
+  }
+
   await event.save();
-  return { attendees: event.attendees.length, attending: !attending };
+  await event.populate('attendees', 'firstName lastName username avatar');
+
+  return {
+    success: true,
+    attending: !attending,
+    attendeesCount: event.attendees.length,
+    attendees: event.attendees,
+  };
 }
 
 /**
