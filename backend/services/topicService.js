@@ -7,10 +7,14 @@ const cache = require('../cache');
 /**
  * Create new topic with first post
  */
-async function createTopic({ title, content, type, categoryId, tags }, userId) {
+async function createTopic({ title, content, type, categoryId, tags }, userId, isAdmin = false) {
   if (!title?.trim()) throw new Error('כותרת חסרה');
   if (!content?.trim()) throw new Error('תוכן חסר');
   if (!categoryId) throw new Error('קטגוריה חסרה');
+
+  if (Array.isArray(tags) && tags.map(String).map((tag) => tag.toLowerCase()).includes('challenge') && !isAdmin) {
+    throw new Error('יצירת אתגר קוד בפורום מותרת רק למנהל.');
+  }
 
   const category = await Category.findById(categoryId);
   if (!category) throw new Error('קטגוריה לא נמצאה');
@@ -57,8 +61,11 @@ async function createTopic({ title, content, type, categoryId, tags }, userId) {
 /**
  * Fetch topics list with pagination / sorting support
  */
-async function getTopics({ limit = 12, sort = 'newest' }) {
+async function getTopics({ limit = 12, sort = 'newest', tag }) {
   const query = {};
+  if (tag) {
+    query.tags = tag;
+  }
   const sortOrder = sort === 'top'
     ? { votes: -1, createdAt: -1 }
     : sort === 'trending'
@@ -69,9 +76,21 @@ async function getTopics({ limit = 12, sort = 'newest' }) {
     .sort(sortOrder)
     .limit(Math.max(1, Math.min(Number(limit) || 12, 100)))
     .populate('author', 'firstName lastName icon')
+    .populate('category', 'name')
     .lean();
 
-  return topics;
+  // Preserve the full post count while only returning the first post content for list rendering
+  const topicsWithCounts = await Topic.populate(topics.map((topic) => ({
+    ...topic,
+    postsCount: (topic.posts || []).length,
+  })), {
+    path: 'posts',
+    select: 'content',
+    options: { sort: { createdAt: 1 } },
+    perDocumentLimit: 1,
+  });
+
+  return topicsWithCounts;
 }
 
 module.exports = {

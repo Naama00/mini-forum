@@ -1,3 +1,4 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const http = require('http');
 const express = require('express');
 const dotenv = require("dotenv");
@@ -27,6 +28,7 @@ const topicRoutes = require('./routes/topicRoutes');
 const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
 const geminiRoutes = require("./routes/geminiRoutes");
+const usageRoutes= require("./routes/usageRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -116,6 +118,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api', dataRoutes);
 app.use("/api/gemini", geminiRoutes);
+app.use('/api/usage',usageRoutes);
 // Debug routes (only enabled in non-production)
 if (process.env.NODE_ENV !== 'production') {
     app.use('/api/debug', debugRoutes);

@@ -129,54 +129,24 @@ export default function SearchBar() {
 
   return (
     <div
-      className="relative w-full max-w-full"
       ref={dropdownRef}
       dir="rtl"
-      style={{ fontFamily: "'Assistant', sans-serif" }}
+      className="relative w-full max-w-full font-body"
     >
       {/* ── שדה חיפוש ── */}
-      <div className="relative group">
+      <div className="relative group search-futuristic">
         <input
           type="text"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onKeyDown={handleKeyDown}
           placeholder="חיפוש מאמרים, משרות, פורומים..."
-          style={{
-            width: "100%",
-            background: "rgba(10, 12, 22, 0.6)",
-            border: "1px solid var(--surface-border)",
-            borderRadius: "0.875rem",
-            padding: "0.6rem 2.5rem 0.6rem 1rem",
-            color: "#e2e8f0",
-            fontSize: "0.875rem",
-            outline: "none",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-            backdropFilter: "blur(12px)",
-          }}
-          onFocus={e => {
-            setOpen(true);
-            e.target.style.borderColor = "rgba(0,229,255,0.5)";
-            e.target.style.boxShadow   = "0 0 0 3px rgba(0,229,255,0.08), 0 0 18px rgba(0,229,255,0.12)";
-          }}
-          onBlur={e => {
-            e.target.style.borderColor = "var(--surface-border)";
-            e.target.style.boxShadow   = "none";
-          }}
+          className="w-full rounded-xl border border-white/10 bg-dark-950/70 py-2.5 pr-10 pl-4 text-sm text-dark-100 outline-none transition-all duration-250 backdrop-blur-md placeholder:text-dark-500 focus:border-neon-lime/45 focus:shadow-[0_0_0_3px_rgba(204,255,0,0.08),0_0_20px_rgba(204,255,0,0.12)]"
+          onFocus={() => setOpen(true)}
         />
         {/* אייקון ימין */}
         <span
-          style={{
-            position: "absolute",
-            right: "0.75rem",
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: loading ? "var(--accent-cyan)" : "rgba(148,163,184,0.5)",
-            fontSize: "0.85rem",
-            pointerEvents: "none",
-            transition: "color 0.2s",
-            fontFamily: "Assistant",
-          }}
+          className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-sm font-mono transition-colors ${loading ? 'text-neon-lime' : 'text-dark-500'}`}
         >
           {loading ? (
             <svg
@@ -192,42 +162,13 @@ export default function SearchBar() {
 
       {/* ── לוח תוצאות צף ── */}
       {open && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 60,
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "center",
-            padding: "2rem 1rem 1rem",
-            pointerEvents: "none",
-          }}
-        >
+        <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-8 pointer-events-none">
           <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "rgba(7, 8, 14, 0.85)",
-              backdropFilter: "blur(20px)",
-            }}
+            className="absolute inset-0 bg-dark-950/90 backdrop-blur-2xl"
             onClick={() => setOpen(false)}
           />
 
-          <div
-            style={{
-              position: "relative",
-              width: "100%",
-              maxWidth: "750px",
-              minHeight: "420px",
-              borderRadius: "1.5rem",
-              border: "1px solid rgba(148,163,184,0.12)",
-              background: "rgba(10, 12, 22, 0.95)",
-              boxShadow: "0 40px 120px rgba(0, 0, 0, 0.45)",
-              overflow: "hidden",
-              pointerEvents: "auto",
-            }}
-          >
+          <div className="relative w-full max-w-[750px] min-h-[420px] rounded-3xl border border-neon-lime/15 bg-dark-900/95 shadow-2xl shadow-glow-lime overflow-hidden pointer-events-auto glass-card">
             <div style={{ padding: "1.25rem 1.5rem 1rem" }}>
               <div style={{ position: "relative", marginBottom: "1rem" }}>
                 <input
@@ -237,31 +178,10 @@ export default function SearchBar() {
                   onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
                   onKeyDown={handleKeyDown}
                   placeholder="הכנס מילת חיפוש..."
-                  style={{
-                    width: "100%",
-                    minHeight: "3.5rem",
-                    background: "rgba(15, 23, 42, 0.9)",
-                    border: "1px solid rgba(148,163,184,0.18)",
-                    borderRadius: "1rem",
-                    padding: "1rem 3rem 1rem 1.25rem",
-                    color: "#e2e8f0",
-                    fontSize: "1rem",
-                    outline: "none",
-                    transition: "border-color 0.2s, box-shadow 0.2s",
-                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.02)",
-                    backdropFilter: "blur(8px)",
-                  }}
+                  className="input-futuristic min-h-14 pr-12 text-base"
                 />
                 <span
-                  style={{
-                    position: "absolute",
-                    right: "1rem",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: loading ? "var(--accent-cyan)" : "rgba(148,163,184,0.55)",
-                    fontSize: "1rem",
-                    pointerEvents: "none",
-                  }}
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-base font-mono ${loading ? 'text-neon-lime' : 'text-dark-500'}`}
                 >
                   {loading ? (
                     <svg
@@ -330,7 +250,7 @@ export default function SearchBar() {
                             fontSize: "0.82rem",
                             textTransform: "uppercase",
                             letterSpacing: "0.1em",
-                            color: "rgba(0,229,255,0.55)",
+                            color: "rgba(204,255,0,0.6)",
                             fontWeight: 700,
                           }}
                         >
@@ -359,8 +279,8 @@ export default function SearchBar() {
                               transition: "all 0.2s ease",
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = "rgba(0,229,255,0.08)";
-                              e.currentTarget.style.borderColor = "rgba(0,229,255,0.18)";
+                              e.currentTarget.style.background = "rgba(204,255,0,0.06)";
+                              e.currentTarget.style.borderColor = "rgba(204,255,0,0.2)";
                             }}
                             onMouseLeave={(e) => {
                               e.currentTarget.style.background = "rgba(255,255,255,0.02)";
@@ -378,7 +298,7 @@ export default function SearchBar() {
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  color: "var(--accent-cyan)",
+                                  color: "var(--accent-lime)",
                                   fontSize: "1rem",
                                   flexShrink: 0,
                                 }}

@@ -165,14 +165,14 @@ export default function ForumHome() {
         <section className={styles['home-hero-section']}>
           <div className="max-w-6xl mx-auto">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-6 mx-auto">
-                <Gauge className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-mono text-cyan-400">
-                  Real-Time Discussion Platform
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-neon-lime/10 border border-neon-lime/25 mb-6 mx-auto shadow-glow-lime">
+                <Gauge className="w-4 h-4 text-neon-lime animate-pulse" />
+                <span className="text-sm font-mono text-neon-lime tracking-wider">
+                  // LIVE_TECH_FORUM
                 </span>
               </div>
 
-              <h2 className="text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-[-0.03em] max-w-4xl mx-auto">
+              <h2 className="font-display text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-[-0.03em] max-w-4xl mx-auto">
                 <span className={`${styles['home-hero-title-line']} block`}>Where Developers</span>
                 <span className={`${styles['home-gradient-text']} block`}>
                   Build The Future

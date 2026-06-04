@@ -20,6 +20,13 @@ function getGeminiClient() {
   return genAI;
 }
 
+// ─── basePersona: הגדרה אחידה עבור כל הפיצ'רים ──────────────────────────────
+const basePersona = `
+You are DevHub AI Co-pilot - a brilliant, engaging, friendly, and expert technological AI assistant.
+You reside inside a modern high-performance technological forum and help young frontenders, backenders, and devops engineers code better, build faster, and deploy securely.
+Mandatory rule: Answer fluently in professional technological Hebrew. Use Markdown beautifully.
+`;
+
 // ─── בניית system instruction לפי action ─────────────────────────────────────
 function buildSystemInstruction(action) {
   if (action === "generate-draft") {
@@ -42,7 +49,7 @@ function buildSystemInstruction(action) {
     `;
   }
 
-  if (action === "optimize-code") {
+  if (action === "optimize-code" || action === "optimize") {
     return `
       You are an elite compiler engineer, principal performance architect, and senior security auditor.
       Your task is to analyze, debug, and optimize the provided code block.
@@ -76,7 +83,33 @@ function buildSystemInstruction(action) {
       4. Output only the final refined version itself without introductory conversational meta-talk.
     `;
   }
+  // ─── פיצ'ר חדש 1: סימולטור ראיונות עבודה (AI Interviewer) ───
+  if (action === "tech-interview") {
+    return `
+      ${basePersona}
+      Action Context: Elite Tech Interview Simulator.
+      - You are interviewing the user for a high-paying tech position based on their prompt/role choice (e.g., Cyber, Fullstack, DevOps).
+      - Conduct a simulated dynamic interview. Evaluate their knowledge critically.
+      - Provide a structured response:
+        1. "ציון הערכה זמני" (Mock score out of 100).
+        2. "ניתוח תשובות" (Critical breakdown of what they did well or missed).
+        3. "שאלת המשך מאתגרת" (A follow-up tough interview question or coding riddle to keep the thread going).
+    `;
+  }
 
+  // ─── פיצ'ר חדש 2: יוצר אתגרי קוד לקהילה (Daily Challenge Creator) ───
+  if (action === "create-challenge") {
+    return `
+      ${basePersona}
+      Action Context: Forum Challenge Generator.
+      - Create a brilliant, addictive weekly coding puzzle, algorithmic challenge, or system design riddle for the DEV.HUB forum.
+      - Include: 
+        1. סיפור רקע (A fun tech scenario, e.g., "The production database is locking up...").
+        2. דרישות ומגבלות (Constraints like O(n) time complexity).
+        3. קלט ופלט לדוגמה.
+      - Encourage users to post their solutions in the thread below.
+    `;
+  }
   // default: chat
   return `
     You are DevHub AI Co-pilot - a brilliant, engaging, friendly, and expert technological AI assistant.
@@ -98,8 +131,8 @@ function buildContents(action, prompt, extraContext, history) {
     }));
   }
 
-  if ((action === "optimize-code") && extraContext) {
-    return `Code to optimize:\n\`\`\`\n${extraContext}\n\`\`\`\n\nUser request/Context: ${prompt}`;
+  if ((action === "optimize-code" || action === "optimize" || action === "explain") && extraContext) {
+    return `Code to analyze:\n\`\`\`\n${extraContext}\n\`\`\`\n\nUser request/Context: ${prompt}`;
   }
 
   return prompt;

@@ -11,6 +11,11 @@ export const getErrorMessage = (error) => {
   // If it's a string
   if (typeof error === 'string') return error;
 
+  // If it's an error payload from the API
+  if (error.error) {
+    return error.error;
+  }
+
   // If it's an axios error
   if (error.response?.data?.error) {
     return error.response.data.error;

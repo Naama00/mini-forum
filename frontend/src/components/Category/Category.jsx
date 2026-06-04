@@ -326,7 +326,7 @@ export default function CategoryPage() {
                       Active Category
                     </div>
 
-                    <h1 className="text-5xl font-black mb-4 text-white">
+                    <h1 className="text-5xl font-bold mb-4 text-white">
                       <span className="text-gradient">
                         {category.name}
                       </span>

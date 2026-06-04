@@ -107,6 +107,7 @@ const handleSubmit = async (e) => {
       <div className="page-bg">
         <div className="page-bg-blob page-bg-blob--cyan" />
         <div className="page-bg-blob page-bg-blob--violet" />
+        <div className="page-bg-blob page-bg-blob--magenta" />
         <div className="page-bg-grid" />
       </div>
 
@@ -114,14 +115,14 @@ const handleSubmit = async (e) => {
       <header className="relative z-10 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
-            <a href="/" className="text-white font-black text-2xl tracking-tighter hover:text-cyan-300 transition-colors">
-              DEV<span className="text-gradient">.HUB</span>
+            <a href="/" className="font-display text-white font-black text-2xl tracking-tighter hover:text-neon-lime transition-colors">
+              DEV<span className="gradient-text">.HUB</span>
             </a>
             <div className="flex items-center gap-2 text-sm text-slate-400">
               {mode === "login" ? "עדיין אין לך חשבון?" : "כבר יש לך חשבון?"}
               <button
                 onClick={() => switchMode(mode === "login" ? "register" : "login")}
-                className="text-cyan-300 font-semibold hover:text-white transition-colors"
+                className="text-neon-lime font-semibold hover:text-white transition-colors"
               >
                 {mode === "login" ? "הירשם עכשיו" : "התחבר"}
               </button>
@@ -143,8 +144,8 @@ const handleSubmit = async (e) => {
                   onClick={() => switchMode(t.key)}
                   className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all border ${
                     mode === t.key
-                      ? "border-cyan-400 bg-cyan-500/20 text-cyan-300"
-                      : "border-slate-700 bg-slate-900/50 text-slate-400 hover:border-cyan-500/50"
+                      ? "border-neon-lime/50 bg-neon-lime/15 text-neon-lime shadow-glow-lime"
+                      : "border-white/10 bg-dark-900/50 text-dark-400 hover:border-neon-lime/30"
                   }`}
                 >
                   {t.label}
@@ -154,13 +155,13 @@ const handleSubmit = async (e) => {
 
             {/* כותרת */}
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 mb-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                <span className="text-xs text-cyan-300 font-medium uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-neon-lime/25 bg-neon-lime/10 mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-neon-lime live-pulse" />
+                <span className="text-xs text-neon-lime font-mono font-medium uppercase tracking-wider">
                   {mode === "login" ? "SIGN IN" : "SIGN UP"}
                 </span>
               </div>
-              <h1 className="text-4xl font-black text-white mb-2">
+              <h1 className="font-display text-4xl font-black text-white mb-2">
                 {mode === "login" ? "ברוך הבא בחזרה" : "הצטרף לקהילה"}
               </h1>
               <p className="text-slate-400 text-sm">
@@ -239,7 +240,7 @@ const handleSubmit = async (e) => {
             {/* שכחתי סיסמה */}
             {mode === "login" && (
               <div className="mb-5 text-left">
-                <button className="text-xs text-cyan-300 hover:text-white transition-colors">שכחתי סיסמה</button>
+                <button className="text-xs text-neon-cyan hover:text-neon-lime transition-colors">שכחתי סיסמה</button>
               </div>
             )}
 

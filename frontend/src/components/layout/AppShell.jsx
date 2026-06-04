@@ -11,12 +11,12 @@ import { useAuth } from "../../hooks";
 const SIDEBAR_ROUTES = [
   "/", "/category", "/articles", "/events", "/jobs",
   "/notifications", "/search", "/ai-workspace",
-  "/new-topic",
+  "/new-topic","/challenge","/challenges","/usage",
 ];
 
 function hasSidebar(pathname) {
-  return SIDEBAR_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/") === false && pathname === r)
-    || /^\/(articles|events|jobs|category)/.test(pathname);
+  return SIDEBAR_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"))
+    || /^\/(articles|events|jobs|category|challenge|challenges)/.test(pathname);
 }
 
 export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed, setIsCollapsed }) {

@@ -32,8 +32,13 @@ function errorMiddleware(err, req, res, next) {
       status = 400;
       message = err.message;
     }
-    // 401 - Unauthorized
-    else if (err.message.includes('מייל') && err.message.includes('סיסמה')) {
+    // 401 - Unauthorized / bad credentials
+    else if (
+      err.message.includes('הסיסמה שגויה') ||
+      err.message.includes('המייל אינו קיים') ||
+      err.message.includes('חשבון זה משתמש בכניסה עם Google') ||
+      (err.message.includes('מייל') && err.message.includes('סיסמה'))
+    ) {
       status = 401;
       message = err.message;
     }

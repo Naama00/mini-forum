@@ -42,7 +42,7 @@ async function registerUser(userData) {
 
     await user.save();
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
     return {
         token,
         user: {
@@ -50,7 +50,8 @@ async function registerUser(userData) {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            icon: user.icon
+            icon: user.icon,
+            isAdmin: !!user.isAdmin,
         }
     };
 }
@@ -81,7 +82,7 @@ async function loginUser(email, password) {
     user.isConnected = true;
     await user.save();
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
 
     return {
         token,
@@ -90,7 +91,8 @@ async function loginUser(email, password) {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            icon: user.icon
+            icon: user.icon,
+            isAdmin: !!user.isAdmin,
         }
     };
 }
@@ -147,7 +149,7 @@ async function loginWithGoogle(credential) {
         logger.info({ userId: user._id, iconAfterSave: user.icon }, '✅ User updated in database');
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
 
     return {
         token,
@@ -156,7 +158,8 @@ async function loginWithGoogle(credential) {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            icon: user.icon
+            icon: user.icon,
+            isAdmin: !!user.isAdmin,
         }
     };
 }

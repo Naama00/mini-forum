@@ -1,7 +1,7 @@
 .page-shell {
   min-height: 100vh;
-  background-color: #0f172a;
-  color: #fff;
+  background-color: var(--void-bg);
+  color: #f8fafc;
   position: relative;
   overflow: hidden;
 }
@@ -25,15 +25,21 @@
 }
 
 .page-bg-blob--cyan {
-  background-color: rgba(6, 182, 212, 0.12);
+  background-color: rgba(204, 255, 0, 0.08);
   top: -20%;
   right: 5%;
 }
 
 .page-bg-blob--violet {
-  background-color: rgba(139, 92, 246, 0.12);
+  background-color: rgba(0, 229, 255, 0.1);
   bottom: -20%;
   left: 8%;
+}
+
+.page-bg-blob--magenta {
+  background-color: rgba(255, 0, 170, 0.06);
+  top: 40%;
+  left: 30%;
 }
 
 .page-bg-grid {

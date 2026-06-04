@@ -1,0 +1,117 @@
+.usage-shell {
+  position: relative;
+  min-h: 100vh;
+  overflow: hidden;
+  padding: 2rem 1.5rem;
+}
+
+/* רקע ובועות זוהרות בדומה לדף הבית */
+.usage-bg-container {
+  position: fixed;
+  inset: 0;
+  z-index: -50;
+  overflow: hidden;
+}
+
+.usage-bg-blob {
+  position: absolute;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 9999px;
+  filter: blur(4rem);
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  opacity: 0.12;
+}
+
+.usage-bg-blob-1 {
+  background-color: #00e5ff;
+  top: -10%;
+  right: -10%;
+}
+
+.usage-bg-blob-2 {
+  background-color: #a855f7;
+  bottom: -10%;
+  left: -10%;
+}
+
+.usage-cursor-glow {
+  position: absolute;
+  width: 25rem;
+  height: 25rem;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(168, 85, 247, 0.15));
+  border-radius: 9999px;
+  filter: blur(4rem);
+  pointer-events: none;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.usage-grid-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-size: 50px 50px;
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(0,229,255,.08) 25%, rgba(0,229,255,.08) 26%, transparent 27%),
+    linear-gradient(90deg, transparent 24%, rgba(0,229,255,.08) 25%, rgba(0,229,255,.08) 26%, transparent 27%);
+}
+
+/* כותרת הדף בסגנון המדורג */
+.usage-gradient-text {
+  display: inline-block;
+  background-image: linear-gradient(90deg, #00e5ff, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+  font-weight: 900;
+}
+
+/* כרטיסיות הסטטיסטיקה והגרפים בעיצוב Glassmorphism משודרג */
+.usage-glass-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem;
+  transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.usage-glass-card:hover {
+  transform: translateY(-0.25rem);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 20px -5px rgba(0, 229, 255, 0.1);
+}
+
+/* טאבים */
+.usage-tabs-container {
+  display: flex;
+  gap: 0.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 0.375rem;
+  width: fit-content;
+}
+
+/* אלמנטים של ה-Heatmap */
+.heatmap-cell {
+  height: 1rem;
+  width: 1rem;
+  border-radius: 0.25rem;
+  transition: all 200ms ease;
+  cursor: default;
+}
+.heatmap-cell:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+  z-index: 10;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.12; }
+  50% { transform: scale(1.05); opacity: 0.18; }
+}

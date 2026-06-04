@@ -18,7 +18,7 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="p-2 rounded-2xl border border-slate-700 bg-slate-900/60 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-300 transition-all"
+      className="p-2 rounded-2xl border border-white/10 bg-dark-900/60 text-dark-400 hover:border-neon-lime/40 hover:text-neon-lime hover:shadow-glow-lime transition-all"
       style={lightModeButtonStyle}
       onClick={toggleTheme}
       title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}

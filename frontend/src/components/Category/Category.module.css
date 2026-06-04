@@ -84,6 +84,7 @@
   font-weight: 900;
   line-height: 1;
   margin-bottom: 1rem;
+  font-family: 'Space Grotesk', system-ui, sans-serif !important;
 }
 
 .heroGradient {

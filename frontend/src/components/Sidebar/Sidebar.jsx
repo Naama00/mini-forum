@@ -6,11 +6,14 @@ import './Sidebar.css';
 const API_BASE = 'http://localhost:5000';
 
 const NAV = [
-  { to: '/', icon: '⌂', label: 'דף הבית' },
-  { to: '/articles', icon: '◎', label: 'מאמרים' },
-  { to: '/events', icon: '◆', label: 'אירועים' },
-  { to: '/jobs', icon: '◇', label: 'משרות' },
-  { to: '/notifications', icon: '◐', label: 'התראות' },
+  { to: '/', label: 'דף הבית' },
+  { to: '/articles', label: 'מאמרים' },
+  { to: '/events', label: 'אירועים' },
+  { to: '/jobs', label: 'משרות' },
+  { to: '/usage', label: 'נתוני שימוש' },
+  { to: '/notifications', label: 'התראות' },
+  { to: '/ai-workspace', label: 'AI Workspace' },
+  { to: '/challenges', label: 'אתגרים' },
 ];
 
 const TAGS = ['React', 'Node.js', 'Cyber', 'AI', 'Career', 'DevOps'];
@@ -39,7 +42,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             aria-label="סגור סיידבר"
-            className="absolute top-4 left-4 z-50 p-2 rounded-2xl border border-slate-700 bg-slate-900/60 text-slate-300 hover:border-cyan-500/50 transition-all"
+            className="absolute top-4 left-4 z-50 p-2 rounded-2xl border border-white/10 bg-dark-900/70 text-dark-300 hover:border-neon-lime/40 hover:text-neon-lime transition-all"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -53,29 +56,22 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             <p className="sidebar-label">ניווט עיקרי</p>
             <ul className="sidebar-nav">
               {NAV.map(item => {
+                // For the AI workspace item, send unauthenticated users to /auth
+                const target = item.to === '/ai-workspace' && !isLoggedIn ? '/auth' : item.to;
                 const isActive = item.to === '/'
                   ? location.pathname === '/'
                   : location.pathname.startsWith(item.to);
                 return (
                   <li key={item.to}>
-                    <Link to={item.to} className={`sidebar-link${isActive ? ' active' : ''}`}>
-                      <span className="sidebar-icon">{item.icon}</span>
+                    <Link to={target} className={`sidebar-link${isActive ? ' active' : ''}`} title={item.to === '/ai-workspace' && !isLoggedIn ? 'התחבר כדי לגשת ל‑AI' : undefined}>
                       <span className="flex-1 sidebar-link-text">{item.label}</span>
+                      {item.to === '/ai-workspace' && !isLoggedIn && (
+                        <span className="sidebar-badge">התחבר כדי לגשת</span>
+                      )}
                     </Link>
                   </li>
                 );
               })}
-              {isLoggedIn && (
-                <li>
-                  <Link
-                    to="/ai-workspace"
-                    className={`sidebar-link${location.pathname === '/ai-workspace' ? ' active' : ''}`}
-                  >
-                    <span className="sidebar-icon">🤖</span>
-                    <span className="flex-1">AI Workspace</span>
-                  </Link>
-                </li>
-              )}
             </ul>
           </div>
 

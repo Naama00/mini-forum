@@ -45,6 +45,7 @@ module.exports = (req, res, next) => {
       id: decoded.userId || decoded.id,
       userId: decoded.userId || decoded.id,
       roles: decoded.roles || [],
+      isAdmin: decoded.isAdmin || false,
     };
 
     next();

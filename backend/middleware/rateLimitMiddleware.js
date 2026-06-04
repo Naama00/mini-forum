@@ -125,8 +125,15 @@ const searchLimiter = rateLimit({
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'יש עומס בשרת. אנא נסו מאוחר יותר.',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      error: 'יש עומס בשרת. אנא נסו מאוחר יותר.'
+    });
+  }
 });
 
 module.exports = {

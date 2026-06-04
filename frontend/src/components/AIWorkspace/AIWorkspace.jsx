@@ -194,6 +194,8 @@ export default function AIWorkspace({
   };
 
   // ─── handlePublish: ללא שינוי ────────────────────────────────────────────
+  const isAdmin = currentUser?.isAdmin;
+
   const handlePublish = async () => {
     if (!result) return;
     setError('');
@@ -203,10 +205,22 @@ export default function AIWorkspace({
       let title = prompt.slice(0, 50);
       if (title.length >= 50) title += '...';
 
-      if (action === 'draft') {
+      if (action === 'draft' || action === 'tech-interview' || action === 'create-challenge') {
+        if (action === 'create-challenge' && !isAdmin) {
+          setSuccessMessage('האתגר נשאר בארגז הכלים הפרטי שלך. רק מנהל יכול לפרסם אתגרים רשמיים בפורום.');
+          return;
+        }
+
         if (!onAddTopic) throw new Error('פונקציית פרסום פוסט לא זמינה בקומפוננטה זו');
-        await onAddTopic({ title, content: result, categoryId: selectedCategory });
-        setSuccessMessage('הטיוטה פורסמה בהצלחה כנושא חדש בפורום!');
+        const tags = action === 'create-challenge' ? ['challenge'] : action === 'tech-interview' ? ['interview'] : [];
+        const type = action === 'create-challenge' ? 'challenge' : action === 'tech-interview' ? 'interview' : 'question';
+
+        await onAddTopic({ title, content: result, categoryId: selectedCategory, tags, type });
+        const actionLabel = action === 'tech-interview' ? 'ראיון' : action === 'create-challenge' ? 'אתגר' : 'טיוטה';
+        const successText = action === 'create-challenge'
+          ? 'האתגר פורסם בהצלחה באתגרים!'
+          : `ה${actionLabel} פורסם בהצלחה כנושא חדש בפורום!`;
+        setSuccessMessage(successText);
       } else {
         if (!onAddArticle) throw new Error('פונקציית שמירת מאמר לא זמינה בקומפוננטה זו');
         await onAddArticle({ title: `ניתוח AI: ${title}`, content: result, tags: [action] });
@@ -238,27 +252,41 @@ export default function AIWorkspace({
         </div>
 
         {/* Action Tabs */}
-        <div className="flex items-center gap-2 bg-slate-900/60 p-1.5 rounded-2xl border border-white/5 self-start md:self-auto">
+        <div className="flex flex-wrap items-center gap-2 bg-slate-900/60 p-1.5 rounded-2xl border border-white/5 self-start md:self-auto">
           <button
             onClick={() => setAction('draft')}
             className={`${styles.actionButton} ${action === 'draft' ? styles.actionButtonActive : ''}`}
           >
             <FileText className="w-4 h-4" />
-            טיוטת פוסט מקיף
+            טיוטת פוסט
           </button>
           <button
             onClick={() => setAction('optimize')}
             className={`${styles.actionButton} ${action === 'optimize' ? styles.actionButtonActive : ''}`}
           >
             <Code2 className="w-4 h-4" />
-            אופטימיזציית קוד
+            קוד אופטימלי
           </button>
           <button
             onClick={() => setAction('explain')}
             className={`${styles.actionButton} ${action === 'explain' ? styles.actionButtonActive : ''}`}
           >
             <Wand2 className="w-4 h-4 text-violet-400" />
-            הסבר ארכיטקטורה
+            ארכיטקטורה
+          </button>
+          <button
+            onClick={() => setAction('tech-interview')}
+            className={`${styles.actionButton} ${action === 'tech-interview' ? styles.actionButtonActive : ''}`}
+          >
+            <Zap className="w-4 h-4 text-amber-400" />
+            ראיון טק
+          </button>
+          <button
+            onClick={() => setAction('create-challenge')}
+            className={`${styles.actionButton} ${action === 'create-challenge' ? styles.actionButtonActive : ''}`}
+          >
+            <Rocket className="w-4 h-4 text-pink-400" />
+            אתגר קוד
           </button>
         </div>
       </div>
@@ -274,9 +302,11 @@ export default function AIWorkspace({
             <div className="flex items-center justify-between mb-4">
               <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-cyan-400" />
-                {action === 'draft'    && 'על מה תרצה שהפוסט ידבר?'}
-                {action === 'optimize' && 'הנחיות מיוחדות לאופטימיזציה'}
-                {action === 'explain'  && 'מה תרצה שננתח ונבין בקוד?'}
+                {action === 'draft'            && 'על מה תרצה שהפוסט ידבר?'}
+                {action === 'optimize'         && 'הנחיות מיוחדות לאופטימיזציה'}
+                {action === 'explain'          && 'מה תרצה שננתח ונבין בקוד?'}
+                {action === 'tech-interview'   && 'לאיזה משרה/תפקיד תרצה להיחקק?'}
+                {action === 'create-challenge' && 'אתגר קוד לאילו תחומים?'}
               </label>
 
               <button
@@ -295,7 +325,13 @@ export default function AIWorkspace({
               placeholder={
                 action === 'draft'
                   ? 'לדוגמה: כתוב מדריך מעמיק על ניהול סטייט ב-React 19 עם Server Actions...'
-                  : 'לדוגמה: מצא זליגות זיכרון, שפר ביצועי רינדור והפוך את הפונקציות לנקיות יותר...'
+                  : action === 'optimize'
+                  ? 'לדוגמה: מצא זליגות זיכרון, שפר ביצועי רינדור והפוך את הפונקציות לנקיות יותר...'
+                  : action === 'explain'
+                  ? 'לדוגמה: הסבר את ארכיטקטורת Microfrontends ומתי להשתמש בה...'
+                  : action === 'tech-interview'
+                  ? 'לדוגמה: ראיון Fullstack - שאל אותי על React hooks, Node.js ו-SQL...'
+                  : 'לדוגמה: בעיה: שרת PostgreSQL מתנעל בשיאי עומס; רמז: עדיפות queries'
               }
               className="form-input min-h-[120px] resize-none mb-4"
               required
@@ -359,7 +395,7 @@ export default function AIWorkspace({
                 }}
                 className="w-full text-right text-xs text-slate-400 hover:text-cyan-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all"
               >
-                🛠️ ניתוח אבטחה ואופטימיזציה מלאה
+                🛠️ ניתוח אבטחה ואופטימיזציה
               </button>
               <button
                 type="button"
@@ -369,7 +405,27 @@ export default function AIWorkspace({
                 }}
                 className="w-full text-right text-xs text-slate-400 hover:text-cyan-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all"
               >
-                📝 פוסט ארכיטקטורת Microfrontends
+                📝 Microfrontends ארכיטקטורה
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAction('tech-interview');
+                  setPrompt('ראיון Fullstack Developer — שאל אותי שאלות טכניות קשות על React, Node.js, Databases ו-Deployment.');
+                }}
+                className="w-full text-right text-xs text-slate-400 hover:text-amber-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all"
+              >
+                🎤 ראיון Fullstack קשה
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAction('create-challenge');
+                  setPrompt('יצר אתגר קוד שבועי עבור הקהילה: בעיה אלגוריתמית מסובכת או דיזיין סיסטם עם טוויסט פעלתי.');
+                }}
+                className="w-full text-right text-xs text-slate-400 hover:text-pink-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all"
+              >
+                🚀 אתגר קוד שבועי
               </button>
             </div>
           </div>
@@ -410,7 +466,7 @@ export default function AIWorkspace({
               </div>
 
               {result && !loading && (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   {action === 'draft' && categories.length > 0 && (
                     <select
                       value={selectedCategory}
@@ -424,13 +480,24 @@ export default function AIWorkspace({
                       ))}
                     </select>
                   )}
-                  <button
-                    onClick={handlePublish}
-                    className="button-outline text-xs py-1 px-3 rounded-lg flex items-center gap-1 text-cyan-400 border-cyan-500/20 hover:bg-cyan-500/10"
-                  >
-                    <Rocket className="w-3 h-3" />
-                    {action === 'draft' ? 'פרסם בפורום' : 'שמור בארכיון'}
-                  </button>
+
+                  {action === 'create-challenge' && !isAdmin ? (
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-200 px-4 py-3 text-sm">
+                      אתגר זה נשמר כטיוטה אישית ב-Workspace. רק מנהל יכול לפרסם אתגרים רשמיים בפורום.
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handlePublish}
+                      className="button-outline text-xs py-1 px-3 rounded-lg flex items-center gap-1 text-cyan-400 border-cyan-500/20 hover:bg-cyan-500/10"
+                    >
+                      <Rocket className="w-3 h-3" />
+                      {action === 'draft'
+                        ? 'פרסם בפורום'
+                        : action === 'create-challenge'
+                        ? 'פרסם אתגר רשמי'
+                        : 'שמור בארכיון'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

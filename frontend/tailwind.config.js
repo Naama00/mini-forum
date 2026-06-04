@@ -65,8 +65,10 @@ export default {
 
       // ─── TYPOGRAPHY ───────────────────────────────────────────────────────────
       fontFamily: {
-        'sans':  ['Assistant', 'sans-serif'],
-        'mono':  ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        'sans':  ['Space Grotesk', 'system-ui', 'sans-serif'],
+        'display': ['Space Grotesk', 'system-ui', 'sans-serif'],
+        'body':  ['Space Grotesk', 'system-ui', 'sans-serif'],
+        'mono':  ['Assistant', 'monospace'],
       },
       fontSize: {
         'xs':   '0.75rem',

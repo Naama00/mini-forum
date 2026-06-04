@@ -29,11 +29,15 @@ const EditJob            = lazy(() => import('./components/Job/EditJob'));
 const Notifications      = lazy(() => import('./components/Notification/Notifications'));
 const SearchResults      = lazy(() => import('./components/Search/Searchresults'));
 const AIWorkspace        = lazy(() => import('./components/AIWorkspace/AIWorkspaceContainer'));
+const Usage              = lazy(() => import('./components/Usage/Usage'));
+const Challenges         = lazy(() => import('./components/Challenges/Challenges'));
+const Challenge          = lazy(() => import('./components/Challenges/Challenge'));
+const Topic              = lazy(() => import('./components/Topic/Topic'));
 
 // דפים שמציגים סיידבר
 const WITH_SIDEBAR = [
   '/', '/category', '/articles', '/events', '/jobs',
-  '/notifications', '/search', '/new-topic', '/ai-workspace',
+  '/notifications', '/search', '/new-topic', '/ai-workspace', '/usage', '/challenges', '/challenge', '/topic', '/topics'
 ];
 
 function useSidebar() {
@@ -84,6 +88,10 @@ function AppRoutes() {
         <Route path="/notifications"      element={<Notifications />} />
         <Route path="/search"             element={<SearchResults />} />
         <Route path="/ai-workspace"       element={<AIWorkspace />} />
+        <Route path="/challenges"         element={<Challenges />} />
+        <Route path="/challenges/:id"     element={<Challenge />} />
+        <Route path="/topic/:id"          element={<Topic />} />
+        <Route path="/usage"              element={<Usage />} />
       </Routes>
     </Suspense>
   );
