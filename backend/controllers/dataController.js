@@ -1,5 +1,5 @@
 const dataService = require('../services/dataService');
-const logger = require('../logger');
+const logger = require('../config/logger');
 
 /**
  * GET /api/categories

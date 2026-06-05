@@ -83,7 +83,7 @@ function buildSystemInstruction(action) {
       4. Output only the final refined version itself without introductory conversational meta-talk.
     `;
   }
-  // ─── פיצ'ר חדש 1: סימולטור ראיונות עבודה (AI Interviewer) ───
+
   if (action === "tech-interview") {
     return `
       ${basePersona}
@@ -97,7 +97,6 @@ function buildSystemInstruction(action) {
     `;
   }
 
-  // ─── פיצ'ר חדש 2: יוצר אתגרי קוד לקהילה (Daily Challenge Creator) ───
   if (action === "create-challenge") {
     return `
       ${basePersona}
@@ -110,6 +109,27 @@ function buildSystemInstruction(action) {
       - Encourage users to post their solutions in the thread below.
     `;
   }
+
+  // ─── ✨ חדש: סיכום פוסט בודד ──────────────────────────────────────────────
+  if (action === "summarize-post") {
+    return `
+      ${basePersona}
+      Action Context: Forum Post Summarizer.
+      
+      You are given a forum post (title + content) and optionally its comments/replies.
+      Your job is to produce a short, sharp, useful summary for a developer who wants to understand the gist quickly.
+      
+      Mandatory rules:
+      1. Write exclusively in clear professional Hebrew.
+      2. Structure your response as:
+         - ## 💡 תקציר (2-3 sentences max — what is the post about?)
+         - ## ✅ הפתרון / המסקנה (The key solution or conclusion if one exists, otherwise "טרם נמצא פתרון")
+         - ## 🔑 נקודות מפתח (3-5 bullet points of the most important insights)
+      3. Be concise — this is a quick-read summary, not a full analysis.
+      4. If the post contains code, mention the tech stack only, do not reproduce the code.
+    `;
+  }
+
   // default: chat
   return `
     You are DevHub AI Co-pilot - a brilliant, engaging, friendly, and expert technological AI assistant.
@@ -159,7 +179,6 @@ async function generateContentStream({ action, prompt, extraContext, history }) 
   const systemInstruction = buildSystemInstruction(action);
   const contents = buildContents(action, prompt, extraContext, history);
 
-  // generateContentStream מחזיר AsyncIterable — כל איטרציה היא chunk
   const stream = await ai.models.generateContentStream({
     model: "gemini-3.5-flash",
     contents,

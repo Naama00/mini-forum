@@ -7,7 +7,7 @@ body {
   background-color: #0f172a;
   color: #e2e8f0;
   -webkit-font-smoothing: antialiased;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Space Grotesk', 'Assistant', system-ui, sans-serif;
   direction: rtl;
 }
 
@@ -49,6 +49,6 @@ h1, h2, h3, h4, h5, h6,
 .text-gradient,
 .glass-card h1, .glass-card h2, .glass-card h3,
 h1 .text-gradient, h2 .text-gradient, h3 .text-gradient {
-  font-family: 'Space Grotesk', system-ui, sans-serif !important;
+  font-family: 'Space Grotesk', 'Assistant', system-ui, sans-serif !important;
   letter-spacing: -0.02em;
 }

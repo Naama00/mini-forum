@@ -1,6 +1,6 @@
 const { Queue, Worker } = require('bullmq');
 const Notification = require('../models/Notification');
-const logger = require('../logger');
+const logger = require('../config/logger');
 const notificationEvents = require('../notificationEvents');
 
 const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';

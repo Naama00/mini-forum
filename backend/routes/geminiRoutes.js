@@ -1,12 +1,12 @@
 // backend/routes/geminiRoutes.js
 const express = require("express");
 const router = express.Router();
-const { handleAIAssist, handleAIStream } = require("../controllers/geminiController");
+const { handleAIAssist, handleAIStream, handleSummarizePost } = require("../controllers/geminiController");
+const aiRateLimiter = require("../middleware/aiRateLimiter");
+const authMiddleware = require("../middleware/authMiddleware"); // ← הנתיב שלך, שנה אם צריך
 
-// קיים — תגובה מלאה
-router.post("/assist", handleAIAssist);
-
-// חדש — Server-Sent Events streaming
-router.post("/stream", handleAIStream);
+router.post("/assist", authMiddleware, aiRateLimiter, handleAIAssist);
+router.post("/stream", authMiddleware, aiRateLimiter, handleAIStream);
+router.post("/summarize", authMiddleware, aiRateLimiter, handleSummarizePost);
 
 module.exports = router;

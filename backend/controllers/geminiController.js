@@ -26,7 +26,7 @@ async function handleAIAssist(req, res) {
   }
 }
 
-// ─── handleAIStream: חדש — SSE endpoint ──────────────────────────────────────
+// ─── handleAIStream: קיים, לא שונה — SSE endpoint ────────────────────────────
 async function handleAIStream(req, res) {
   const { action, prompt, extraContext, history } = req.body;
 
@@ -34,15 +34,12 @@ async function handleAIStream(req, res) {
     return res.status(400).json({ error: "הקלט לחיפוש/עיבוד ריק או לא תקין." });
   }
 
-  // ── הגדרת headers של SSE ──────────────────────────────────────────────────
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
-  // מונע buffering בשרתי proxy כמו nginx
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
-  // helper: שליחת event אחד
   const send = (event, data) => {
     res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
   };
@@ -55,7 +52,6 @@ async function handleAIStream(req, res) {
       history,
     });
 
-    // כל איטרציה ב-stream היא chunk מ-Gemini
     for await (const chunk of stream) {
       const text = chunk.text;
       if (text) {
@@ -63,7 +59,6 @@ async function handleAIStream(req, res) {
       }
     }
 
-    // סיום תקין
     send("done", { finished: true });
   } catch (error) {
     console.error("Stream Error in Gemini:", error);
@@ -73,7 +68,52 @@ async function handleAIStream(req, res) {
   }
 }
 
+// ─── ✨ handleSummarizePost: חדש — סיכום פוסט בודד ───────────────────────────
+// מקבל: { title, content, comments[] }
+// מחזיר: { text } — סיכום Markdown
+async function handleSummarizePost(req, res) {
+  const { title, content, comments } = req.body;
+
+  if (!title && !content) {
+    return res.status(400).json({ error: "חסר תוכן לסיכום." });
+  }
+
+  // ── בניית prompt מובנה מתוכן הפוסט ──────────────────────────────────────
+  const commentsText =
+    Array.isArray(comments) && comments.length > 0
+      ? comments
+          .slice(0, 20) // מקסימום 20 תגובות ראשונות כדי לחסוך טוקנים
+          .map((c, i) => `תגובה ${i + 1}: ${c.content || c.text || ""}`)
+          .join("\n")
+      : "אין תגובות עדיין.";
+
+  const prompt = `
+כותרת הפוסט: ${title || "ללא כותרת"}
+
+תוכן הפוסט:
+${content || ""}
+
+תגובות:
+${commentsText}
+  `.trim();
+
+  try {
+    const aiText = await geminiService.generateContent({
+      action: "summarize-post",
+      prompt,
+    });
+
+    return res.json({ text: aiText });
+  } catch (error) {
+    console.error("Controller Error in summarizePost:", error);
+    return res.status(500).json({
+      error: "שגיאה בסיכום הפוסט: " + (error?.message || error),
+    });
+  }
+}
+
 module.exports = {
   handleAIAssist,
   handleAIStream,
+  handleSummarizePost, // ✨ חדש
 };

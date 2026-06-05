@@ -2,7 +2,7 @@ const { Topic } = require('../models/Topic');
 const { Post } = require('../models/Post');
 const { Category } = require('../models/Category');
 const { User } = require('../models/User');
-const cache = require('../cache');
+const cache = require('../config/cache');
 
 /**
  * Create new topic with first post

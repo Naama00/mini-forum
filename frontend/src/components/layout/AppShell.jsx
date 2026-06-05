@@ -6,17 +6,17 @@ import SearchBar from "../Search/Searchbar";
 import { ThemeToggle } from "../common";
 import NotificationBell from "../Notification/Notificationbell";
 import { useAuth } from "../../hooks";
-
+import Footer from "./Footer";
 // דפים שמציגים סיידבר — כל השאר מלא-רוחב (לוגין, פרופיל וכו')
 const SIDEBAR_ROUTES = [
-  "/", "/category", "/articles", "/events", "/jobs",
+  "/", "/category", "/topic", "/articles", "/events", "/jobs",
   "/notifications", "/search", "/ai-workspace",
-  "/new-topic","/challenge","/challenges","/usage",
+  "/new-topic", "/challenge", "/challenges", "/usage",
 ];
 
 function hasSidebar(pathname) {
   return SIDEBAR_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"))
-    || /^\/(articles|events|jobs|category|challenge|challenges)/.test(pathname);
+    || /^\/(articles|events|jobs|category|topic|challenge|challenges)/.test(pathname);
 }
 
 export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed, setIsCollapsed }) {
@@ -266,6 +266,7 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
           style={{ marginRight: showSidebar && !isCollapsed ? '20rem' : '0' }}
         >
           {children}
+          <Footer />
         </main>
 
       </div>

@@ -49,7 +49,6 @@ function FilterBtn({ active, onClick, children }) {
         color: active ? "var(--accent-cyan)" : "var(--text-muted)",
         fontSize: "0.75rem",
         fontWeight: 700,
-        fontFamily: "'Assistant', sans-serif",
         cursor: "pointer",
         whiteSpace: "nowrap",
         transition: "all 0.2s ease",
@@ -153,7 +152,6 @@ function NotifCard({ n, onRead, onDelete }) {
             alignItems: "center",
             justifyContent: "center",
             fontSize: "9px",
-            fontFamily: "Assistant, sans-serif",
             color: "var(--text-muted)",
           }}
         >
@@ -179,7 +177,7 @@ function NotifCard({ n, onRead, onDelete }) {
           <span className="tag-chip" style={{ fontSize: "10px", padding: "1px 7px" }}>
             {TYPE_LABEL[n.type]}
           </span>
-          <span style={{ fontFamily: "Assistant, sans-serif", fontSize: "11px", color: "rgba(148,163,184,0.35)" }}>
+          <span style={{ fontSize: "11px", color: "rgba(148,163,184,0.35)" }}>
             {timeAgo(n.createdAt)}
           </span>
         </div>
@@ -389,7 +387,6 @@ export default function NotificationsPage() {
     <div
       className="page-shell"
       dir="rtl"
-      style={{ fontFamily: "'Assistant', sans-serif" }}
     >
       {/* רקע */}
       <div className="page-bg">
@@ -417,8 +414,8 @@ export default function NotificationsPage() {
             <div>
               <p
                 style={{
-                  fontFamily: "Assistant, sans-serif",
                   fontSize: "10px",
+                  fontFamily: "Assistant",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: "rgba(0,229,255,0.45)",
@@ -431,6 +428,7 @@ export default function NotificationsPage() {
                 style={{
                   fontSize: "clamp(1.5rem, 4vw, 2.25rem)",
                   fontWeight: 800,
+                  fontFamily: "Space Grotesk, Assistant, system-ui, sans-serif",
                   color: "#fff",
                   letterSpacing: "-0.02em",
                   display: "flex",
@@ -453,7 +451,6 @@ export default function NotificationsPage() {
                       borderRadius: "9999px",
                       letterSpacing: "0.08em",
                       textTransform: "uppercase",
-                      fontFamily: "Assistant, sans-serif",
                     }}
                   >
                     {unread} חדשות
@@ -484,7 +481,6 @@ export default function NotificationsPage() {
                     background: "rgba(10,12,22,0.3)",
                     color: "rgba(148,163,184,0.5)",
                     cursor: "pointer",
-                    fontFamily: "'Assistant', sans-serif",
                     fontWeight: 600,
                     transition: "all 0.2s",
                   }}
@@ -502,7 +498,7 @@ export default function NotificationsPage() {
             {FILTERS.map((f) => (
               <FilterBtn key={f} active={filter === f} onClick={() => setFilter(f)}>
                 {f !== "all" && f !== "unread" && (
-                  <span style={{ fontFamily: "Assistant, sans-serif", fontSize: "10px" }}>{TYPE_ICON[f]}</span>
+                  <span style={{ fontSize: "10px" }}>{TYPE_ICON[f]}</span>
                 )}
                 {FILTER_LABELS[f]}
               </FilterBtn>
@@ -512,7 +508,7 @@ export default function NotificationsPage() {
           {/* מפריד */}
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(0,229,255,0.1))" }} />
-            <span style={{ fontFamily: "Assistant, sans-serif", fontSize: "10px", color: "rgba(148,163,184,0.3)", letterSpacing: "0.1em" }}>
+            <span style={{ fontSize: "10px", color: "rgba(148,163,184,0.3)", letterSpacing: "0.1em" }}>
               // {filtered.length} רשומות
             </span>
             <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(0,229,255,0.1))" }} />
@@ -532,13 +528,13 @@ export default function NotificationsPage() {
                   margin: "0 auto 1rem",
                 }}
               />
-              <p style={{ fontFamily: "Assistant, sans-serif", fontSize: "12px", color: "rgba(148,163,184,0.35)" }}>
+              <p style={{ fontSize: "12px", color: "rgba(148,163,184,0.35)" }}>
                 // מושך נתונים...
               </p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="card-empty">
-              <div style={{ fontSize: "2.5rem", marginBottom: "1rem", opacity: 0.3, fontFamily: "Assistant, sans-serif" }}>◐</div>
+              <div style={{ fontSize: "2.5rem", marginBottom: "1rem", opacity: 0.3 }}>◐</div>
               <h3 style={{ fontWeight: 700, color: "#e2e8f0", marginBottom: "0.5rem" }}>
                 {filter === "unread" ? "אין התראות שלא נקראו" : "אין התראות בקטגוריה זו"}
               </h3>
@@ -573,7 +569,6 @@ export default function NotificationsPage() {
                     border: `1px solid ${p === page ? "rgba(0,229,255,0.3)" : "var(--surface-border)"}`,
                     background: p === page ? "rgba(0,229,255,0.07)" : "rgba(10,12,22,0.3)",
                     color: p === page ? "var(--accent-cyan)" : "var(--text-muted)",
-                    fontFamily: "Assistant, sans-serif",
                     fontSize: "12px",
                     fontWeight: 700,
                     cursor: "pointer",

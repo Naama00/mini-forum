@@ -1,7 +1,7 @@
 const { Post } = require('../models/Post');
 const { Topic } = require('../models/Topic');
 const { User } = require('../models/User');
-const cache = require('../cache');
+const cache = require('../config/cache');
 
 /**
  * Format public user data - remove sensitive fields

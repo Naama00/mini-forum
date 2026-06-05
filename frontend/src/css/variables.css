@@ -37,7 +37,7 @@
   --blur-medium: 12px;
   --blur-light: 8px;
 
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Assistant', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', 'Assistant', system-ui, sans-serif;
   --font-mono: 'Assistant', monospace;
 }

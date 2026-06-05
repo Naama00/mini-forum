@@ -1,7 +1,7 @@
 const { User, Category, Topic, Upload } = require('../models');
 const { Post } = require('../models/Post');
-const logger = require('../logger');
-const cache = require('../cache');
+const logger = require('../config/logger');
+const cache = require('../config/cache');
 
 const CACHE_KEYS = {
     categories: 'categories:all',

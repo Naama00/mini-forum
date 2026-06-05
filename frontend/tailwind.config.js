@@ -65,9 +65,9 @@ export default {
 
       // ─── TYPOGRAPHY ───────────────────────────────────────────────────────────
       fontFamily: {
-        'sans':  ['Space Grotesk', 'system-ui', 'sans-serif'],
-        'display': ['Space Grotesk', 'system-ui', 'sans-serif'],
-        'body':  ['Space Grotesk', 'system-ui', 'sans-serif'],
+        'sans':  ['Space Grotesk', 'Assistant', 'system-ui', 'sans-serif'],
+        'display': ['Space Grotesk', 'Assistant', 'system-ui', 'sans-serif'],
+        'body':  ['Space Grotesk', 'Assistant', 'system-ui', 'sans-serif'],
         'mono':  ['Assistant', 'monospace'],
       },
       fontSize: {

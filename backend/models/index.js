@@ -10,7 +10,7 @@ const { Post, postSchema } = require('./Post');
 const { Upload, uploadSchema } = require('./Upload');
 
 // יצירת אינדקסים וקולקציות
-const logger = require('../logger');
+const logger = require('../config/logger');
 
 async function initializeDatabase() {
     try {

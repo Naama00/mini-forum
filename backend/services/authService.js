@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const { User } = require('../models/User');
-const logger = require('../logger');
+const logger = require('../config/logger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'devhub-secret-key-change-in-production';
 const GOOGLE_CLIENT_ID = '151921932655-85p00136srh9nb2tquam8qkkjtuvfnl5.apps.googleusercontent.com';

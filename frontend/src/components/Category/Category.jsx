@@ -10,6 +10,8 @@ import { getToken } from "../../utils/storage";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import MarkdownEditor from "../MarkdownEditor";
 import MarkdownRenderer from "../MarkdownRenderer";
+import PostSummary from "../Topic/PostSummary";
+import { UserAvatar } from "../common/UserAvatar";
 import { useAuth } from "../../hooks";
 import styles from "./Category.module.css";
 
@@ -140,7 +142,7 @@ export default function CategoryPage() {
         .then((res) => {
           if (res.success) {
             setCategory(res.data);
-            setTopics(res.data?.topics || []);
+            setTopics((res.data?.topics || []).filter((topic) => !topic.tags?.includes('challenge') && topic.type !== 'challenge'));
           } else {
             setError(res.message);
           }
@@ -422,11 +424,11 @@ export default function CategoryPage() {
                       >
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                           <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-2xl border border-slate-700 bg-slate-900/50 flex items-center justify-center font-bold text-cyan-400">
-                              {avatarInitials(
-                                getAuthorName(t)
-                              )}
-                            </div>
+                            <UserAvatar
+                              firstName={getAuthorData(t)?.firstName || ""}
+                              lastName={getAuthorData(t)?.lastName || ""}
+                              size="md"
+                            />
 
                             <div>
                               <h2 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors mb-2">
@@ -487,9 +489,11 @@ export default function CategoryPage() {
                 </h1>
 
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-12 h-12 rounded-2xl border border-slate-700 bg-slate-900/50 flex items-center justify-center font-bold text-cyan-400">
-                    {avatarInitials(getAuthorName(topic))}
-                  </div>
+                  <UserAvatar
+                    firstName={getAuthorData(topic)?.firstName || ""}
+                    lastName={getAuthorData(topic)?.lastName || ""}
+                    size="md"
+                  />
 
                   <div>
                     <div className="font-semibold text-white">
@@ -513,6 +517,7 @@ export default function CategoryPage() {
                     />
                   )}
                 </div>
+
               </div>
 
               {/* POSTS */}
@@ -524,11 +529,11 @@ export default function CategoryPage() {
                     className="glass-card glass-card-md"
                   >
                     <div className="flex items-center gap-3 mb-5">
-                      <div className="w-10 h-10 rounded-xl border border-slate-700 bg-slate-900/50 flex items-center justify-center font-bold text-cyan-400">
-                        {avatarInitials(
-                          getAuthorName(post)
-                        )}
-                      </div>
+                      <UserAvatar
+                        firstName={getAuthorData(post)?.firstName || ""}
+                        lastName={getAuthorData(post)?.lastName || ""}
+                        size="sm"
+                      />
 
                       <div>
                         <div className="font-semibold text-white flex items-center gap-2">
@@ -651,6 +656,16 @@ export default function CategoryPage() {
                   </div>
                 ))}
               </div>
+
+              {posts.length >= 2 && (
+                <div className="mt-8">
+                  <PostSummary
+                    title={topic.title}
+                    content={posts[0]?.content || topic.content || ''}
+                    comments={posts.slice(1).map((p) => ({ content: p.content }))}
+                  />
+                </div>
+              )}
 
               {/* REPLY */}
 

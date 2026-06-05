@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { MessageCircle, User, Calendar } from 'lucide-react';
 import Breadcrumb from '../Breadcrumb';
 import MarkdownRenderer from '../MarkdownRenderer';
+import PostSummary from './PostSummary'; 
 import { useAuth } from '../../hooks';
 import { getToken } from '../../utils/storage';
 import { timeAgo } from '../../utils/formatters';
@@ -213,6 +214,8 @@ export default function TopicPage() {
                   <MarkdownRenderer source={posts[0].content || ''} />
                 </div>
               )}
+
+              {/* ✨ כפתור סיכום AI — מופיע אם יש לפחות 2 פוסטים */}
             </div>
 
             {/* Replies */}

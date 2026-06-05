@@ -56,13 +56,14 @@ export default function AIWorkspaceContainer() {
   });
 
   const articleMutation = useMutation({
-    mutationFn: async ({ title, content, summary, image, tags }) => {
+    mutationFn: async ({ title, content, summary, image, tags, categoryId }) => {
       const response = await authFetch.post('/articles', {
         title,
         content,
         summary,
         image,
         tags,
+        categoryId,
       });
       if (!response.success) {
         throw new Error(response.message || 'Failed to create article');

@@ -14,6 +14,7 @@ async function getAllArticles({ tag, search, page = 1, limit = 10 }) {
 
   const articles = await Article.find(query)
     .populate('author', 'firstName lastName icon')
+    .populate('category', 'name')
     .populate('comments.author', 'firstName lastName icon')
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
@@ -33,6 +34,7 @@ async function getArticleById(id) {
     { new: true }
   )
     .populate('author', 'firstName lastName icon')
+    .populate('category', 'name')
     .populate('comments.author', 'firstName lastName icon');
 
   if (!article) throw new Error('מאמר לא נמצא');
@@ -42,7 +44,7 @@ async function getArticleById(id) {
 /**
  * Create new article
  */
-async function createArticle({ title, content, summary, image, tags }, authorId) {
+async function createArticle({ title, content, summary, image, tags, categoryId }, authorId) {
   if (!title || !title.trim()) {
     throw new Error('כותרת המאמר חסרה');
   }
@@ -56,7 +58,8 @@ async function createArticle({ title, content, summary, image, tags }, authorId)
     summary: summary ? summary.trim() : '',
     image: image || '',
     tags: Array.isArray(tags) ? tags : (tags ? [tags] : []),
-    author: authorId
+    author: authorId,
+    category: categoryId || null,
   });
   
   await article.save();
@@ -67,12 +70,12 @@ async function createArticle({ title, content, summary, image, tags }, authorId)
 /**
  * Update article
  */
-async function updateArticle(id, { title, content, summary, image, tags }, authorId) {
+async function updateArticle(id, { title, content, summary, image, tags, categoryId }, authorId) {
   const article = await Article.findById(id);
   if (!article) throw new Error('מאמר לא נמצא');
   if (article.author.toString() !== authorId) throw new Error('אין הרשאה לערוך');
 
-  Object.assign(article, { title, content, summary, image, tags, updatedAt: Date.now() });
+  Object.assign(article, { title, content, summary, image, tags, category: categoryId || null, updatedAt: Date.now() });
   await article.save();
   return article;
 }

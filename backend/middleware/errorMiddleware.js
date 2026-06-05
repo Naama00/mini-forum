@@ -3,7 +3,7 @@
  * Catches all errors thrown from controllers and services
  */
 
-const logger = require('../logger');
+const logger = require('../config/logger');
 
 function errorMiddleware(err, req, res, next) {
   // Default values

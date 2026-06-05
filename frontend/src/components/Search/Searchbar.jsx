@@ -164,11 +164,12 @@ export default function SearchBar() {
       {open && (
         <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-8 pointer-events-none">
           <div
-            className="absolute inset-0 bg-dark-950/90 backdrop-blur-2xl"
+            className="absolute inset-0 bg-transparent backdrop-blur-2xl"
             onClick={() => setOpen(false)}
           />
 
-          <div className="relative w-full max-w-[750px] min-h-[420px] rounded-3xl border border-neon-lime/15 bg-dark-900/95 shadow-2xl shadow-glow-lime overflow-hidden pointer-events-auto glass-card">
+          <div className="relative w-full max-w-[750px] min-h-[420px] rounded-3xl border border-white/10 shadow-2xl shadow-glow-lime overflow-hidden pointer-events-auto glass-card-futuristic"
+               style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}>
             <div style={{ padding: "1.25rem 1.5rem 1rem" }}>
               <div style={{ position: "relative", marginBottom: "1rem" }}>
                 <input

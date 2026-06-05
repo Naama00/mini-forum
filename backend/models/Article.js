@@ -14,6 +14,7 @@ const articleSchema = new mongoose.Schema({
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   image: { type: String, default: '' },
   tags: [{ type: String }],
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   comments: [commentSchema],
   views: { type: Number, default: 0 },

@@ -5,17 +5,18 @@ const dotenv = require("dotenv");
 dotenv.config();
 const mongoose = require('mongoose');
 const cors = require('cors');
-const logger = require('./logger');
+const logger = require('./config/logger');
 const pinoHttp = require('pino-http')({ logger });
 const { initializeDatabase } = require('./models');
 const errorMiddleware = require('./middleware/errorMiddleware');
 const { authLimiter, topicLimiter, postLimiter, commentLimiter, searchLimiter, generalLimiter } = require('./middleware/rateLimitMiddleware');
-const { connectRedis } = require('./cache');
+const { connectRedis } = require('./config/cache');
 const { initializeNotificationQueue } = require('./queues/notificationQueue');
 const notificationEvents = require('./notificationEvents');
-const { initSocket, getSocket } = require('./socket');
+const { initSocket, getSocket } = require('./config/socket');
 
 // Routes
+const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const articleRoutes = require('./routes/articleRoutes');
 const eventRoutes = require('./routes/eventRoutes');
@@ -29,6 +30,7 @@ const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
 const geminiRoutes = require("./routes/geminiRoutes");
 const usageRoutes= require("./routes/usageRoutes");
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +42,7 @@ const url = 'mongodb://127.0.0.1:27017/forumDB';
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(pinoHttp);
 
 // Apply general rate limiter only to API routes
@@ -88,6 +91,7 @@ async function startServer() {
         logger.info('   POST /api/auth/register');
         logger.info('   POST /api/auth/login');
         logger.info('   POST /api/auth/google');
+        logger.info('   POST /api/uploads');
     });
 }
 
@@ -119,6 +123,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api', dataRoutes);
 app.use("/api/gemini", geminiRoutes);
 app.use('/api/usage',usageRoutes);
+app.use('/api/uploads', uploadRoutes);
 // Debug routes (only enabled in non-production)
 if (process.env.NODE_ENV !== 'production') {
     app.use('/api/debug', debugRoutes);

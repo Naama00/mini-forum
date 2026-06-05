@@ -1,5 +1,5 @@
 const Notification = require('../models/Notification');
-const logger = require('../logger');
+const logger = require('../config/logger');
 const { addNotificationJob } = require('../queues/notificationQueue');
 
 /**

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import authFetch from '../../services/api';
+import { UserAvatar } from '../common/UserAvatar';
 import { Loading } from '../common/Loading';
 
 // Extract real title from Markdown content; prefer the first H1 header if present
@@ -86,9 +87,16 @@ export default function Challenges() {
                     <span className="font-semibold text-slate-200">קטגוריה:</span>{' '}
                     {topic.category?.name || 'כללי'}
                   </div>
-                  <div>
-                    <span className="font-semibold text-slate-200">פורסם על ידי:</span>{' '}
-                    {topic.author?.firstName || 'משתמש'}
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-200">פורסם על ידי:</span>
+                    <div className="flex items-center gap-2">
+                      <UserAvatar
+                        firstName={topic.author?.firstName || ""}
+                        lastName={topic.author?.lastName || ""}
+                        size="xs"
+                      />
+                      <span>{topic.author?.firstName || 'משתמש'}</span>
+                    </div>
                   </div>
                   <div>
                     <span className="font-semibold text-slate-200">נוצר ב:</span>{' '}

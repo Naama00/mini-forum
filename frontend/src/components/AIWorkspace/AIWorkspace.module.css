@@ -3,7 +3,9 @@
 .workspaceContainer {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .actionButton {
@@ -52,6 +54,12 @@
 
 .pulseIcon {
   animation: aiPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.resultMarkdown {
+  color: var(--text-soft);
+  line-height: 1.9;
+  font-size: 1rem;
 }
 
 @keyframes aiPulse {
@@ -173,7 +181,12 @@
 /* ── Action Tabs ── */
 .tabsWrap {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
   gap: 0.4rem;
+  row-gap: 0.4rem;
+  width: 100%;
   background: rgba(10, 12, 22, 0.5);
   border: 1px solid var(--surface-border);
   border-radius: 1rem;
@@ -182,9 +195,6 @@
 
 .actionButton {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.5rem;
   padding: 0.55rem 1rem;
   border-radius: 0.75rem;
@@ -229,10 +239,11 @@
 .inputCard {
   position: relative;
   overflow: hidden;
-  border-radius: 1.5rem;
-  border: 1px solid var(--surface-border);
-  background: rgba(15, 23, 42, 0.35);
-  padding: 1.5rem;
+  border-radius: 1.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(15, 23, 42, 0.42);
+  padding: 1.75rem;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 20px 60px rgba(0, 0, 0, 0.18);
 }
 
 .inputCardHeader {
@@ -673,6 +684,12 @@
   padding-right: 1.25rem;
   margin-bottom: 1rem;
   list-style-type: disc;
+}
+
+.resultMarkdown {
+  color: var(--text-soft);
+  line-height: 1.9;
+  font-size: 1rem;
 }
 
 .resultMarkdown li { margin-bottom: 0.35rem; }

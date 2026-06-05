@@ -1,4 +1,4 @@
-const cache = require('../cache');
+const cache = require('../config/cache');
 
 async function clearCaches(req, res, next) {
     try {

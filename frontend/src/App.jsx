@@ -12,7 +12,7 @@ import Sidebar from './components/Sidebar/Sidebar';
 const Home               = lazy(() => import('./components/Home/Home'));
 const Category           = lazy(() => import('./components/Category/Category'));
 const AuthForm           = lazy(() => import('./components/Auth'));
-const NewTopic           = lazy(() => import('./components/NewTopic'));
+const NewTopic           = lazy(() => import('./components/Topic/NewTopic'));
 const ProfilePage        = lazy(() => import('./components/Profile'));
 const ArticlesPage       = lazy(() => import('./components/Article/Articles'));
 const EventsPage         = lazy(() => import('./components/Event/Events'));

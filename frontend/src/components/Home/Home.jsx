@@ -60,6 +60,11 @@ function AnimatedCounter({ target }) {
 export default function ForumHome() {
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState(null);
+  const categoriesRef = useRef(null);
+
+  const scrollToCategories = () => {
+    categoriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const {
     data: categories = [],
@@ -183,17 +188,6 @@ export default function ForumHome() {
                 Join the next generation tech community. Explore advanced
                 discussions, architecture, AI, web systems and innovation.
               </p>
-
-              <div className="flex justify-center gap-4 flex-wrap">
-                <button className="button-primary px-8 py-4 rounded-xl hover:shadow-xl hover:shadow-cyan-500/30 duration-300">
-                  <Zap className="w-5 h-5" />
-                  Explore Discussions
-                </button>
-
-                <button className="button-secondary px-8 py-4 rounded-xl duration-300">
-                  View Categories
-                </button>
-              </div>
             </div>
 
             {/* Stats */}
@@ -219,7 +213,7 @@ export default function ForumHome() {
         </section>
 
         {/* Categories */}
-        <section className={styles['home-categories-section']}>
+        <section ref={categoriesRef} id="categories" className={styles['home-categories-section']}>
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 rounded-full bg-gradient-to-b from-cyan-500 to-violet-500" />
@@ -344,9 +338,9 @@ export default function ForumHome() {
           <div className="max-w-7xl mx-auto">
             <div className={styles['home-cta-container']}>
               <div className={styles['home-cta-content']}>
-                <h3 className="text-4xl font-black text-white mb-4">Ready to join the future?</h3>
+                <h3 className="text-4xl font-black text-white mb-4">?Ready to join the future</h3>
                 <p className="text-lg text-slate-400 mb-8">Connect with developers, share ideas and explore advanced tech discussions.</p>
-               <button className="button-primary px-8 py-4 rounded-xl hover:shadow-xl hover:shadow-cyan-500/30 duration-300">
+               <button onClick={scrollToCategories} className="button-primary px-8 py-4 rounded-xl hover:shadow-xl hover:shadow-cyan-500/30 duration-300">
                   <Zap className="w-5 h-5" /> Start Exploring
                 </button>
               </div>

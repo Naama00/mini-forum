@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import MarkdownEditor from "./MarkdownEditor";
-import { useAuth } from "../hooks";
-import { getToken } from "../utils/storage";
+import MarkdownEditor from "../MarkdownEditor";
+import { useAuth } from "../../hooks";
+import { getToken } from "../../utils/storage";
 const API_BASE = "http://localhost:5000";
 
 const TOPIC_TYPES = [
@@ -29,15 +29,14 @@ export default function NewTopic() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) navigate('/auth');
   }, [user]);
 
-  // use global styles and existing theme variables; keep markup simple here
-
-  // טעינת קטגוריות
   useEffect(() => {
     fetch(`${API_BASE}/api/categories`)
       .then((r) => r.json())
@@ -74,6 +73,41 @@ export default function NewTopic() {
     }
   };
 
+  // ── Image upload ──────────────────────────────────────────
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const token = getToken();
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch(`${API_BASE}/api/uploads`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "שגיאה בהעלאת התמונה");
+
+      // הכנסת Markdown לתוך תיבת התוכן
+      const mdImage = `\n![תמונה](${data.url})\n`;
+      setForm((p) => ({ ...p, content: p.content + mdImage }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+      // איפוס ה-input כדי לאפשר העלאה חוזרת של אותו קובץ
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+  // ─────────────────────────────────────────────────────────
+
   const handleSubmit = async () => {
     if (!form.title.trim()) return setError("יש להזין כותרת לנושא");
     if (!form.content.trim()) return setError("יש להזין תוכן לפוסט");
@@ -102,7 +136,6 @@ export default function NewTopic() {
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "שגיאה ביצירת הנושא");
 
-      // מעבר לדף הנושא החדש
       const newId = data.data?._id || data.data?.id;
       navigate(`/category?topicId=${newId}`);
     } catch (err) {
@@ -191,7 +224,44 @@ export default function NewTopic() {
 
             {/* CONTENT */}
             <div className="mb-8">
-              <label className="text-slate-300 text-sm font-medium mb-2 block">תוכן <span className="text-rose-500">*</span></label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-slate-300 text-sm font-medium">תוכן <span className="text-rose-500">*</span></label>
+
+                {/* ── כפתור העלאת תמונה ── */}
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    title="העלה תמונה"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700/40 bg-slate-950/50 text-slate-300 text-xs hover:border-cyan-500/40 hover:text-cyan-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploading ? (
+                      <>
+                        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        <span>מעלה...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>📎</span>
+                        <span>הוסף תמונה</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                {/* ─────────────────────── */}
+              </div>
+
               <div className="bg-slate-950/60 border border-slate-700/40 backdrop-blur-xl p-3 rounded-3xl shadow-[0_30px_80px_-40px_rgba(0,0,0,0.55)]">
               <MarkdownEditor
                 value={form.content}

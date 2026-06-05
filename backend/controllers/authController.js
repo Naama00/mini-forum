@@ -1,5 +1,5 @@
 const { registerUser, loginUser, loginWithGoogle } = require('../services/authService');
-const logger = require('../logger');
+const logger = require('../config/logger');
 
 /**
  * POST /api/auth/register
