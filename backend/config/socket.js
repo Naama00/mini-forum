@@ -2,7 +2,10 @@ const http = require('http');
 const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'devhub-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable must be set');
+}
 let io = null;
 
 function initSocket(server) {
@@ -10,7 +13,7 @@ function initSocket(server) {
 
   io = new Server(server, {
     cors: {
-      origin: '*',
+      origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : 'http://localhost:5173',
       methods: ['GET', 'POST'],
       credentials: true,
     },

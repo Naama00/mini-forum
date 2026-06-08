@@ -23,7 +23,12 @@ const bcrypt = require('bcryptjs');
     console.log('first 5 char codes:', first);
     console.log('last 5 char codes :', last);
   }
-  console.log('bcrypt compare result:', bcrypt.compareSync('Admin123!', hash));
+  const testPassword = process.env.CHECK_PASSWORD;
+  if (!testPassword) {
+    console.log('Set CHECK_PASSWORD env var to test bcrypt comparison');
+  } else {
+    console.log('bcrypt compare result:', bcrypt.compareSync(testPassword, hash));
+  }
 
   await client.close();
 })();

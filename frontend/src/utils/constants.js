@@ -1,7 +1,7 @@
 // API Configuration
 export const API_BASE_URL = 'http://localhost:5000/api';
 export const API_BASE = 'http://localhost:5000';
-export const GOOGLE_CLIENT_ID = '151921932655-85p00136srh9nb2tquam8qkkjtuvfnl5.apps.googleusercontent.com';
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 // Endpoints
 export const API_ENDPOINTS = {

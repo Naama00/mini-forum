@@ -1,16 +1,23 @@
 const Event = require('../models/Event');
 const { createNotification } = require('./notificationService');
 
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Get all events with optional filters
  */
 async function getAllEvents({ tag, search, upcoming, page = 1, limit = 10 }) {
   let query = {};
   if (tag) query.tags = tag;
-  if (search) query.$or = [
-    { title: { $regex: search, $options: 'i' } },
-    { description: { $regex: search, $options: 'i' } }
-  ];
+  if (search) {
+    const escaped = escapeRegex(search);
+    query.$or = [
+      { title: { $regex: escaped, $options: 'i' } },
+      { description: { $regex: escaped, $options: 'i' } }
+    ];
+  }
   if (upcoming === 'true') query.date = { $gte: new Date() };
 
   const events = await Event.find(query)

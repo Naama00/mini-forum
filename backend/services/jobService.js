@@ -1,6 +1,10 @@
 const Job = require('../models/Job');
 const { createNotification } = require('./notificationService');
 
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Get all jobs with optional filters
  */
@@ -8,12 +12,15 @@ async function getAllJobs({ tag, search, type, location, page = 1, limit = 10 })
   let query = {};
   if (tag) query.tags = tag;
   if (type) query.type = type;
-  if (location) query.location = { $regex: location, $options: 'i' };
-  if (search) query.$or = [
-    { title: { $regex: search, $options: 'i' } },
-    { company: { $regex: search, $options: 'i' } },
-    { description: { $regex: search, $options: 'i' } }
-  ];
+  if (location) query.location = { $regex: escapeRegex(location), $options: 'i' };
+  if (search) {
+    const escaped = escapeRegex(search);
+    query.$or = [
+      { title: { $regex: escaped, $options: 'i' } },
+      { company: { $regex: escaped, $options: 'i' } },
+      { description: { $regex: escaped, $options: 'i' } }
+    ];
+  }
 
   const jobs = await Job.find(query)
     .populate('author', 'username avatar')

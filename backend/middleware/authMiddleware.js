@@ -3,13 +3,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 if (!JWT_SECRET) {
-  if (IS_PRODUCTION) {
-    throw new Error('CRITICAL CONFIGURATION ERROR: JWT_SECRET environment variable is missing in production!');
-  }
-  console.warn('WARNING: JWT_SECRET is not defined. Using a volatile fallback key for development.');
+  throw new Error('FATAL: JWT_SECRET environment variable must be set');
 }
-
-const EffectiveSecret = JWT_SECRET || 'devhub-secret-key-change-in-production';
 
 /**
  * Express middleware to authenticate requests via JWT.
@@ -36,7 +31,7 @@ module.exports = (req, res, next) => {
 
   try {
     // Hardened verification with explicit algorithm enforcement
-    const decoded = jwt.verify(token, EffectiveSecret, {
+    const decoded = jwt.verify(token, JWT_SECRET, {
       algorithms: ['HS256'],
     });
 
