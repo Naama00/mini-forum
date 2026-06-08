@@ -4,8 +4,7 @@ import MarkdownEditor from "../MarkdownEditor";
 import CyberLayout from "../common/CyberLayout";
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 
 const JOB_TYPES = ["fulltime", "parttime", "freelance", "internship", "remote"];
 const JOB_TYPE_LABELS = {

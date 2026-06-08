@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks';
 import './Sidebar.css';
 
-const API_BASE = 'http://localhost:5000';
+import { API_BASE } from '../../utils/constants';
 
 const NAV = [
   { to: '/', label: 'דף הבית' },

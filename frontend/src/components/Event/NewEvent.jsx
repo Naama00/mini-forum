@@ -3,8 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor";
 import { getToken } from "../../utils/storage";
-
-const API = "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 const QUICK_TAGS = ["Conference", "Meetup", "Hackathon", "Workshop", "Webinar", "Networking", "AI", "Cyber", "React", "Career"];
 
 export default function NewEventForm() {

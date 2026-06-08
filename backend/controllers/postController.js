@@ -1,52 +1,25 @@
 const postService = require('../services/postService');
+const { wrapAsync } = require('../utils/controllerFactory');
 
-/**
- * POST /api/posts
- */
-async function createPost(req, res, next) {
-    try {
-        const result = await postService.createPost(req.body.content, req.body.topicId, req.user.userId);
-        res.status(201).json(result);
-    } catch (error) {
-        next(error);
-    }
-}
+const createPost = wrapAsync(async (req, res) => {
+    const result = await postService.createPost(req.body.content, req.body.topicId, req.user.userId);
+    res.status(201).json(result);
+});
 
-/**
- * PUT /api/posts/:postId
- */
-async function updatePost(req, res, next) {
-    try {
-        const result = await postService.updatePost(req.params.postId, req.body, req.user.userId);
-        res.json(result);
-    } catch (error) {
-        next(error);
-    }
-}
+const updatePost = wrapAsync(async (req, res) => {
+    const result = await postService.updatePost(req.params.postId, req.body, req.user.userId);
+    res.json(result);
+});
 
-/**
- * DELETE /api/posts/:postId
- */
-async function deletePost(req, res, next) {
-    try {
-        const result = await postService.deletePost(req.params.postId, req.user.userId);
-        res.json(result);
-    } catch (error) {
-        next(error);
-    }
-}
+const deletePost = wrapAsync(async (req, res) => {
+    const result = await postService.deletePost(req.params.postId, req.user.userId);
+    res.json(result);
+});
 
-/**
- * POST /api/posts/:postId/vote
- */
-async function votePost(req, res, next) {
-    try {
-        const result = await postService.votePost(req.params.postId, req.body.direction, req.user.userId);
-        res.json(result);
-    } catch (error) {
-        next(error);
-    }
-}
+const votePost = wrapAsync(async (req, res) => {
+    const result = await postService.votePost(req.params.postId, req.body.direction, req.user.userId);
+    res.json(result);
+});
 
 module.exports = {
     createPost,

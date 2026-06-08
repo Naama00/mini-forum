@@ -6,7 +6,7 @@ import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";
 
-const API = "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 const JOB_TYPES = { fulltime: "משרה מלאה", parttime: "משרה חלקית", freelance: "פרילנס", internship: "סטאג'", remote: "עבודה מהבית" };
 
 export default function JobPage() {

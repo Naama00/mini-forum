@@ -4,8 +4,7 @@ import { Plus, ImageIcon, Tag } from "lucide-react";
 
 import MarkdownEditor from "../MarkdownEditor";
 import { getToken } from "../../utils/storage";
-
-const API = "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 
 const QUICK_TAGS = [
   "AI", "React", "Node.js", "TypeScript", "CSS",

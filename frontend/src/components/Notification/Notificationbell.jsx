@@ -4,7 +4,8 @@ import { Bell } from "lucide-react";
 import { io } from "socket.io-client";
 import { getToken } from "../../utils/storage";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
+import { timeAgo } from "../../utils/formatters";
 
 const TYPE_ICON = {
   comment: "⬡",
@@ -19,17 +20,6 @@ const TYPE_TEXT = {
   attend:  "נרשם/ה לאירוע",
   message: "שלח/ה לך הודעה",
 };
-
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1)  return "עכשיו";
-  if (mins < 60) return `לפני ${mins} דק'`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} שע'`;
-  const days = Math.floor(hours / 24);
-  return `לפני ${days} ימים`;
-}
 
 function notifLink(n) {
   if (n.type === "message") return "/notifications";

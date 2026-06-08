@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 
 const SECTION_CONFIG = {
   articles: { label: "מאמרים",  icon: "◎", path: (r) => `/articles/${r._id}` },

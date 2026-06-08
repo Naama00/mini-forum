@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
+import { timeAgo } from "../../utils/formatters";
 
 const SECTION_CONFIG = {
   articles: { label: "מאמרים",  icon: "◎", path: (r) => `/articles/${r._id}` },
@@ -10,15 +11,6 @@ const SECTION_CONFIG = {
   topics:   { label: "פורום",   icon: "⬡", path: (r) => `/category?topicId=${r._id}` },
   users:    { label: "משתמשים", icon: "◐", path: (r) => `/profile/${r._id}` },
 };
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const diff = Date.now() - new Date(dateStr);
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "היום";
-  if (days < 30) return `לפני ${days} ימים`;
-  return new Date(dateStr).toLocaleDateString("he-IL");
-}
 
 /* ── Tab Button ── */
 function TabBtn({ active, onClick, children }) {

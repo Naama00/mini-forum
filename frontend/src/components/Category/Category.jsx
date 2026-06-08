@@ -15,7 +15,8 @@ import { UserAvatar } from "../common/UserAvatar";
 import { useAuth } from "../../hooks";
 import styles from "./Category.module.css";
 
-const API_BASE = "http://localhost:5000";
+import { API_BASE } from "../../utils/constants";
+import { timeAgo } from "../../utils/formatters";
 
 /* ─────────────────────────────────────────────
    HELPERS
@@ -30,19 +31,6 @@ function getModeFromUrl() {
   const params = new URLSearchParams(window.location.search);
   if (params.get("topicId")) return "topic";
   return "category";
-}
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
-
-  if (diff < 60) return "עכשיו";
-  if (diff < 3600) return `לפני ${Math.floor(diff / 60)} דק'`;
-  if (diff < 86400) return `לפני ${Math.floor(diff / 3600)} שעות`;
-  if (diff < 604800) return `לפני ${Math.floor(diff / 86400)} ימים`;
-
-  return new Date(dateStr).toLocaleDateString("he-IL");
 }
 
 function avatarInitials(name = "") {

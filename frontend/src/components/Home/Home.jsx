@@ -12,7 +12,7 @@ import authFetch from '../../services/api';
 import styles from'./Home.module.css';
 
 
-const API_BASE = "http://localhost:5000";
+import { API_BASE } from "../../utils/constants";
 
 function AnimatedCounter({ target }) {
   const isK = target.includes("K");

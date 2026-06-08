@@ -5,7 +5,7 @@ import { useAuth } from "../hooks";
 import { timeAgo } from "../utils/formatters";
 import CityAutocomplete from "./CityAutocomplete";
 
-const API_BASE = "http://localhost:5000";
+import { API_BASE } from "../utils/constants";
 
 function avatarInitials(firstName = "", lastName = "") {
   return `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || "?";

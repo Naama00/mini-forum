@@ -1,9 +1,8 @@
 const Event = require('../models/Event');
-const { createNotification } = require('./notificationService');
+const { assertOwnership, toggleLike, addComment, deleteComment } = require('../utils/serviceHelpers');
 
-/**
- * Get all events with optional filters
- */
+const NOT_FOUND = 'אירוע לא נמצא';
+
 async function getAllEvents({ tag, search, upcoming, page = 1, limit = 10 }) {
   let query = {};
   if (tag) query.tags = tag;
@@ -24,22 +23,16 @@ async function getAllEvents({ tag, search, upcoming, page = 1, limit = 10 }) {
   return { events, total, pages: Math.ceil(total / limit) };
 }
 
-/**
- * Get single event by ID
- */
 async function getEventById(id) {
   const event = await Event.findById(id)
     .populate('author', 'username avatar')
     .populate('attendees', 'firstName lastName username avatar')
     .populate('comments.author', 'firstName lastName icon');
 
-  if (!event) throw new Error('אירוע לא נמצא');
+  if (!event) throw new Error(NOT_FOUND);
   return event;
 }
 
-/**
- * Create new event
- */
 async function createEvent({ title, description, date, location, link, image, tags }, authorId) {
   const event = new Event({
     title, description, date, location, link, image,
@@ -51,63 +44,31 @@ async function createEvent({ title, description, date, location, link, image, ta
   return event;
 }
 
-/**
- * Update event
- */
 async function updateEvent(id, { title, description, date, location, link, image, tags }, authorId) {
   const event = await Event.findById(id);
-  if (!event) throw new Error('אירוע לא נמצא');
-  if (event.author.toString() !== authorId) throw new Error('אין הרשאה לערוך');
+  if (!event) throw new Error(NOT_FOUND);
+  assertOwnership(event, authorId, 'לערוך');
 
   Object.assign(event, { title, description, date, location, link, image, tags, updatedAt: Date.now() });
   await event.save();
   return event;
 }
 
-/**
- * Delete event
- */
 async function deleteEvent(id, authorId) {
   const event = await Event.findById(id);
-  if (!event) throw new Error('אירוע לא נמצא');
-  if (event.author.toString() !== authorId) throw new Error('אין הרשאה למחוק');
+  if (!event) throw new Error(NOT_FOUND);
+  assertOwnership(event, authorId, 'למחוק');
 
   await event.deleteOne();
   return { message: 'אירוע נמחק בהצלחה' };
 }
 
-/**
- * Like/unlike event
- */
-async function likeEvent(id, userId) {
-  const event = await Event.findById(id);
-  if (!event) throw new Error('אירוע לא נמצא');
+const likeEvent = (id, userId) => toggleLike(Event, 'Event', id, userId, NOT_FOUND);
 
-  const liked = event.likes.includes(userId);
-  liked ? event.likes.pull(userId) : event.likes.push(userId);
-  await event.save();
-
-  if (!liked) {
-    await createNotification({
-      recipient: event.author,
-      sender: userId,
-      type: 'like',
-      refModel: 'Event',
-      refId: event._id,
-    });
-  }
-
-  return { likes: event.likes.length, liked: !liked };
-}
-
-/**
- * Attend/unattend event
- */
 async function attendEvent(id, userId) {
   const event = await Event.findById(id);
-  if (!event) throw new Error('אירוע לא נמצא');
+  if (!event) throw new Error(NOT_FOUND);
 
-  // Use toString() to safely compare ObjectId with string
   const attending = event.attendees.some(a => a.toString() === userId.toString());
 
   if (attending) {
@@ -127,44 +88,8 @@ async function attendEvent(id, userId) {
   };
 }
 
-/**
- * Add comment to event
- */
-async function addComment(id, { content }, userId) {
-  const event = await Event.findById(id);
-  if (!event) throw new Error('אירוע לא נמצא');
-
-  event.comments.push({ content, author: userId });
-  await event.save();
-
-  await createNotification({
-    recipient: event.author,
-    sender: userId,
-    type: 'comment',
-    refModel: 'Event',
-    refId: event._id,
-    text: content
-  });
-
-  await event.populate('comments.author', 'firstName lastName icon');
-  return event.comments[event.comments.length - 1];
-}
-
-/**
- * Delete comment from event
- */
-async function deleteComment(id, commentId, userId) {
-  const event = await Event.findById(id);
-  if (!event) throw new Error('אירוע לא נמצא');
-
-  const comment = event.comments.id(commentId);
-  if (!comment) throw new Error('תגובה לא נמצאה');
-  if (comment.author.toString() !== userId) throw new Error('אין הרשאה למחוק');
-
-  comment.deleteOne();
-  await event.save();
-  return { message: 'תגובה נמחקה' };
-}
+const addEventComment = (id, body, userId) => addComment(Event, 'Event', id, body, userId, NOT_FOUND);
+const deleteEventComment = (id, commentId, userId) => deleteComment(Event, id, commentId, userId, NOT_FOUND);
 
 module.exports = {
   getAllEvents,
@@ -174,6 +99,6 @@ module.exports = {
   deleteEvent,
   likeEvent,
   attendEvent,
-  addComment,
-  deleteComment
+  addComment: addEventComment,
+  deleteComment: deleteEventComment
 };

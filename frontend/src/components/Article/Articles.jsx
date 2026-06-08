@@ -5,19 +5,8 @@ import { Search, Heart } from "lucide-react";
 import Breadcrumb from "../Breadcrumb";
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
-
-const API = "http://localhost:5000/api";
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "עכשיו";
-  const diff = Date.now() - new Date(dateStr);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "עכשיו";
-  if (mins < 60) return `לפני ${mins} דק'`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} שע'`;
-  return `לפני ${Math.floor(hours / 24)} ימים`;
-}
+import { API_BASE_URL as API } from "../../utils/constants";
+import { timeAgo } from "../../utils/formatters";
 
 export default function ArticlesPage() {
   const { user } = useAuth();

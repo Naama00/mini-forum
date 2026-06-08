@@ -6,7 +6,7 @@ import { useAuth } from "../../hooks";
 import { getToken, getUser } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";
 
-const API = "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 
 function formatDate(dateStr) {
   if (!dateStr) return "טרם נקבע תאריך";

@@ -3,8 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor";
 import { getToken } from "../../utils/storage";
-
-const API = "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 const JOB_TYPES = [{ value: "fulltime", label: "משרה מלאה" }, { value: "parttime", label: "משרה חלקית" }, { value: "freelance", label: "פרילנס" }, { value: "internship", label: "סטאז'" }];
 const QUICK_TAGS = ["React", "Node.js", "Python", "TypeScript", "DevOps", "Cyber", "AI", "Mobile", "Junior", "Remote"];
 
