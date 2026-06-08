@@ -14,6 +14,7 @@ export default function JobsPage() {
   const isLoggedIn = !!user;
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -22,16 +23,20 @@ export default function JobsPage() {
 
   const fetchJobs = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const params = new URLSearchParams({ page, limit: 10 });
       if (search) params.append("search", search);
       if (typeFilter) params.append("type", typeFilter);
       const res = await fetch(`${API}/jobs?${params}`, { headers: { Authorization: `Bearer ${getToken()}` } });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'שגיאה בטעינת משרות');
       setJobs(data.jobs || []);
       setTotalPages(data.pages || 1);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+      setFetchError(e.message || 'שגיאת רשת');
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchJobs(); }, [page, typeFilter]);
@@ -128,7 +133,9 @@ export default function JobsPage() {
         </div>
 
         {/* Content */}
-        {loading ? (
+        {fetchError ? (
+          <div className="text-center py-20 text-red-400">{fetchError}</div>
+        ) : loading ? (
           <div className="text-center py-20 text-slate-400">טוען משרות...</div>
         ) : jobs.length === 0 ? (
           <div className="card-empty">

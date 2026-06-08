@@ -3,6 +3,7 @@ const Event = require('../models/Event');
 const Job = require('../models/Job');
 const { User } = require('../models/User');
 const { Topic } = require('../models/Topic');
+const logger = require('../config/logger');
 
 /**
  * Search across all entities (articles, events, jobs, topics, users)
@@ -15,6 +16,7 @@ async function search(query, type = 'all', limit = 5) {
     const regex = { $regex: query.trim(), $options: 'i' };
     const lim = Math.min(Number(limit), 20);
     const results = {};
+    const errors = [];
 
     /**
      * Helper to run search on model with error handling
@@ -30,7 +32,9 @@ async function search(query, type = 'all', limit = 5) {
             }
             results[key] = await dbQuery;
         } catch (error) {
+            logger.error({ err: error, model: key }, 'Search query failed for model');
             results[key] = [];
+            errors.push(key);
         }
     };
 
@@ -78,7 +82,8 @@ async function search(query, type = 'all', limit = 5) {
     return {
         results,
         total,
-        query
+        query,
+        ...(errors.length > 0 && { partialFailure: true, failedSources: errors })
     };
 }
 
