@@ -1,16 +1,23 @@
 const Article = require('../models/Article');
 const { createNotification } = require('./notificationService');
 
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Get all articles with optional filters
  */
 async function getAllArticles({ tag, search, page = 1, limit = 10 }) {
   let query = {};
   if (tag) query.tags = tag;
-  if (search) query.$or = [
-    { title: { $regex: search, $options: 'i' } },
-    { content: { $regex: search, $options: 'i' } }
-  ];
+  if (search) {
+    const escaped = escapeRegex(search);
+    query.$or = [
+      { title: { $regex: escaped, $options: 'i' } },
+      { content: { $regex: escaped, $options: 'i' } }
+    ];
+  }
 
   const articles = await Article.find(query)
     .populate('author', 'firstName lastName icon')

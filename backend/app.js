@@ -1,4 +1,3 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const http = require('http');
 const express = require('express');
 const dotenv = require("dotenv");
@@ -39,7 +38,10 @@ const io = initSocket(server);
 const PORT = process.env.PORT || 5000;
 const url = 'mongodb://127.0.0.1:27017/forumDB';
 
-app.use(cors());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : 'http://localhost:5173',
+    credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));

@@ -4,6 +4,10 @@ const Job = require('../models/Job');
 const { User } = require('../models/User');
 const { Topic } = require('../models/Topic');
 
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Search across all entities (articles, events, jobs, topics, users)
  */
@@ -12,7 +16,7 @@ async function search(query, type = 'all', limit = 5) {
         throw new Error('נא להזין לפחות 2 תווים');
     }
 
-    const regex = { $regex: query.trim(), $options: 'i' };
+    const regex = { $regex: escapeRegex(query.trim()), $options: 'i' };
     const lim = Math.min(Number(limit), 20);
     const results = {};
 
