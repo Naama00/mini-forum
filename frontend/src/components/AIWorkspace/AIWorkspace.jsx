@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import styles from './AIWorkspace.module.css';
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
 
 // ✨ חדש: הודעות rate limit מובנות — זהות ל-PostSummary
 const RATE_LIMIT_MESSAGES = {

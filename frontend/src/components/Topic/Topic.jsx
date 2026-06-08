@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks';
 import { getToken } from '../../utils/storage';
 import { timeAgo } from '../../utils/formatters';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL as API } from '../../utils/constants';
 
 export default function TopicPage() {
   const { id } = useParams();

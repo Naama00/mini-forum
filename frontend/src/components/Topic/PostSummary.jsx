@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { Sparkles, ChevronDown, ChevronUp, AlertTriangle, Clock } from 'lucide-react';
 import MarkdownRenderer from '../MarkdownRenderer';
 import { getToken } from '../../utils/storage';
-
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL as API } from '../../utils/constants';
 
 // ── הודעות שגיאה לפי סוג ה-rate limit ───────────────────────────────────────
 const RATE_LIMIT_MESSAGES = {

@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { getToken } from "../../utils/storage";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../../utils/constants";
+import { timeAgo } from "../../utils/formatters";
 
 const TYPE_ICON  = { comment: "⬡", like: "◆", attend: "◎", message: "◇" };
 const TYPE_LABEL = { comment: "תגובה", like: "לייק", attend: "הרשמה", message: "הודעה" };
@@ -13,18 +14,6 @@ const TYPE_TEXT  = {
   attend:  "נרשם/ה לאירוע שלך",
   message: "שלח/ה לך הודעה פרטית",
 };
-
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1)  return "עכשיו";
-  if (mins < 60) return `לפני ${mins} דקות`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} שעות`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `לפני ${days} ימים`;
-  return new Date(dateStr).toLocaleDateString("he-IL");
-}
 
 function notifLink(n) {
   if (n.type === "message") return "#";

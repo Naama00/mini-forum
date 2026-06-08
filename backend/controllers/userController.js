@@ -1,16 +1,10 @@
 const userService = require('../services/userService');
+const { wrapAsync } = require('../utils/controllerFactory');
 
-/**
- * PUT /api/users/:userId
- */
-async function updateUser(req, res) {
-    try {
-        const data = await userService.updateUser(req.params.userId, req.user.userId, req.body);
-        res.json({ success: true, data });
-    } catch (error) {
-        next(error);
-    }
-}
+const updateUser = wrapAsync(async (req, res) => {
+    const data = await userService.updateUser(req.params.userId, req.user.userId, req.body);
+    res.json({ success: true, data });
+});
 
 module.exports = {
     updateUser

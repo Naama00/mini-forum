@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MarkdownEditor from "../MarkdownEditor";
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
-const API_BASE = "http://localhost:5000";
+import { API_BASE } from "../../utils/constants";
 
 const TOPIC_TYPES = [
   { value: "question", label: "שאלה", icon: "?" },

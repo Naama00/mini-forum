@@ -1,77 +1,36 @@
 const notificationService = require('../services/notificationService');
+const { wrapAsync } = require('../utils/controllerFactory');
 
-/**
- * GET /api/notifications
- */
-async function getNotifications(req, res, next) {
-  try {
-    const { page = 1, limit = 20 } = req.query;
-    const result = await notificationService.getNotifications(req.user.userId, page, limit);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-}
+const getNotifications = wrapAsync(async (req, res) => {
+  const { page = 1, limit = 20 } = req.query;
+  const result = await notificationService.getNotifications(req.user.userId, page, limit);
+  res.json(result);
+});
 
-/**
- * GET /api/notifications/unread-count
- */
-async function getUnreadCount(req, res, next) {
-  try {
-    const count = await notificationService.getUnreadCount(req.user.userId);
-    res.json({ count });
-  } catch (err) {
-    next(err);
-  }
-}
+const getUnreadCount = wrapAsync(async (req, res) => {
+  const count = await notificationService.getUnreadCount(req.user.userId);
+  res.json({ count });
+});
 
-/**
- * PUT /api/notifications/:id/read
- */
-async function markAsRead(req, res, next) {
-  try {
-    const result = await notificationService.markAsRead(req.params.id, req.user.userId);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-}
+const markAsRead = wrapAsync(async (req, res) => {
+  const result = await notificationService.markAsRead(req.params.id, req.user.userId);
+  res.json(result);
+});
 
-/**
- * PUT /api/notifications/read-all
- */
-async function markAllAsRead(req, res, next) {
-  try {
-    const result = await notificationService.markAllAsRead(req.user.userId);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-}
+const markAllAsRead = wrapAsync(async (req, res) => {
+  const result = await notificationService.markAllAsRead(req.user.userId);
+  res.json(result);
+});
 
-/**
- * DELETE /api/notifications/:id
- */
-async function deleteNotification(req, res, next) {
-  try {
-    const result = await notificationService.deleteNotification(req.params.id, req.user.userId);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-}
+const deleteNotification = wrapAsync(async (req, res) => {
+  const result = await notificationService.deleteNotification(req.params.id, req.user.userId);
+  res.json(result);
+});
 
-/**
- * DELETE /api/notifications
- */
-async function deleteAllNotifications(req, res, next) {
-  try {
-    const result = await notificationService.deleteAllNotifications(req.user.userId);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-}
+const deleteAllNotifications = wrapAsync(async (req, res) => {
+  const result = await notificationService.deleteAllNotifications(req.user.userId);
+  res.json(result);
+});
 
 module.exports = {
   getNotifications,

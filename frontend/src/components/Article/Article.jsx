@@ -8,21 +8,8 @@ import MarkdownRenderer from "../MarkdownRenderer";
 
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
-
-const API = "http://localhost:5000/api";
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const diff = Date.now() - new Date(dateStr);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "עכשיו";
-  if (mins < 60) return `לפני ${mins} דק'`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} שע'`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `לפני ${days} ימים`;
-  return new Date(dateStr).toLocaleDateString("he-IL");
-}
+import { API_BASE_URL as API } from "../../utils/constants";
+import { timeAgo } from "../../utils/formatters";
 
 export default function ArticlePage() {
   const { id } = useParams();

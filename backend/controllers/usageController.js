@@ -1,29 +1,14 @@
 const usageService = require('../services/usageService');
+const { wrapAsync } = require('../utils/controllerFactory');
 
-/**
- * GET /api/usage/me
- * Personal stats for the logged-in user
- */
-async function getMyUsage(req, res, next) {
-    try {
-        const data = await usageService.getMyUsage(req.user.userId);
-        res.json({ success: true, data });
-    } catch (error) {
-        next(error);
-    }
-}
+const getMyUsage = wrapAsync(async (req, res) => {
+    const data = await usageService.getMyUsage(req.user.userId);
+    res.json({ success: true, data });
+});
 
-/**
- * GET /api/usage/global
- * Forum-wide statistics
- */
-async function getGlobalUsage(req, res, next) {
-    try {
-        const data = await usageService.getGlobalUsage();
-        res.json({ success: true, data });
-    } catch (error) {
-        next(error);
-    }
-}
+const getGlobalUsage = wrapAsync(async (req, res) => {
+    const data = await usageService.getGlobalUsage();
+    res.json({ success: true, data });
+});
 
 module.exports = { getMyUsage, getGlobalUsage };

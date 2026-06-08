@@ -1,9 +1,8 @@
 const Job = require('../models/Job');
-const { createNotification } = require('./notificationService');
+const { assertOwnership, toggleLike, addComment, deleteComment } = require('../utils/serviceHelpers');
 
-/**
- * Get all jobs with optional filters
- */
+const NOT_FOUND = 'משרה לא נמצאה';
+
 async function getAllJobs({ tag, search, type, location, page = 1, limit = 10 }) {
   let query = {};
   if (tag) query.tags = tag;
@@ -26,21 +25,15 @@ async function getAllJobs({ tag, search, type, location, page = 1, limit = 10 })
   return { jobs, total, pages: Math.ceil(total / limit) };
 }
 
-/**
- * Get single job by ID
- */
 async function getJobById(id) {
   const job = await Job.findById(id)
     .populate('author', 'username avatar')
     .populate('comments.author', 'firstName lastName icon');
 
-  if (!job) throw new Error('משרה לא נמצאה');
+  if (!job) throw new Error(NOT_FOUND);
   return job;
 }
 
-/**
- * Create new job
- */
 async function createJob({ title, company, location, type, description, requirements, applyLink, salary, tags }, authorId) {
   const job = new Job({
     title, company, location, type, description,
@@ -54,93 +47,28 @@ async function createJob({ title, company, location, type, description, requirem
   return job;
 }
 
-/**
- * Update job
- */
 async function updateJob(id, { title, company, location, type, description, requirements, applyLink, salary, tags }, authorId) {
   const job = await Job.findById(id);
-  if (!job) throw new Error('משרה לא נמצאה');
-  if (job.author.toString() !== authorId) throw new Error('אין הרשאה לערוך');
+  if (!job) throw new Error(NOT_FOUND);
+  assertOwnership(job, authorId, 'לערוך');
 
   Object.assign(job, { title, company, location, type, description, requirements, applyLink, salary, tags, updatedAt: Date.now() });
   await job.save();
   return job;
 }
 
-/**
- * Delete job
- */
 async function deleteJob(id, authorId) {
   const job = await Job.findById(id);
-  if (!job) throw new Error('משרה לא נמצאה');
-  if (job.author.toString() !== authorId) throw new Error('אין הרשאה למחוק');
+  if (!job) throw new Error(NOT_FOUND);
+  assertOwnership(job, authorId, 'למחוק');
 
   await job.deleteOne();
   return { message: 'משרה נמחקה בהצלחה' };
 }
 
-/**
- * Like/unlike job
- */
-async function likeJob(id, userId) {
-  const job = await Job.findById(id);
-  if (!job) throw new Error('משרה לא נמצאה');
-
-  const liked = job.likes.includes(userId);
-  liked ? job.likes.pull(userId) : job.likes.push(userId);
-  await job.save();
-
-  if (!liked) {
-    await createNotification({
-      recipient: job.author,
-      sender: userId,
-      type: 'like',
-      refModel: 'Job',
-      refId: job._id,
-    });
-  }
-
-  return { likes: job.likes.length, liked: !liked };
-}
-
-/**
- * Add comment to job
- */
-async function addComment(id, { content }, userId) {
-  const job = await Job.findById(id);
-  if (!job) throw new Error('משרה לא נמצאה');
-
-  job.comments.push({ content, author: userId });
-  await job.save();
-
-  await createNotification({
-    recipient: job.author,
-    sender: userId,
-    type: 'comment',
-    refModel: 'Job',
-    refId: job._id,
-    text: content
-  });
-
-  await job.populate('comments.author', 'firstName lastName icon');
-  return job.comments[job.comments.length - 1];
-}
-
-/**
- * Delete comment from job
- */
-async function deleteComment(id, commentId, userId) {
-  const job = await Job.findById(id);
-  if (!job) throw new Error('משרה לא נמצאה');
-
-  const comment = job.comments.id(commentId);
-  if (!comment) throw new Error('תגובה לא נמצאה');
-  if (comment.author.toString() !== userId) throw new Error('אין הרשאה למחוק');
-
-  comment.deleteOne();
-  await job.save();
-  return { message: 'תגובה נמחקה' };
-}
+const likeJob = (id, userId) => toggleLike(Job, 'Job', id, userId, NOT_FOUND);
+const addJobComment = (id, body, userId) => addComment(Job, 'Job', id, body, userId, NOT_FOUND);
+const deleteJobComment = (id, commentId, userId) => deleteComment(Job, id, commentId, userId, NOT_FOUND);
 
 module.exports = {
   getAllJobs,
@@ -149,6 +77,6 @@ module.exports = {
   updateJob,
   deleteJob,
   likeJob,
-  addComment,
-  deleteComment
+  addComment: addJobComment,
+  deleteComment: deleteJobComment
 };

@@ -1,9 +1,8 @@
 const Article = require('../models/Article');
-const { createNotification } = require('./notificationService');
+const { assertOwnership, toggleLike, addComment, deleteComment } = require('../utils/serviceHelpers');
 
-/**
- * Get all articles with optional filters
- */
+const NOT_FOUND = 'מאמר לא נמצא';
+
 async function getAllArticles({ tag, search, page = 1, limit = 10 }) {
   let query = {};
   if (tag) query.tags = tag;
@@ -24,9 +23,6 @@ async function getAllArticles({ tag, search, page = 1, limit = 10 }) {
   return { articles, total, pages: Math.ceil(total / limit) };
 }
 
-/**
- * Get single article by ID and increment views
- */
 async function getArticleById(id) {
   const article = await Article.findByIdAndUpdate(
     id,
@@ -37,13 +33,10 @@ async function getArticleById(id) {
     .populate('category', 'name')
     .populate('comments.author', 'firstName lastName icon');
 
-  if (!article) throw new Error('מאמר לא נמצא');
+  if (!article) throw new Error(NOT_FOUND);
   return article;
 }
 
-/**
- * Create new article
- */
 async function createArticle({ title, content, summary, image, tags, categoryId }, authorId) {
   if (!title || !title.trim()) {
     throw new Error('כותרת המאמר חסרה');
@@ -67,99 +60,28 @@ async function createArticle({ title, content, summary, image, tags, categoryId 
   return article;
 }
 
-/**
- * Update article
- */
 async function updateArticle(id, { title, content, summary, image, tags, categoryId }, authorId) {
   const article = await Article.findById(id);
-  if (!article) throw new Error('מאמר לא נמצא');
-  if (article.author.toString() !== authorId) throw new Error('אין הרשאה לערוך');
+  if (!article) throw new Error(NOT_FOUND);
+  assertOwnership(article, authorId, 'לערוך');
 
   Object.assign(article, { title, content, summary, image, tags, category: categoryId || null, updatedAt: Date.now() });
   await article.save();
   return article;
 }
 
-/**
- * Delete article
- */
 async function deleteArticle(id, authorId) {
   const article = await Article.findById(id);
-  if (!article) throw new Error('מאמר לא נמצא');
-  if (article.author.toString() !== authorId) throw new Error('אין הרשאה למחוק');
+  if (!article) throw new Error(NOT_FOUND);
+  assertOwnership(article, authorId, 'למחוק');
 
   await article.deleteOne();
   return { message: 'מאמר נמחק בהצלחה' };
 }
 
-/**
- * Like/unlike article
- */
-async function likeArticle(id, userId) {
-  const article = await Article.findById(id);
-  if (!article) throw new Error('מאמר לא נמצא');
-
-  const liked = article.likes.includes(userId);
-  if (liked) {
-    article.likes.pull(userId);
-  } else {
-    article.likes.push(userId);
-  }
-  await article.save();
-
-  if (!liked) {
-    await createNotification({
-      recipient: article.author,
-      sender: userId,
-      type: 'like',
-      refModel: 'Article',
-      refId: article._id,
-    });
-  }
-
-  return { likes: article.likes.length, liked: !liked };
-}
-
-/**
- * Add comment to article
- */
-async function addComment(id, { content }, userId) {
-  const article = await Article.findById(id);
-  if (!article) throw new Error('מאמר לא נמצא');
-
-  const comment = { content, author: userId };
-  article.comments.push(comment);
-  await article.save();
-
-  await createNotification({
-    recipient: article.author,
-    sender: userId,
-    type: 'comment',
-    refModel: 'Article',
-    refId: article._id,
-    text: content
-  });
-
-  await article.populate('comments.author', 'firstName lastName icon');
-  const newComment = article.comments[article.comments.length - 1];
-  return newComment;
-}
-
-/**
- * Delete comment from article
- */
-async function deleteComment(id, commentId, userId) {
-  const article = await Article.findById(id);
-  if (!article) throw new Error('מאמר לא נמצא');
-
-  const comment = article.comments.id(commentId);
-  if (!comment) throw new Error('תגובה לא נמצאה');
-  if (comment.author.toString() !== userId) throw new Error('אין הרשאה למחוק');
-
-  comment.deleteOne();
-  await article.save();
-  return { message: 'תגובה נמחקה' };
-}
+const likeArticle = (id, userId) => toggleLike(Article, 'Article', id, userId, NOT_FOUND);
+const addArticleComment = (id, body, userId) => addComment(Article, 'Article', id, body, userId, NOT_FOUND);
+const deleteArticleComment = (id, commentId, userId) => deleteComment(Article, id, commentId, userId, NOT_FOUND);
 
 module.exports = {
   getAllArticles,
@@ -168,6 +90,6 @@ module.exports = {
   updateArticle,
   deleteArticle,
   likeArticle,
-  addComment,
-  deleteComment
+  addComment: addArticleComment,
+  deleteComment: deleteArticleComment
 };

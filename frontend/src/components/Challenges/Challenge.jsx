@@ -6,7 +6,7 @@ import MarkdownRenderer from '../MarkdownRenderer';
 import { useAuth } from '../../hooks';
 import { timeAgo } from '../../utils/formatters';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL as API } from '../../utils/constants';
 
 export default function ChallengePage() {
   const { id } = useParams();
