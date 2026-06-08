@@ -18,6 +18,7 @@ export default function EventsPage() {
   const isLoggedIn = !!user;
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [search, setSearch] = useState("");
   const [showUpcoming, setShowUpcoming] = useState(true);
   const [page, setPage] = useState(1);
@@ -26,6 +27,7 @@ export default function EventsPage() {
 
   const fetchEvents = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const params = new URLSearchParams({ page, limit: 9, upcoming: showUpcoming });
       if (search) params.append("search", search);
@@ -33,10 +35,13 @@ export default function EventsPage() {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'שגיאה בטעינת אירועים');
       setEvents(data.events || []);
       setTotalPages(data.pages || 1);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+      setFetchError(e.message || 'שגיאת רשת');
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchEvents(); }, [page, showUpcoming]);
@@ -181,7 +186,9 @@ export default function EventsPage() {
         </div>
 
         {/* Content */}
-        {loading ? (
+        {fetchError ? (
+          <div className="text-center py-20 text-red-400">{fetchError}</div>
+        ) : loading ? (
           <div className="text-center py-20 text-slate-400">טוען אירועים...</div>
         ) : events.length === 0 ? (
           <div className="card-empty">

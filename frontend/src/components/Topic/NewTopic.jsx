@@ -43,7 +43,10 @@ export default function NewTopic() {
       .then((res) => {
         if (res.success) setCategories(res.data || []);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load categories:', err);
+        setError('שגיאה בטעינת הקטגוריות');
+      });
   }, []);
 
   const handleChange = (e) => {

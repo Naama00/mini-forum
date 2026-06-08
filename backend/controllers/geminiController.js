@@ -1,8 +1,9 @@
 // backend/controllers/geminiController.js
 const geminiService = require("../services/geminiService");
+const logger = require("../config/logger");
 
 // ─── handleAIAssist: קיים, לא שונה ───────────────────────────────────────────
-async function handleAIAssist(req, res) {
+async function handleAIAssist(req, res, next) {
   const { action, prompt, extraContext, history } = req.body;
 
   if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
@@ -19,10 +20,8 @@ async function handleAIAssist(req, res) {
 
     return res.json({ text: aiText });
   } catch (error) {
-    console.error("Controller Error in Gemini assist:", error);
-    return res.status(500).json({
-      error: "שגיאה בפנייה למנוע הבינה המלאכותית: " + (error?.message || error),
-    });
+    logger.error({ err: error }, "Gemini assist error");
+    next(error);
   }
 }
 
@@ -61,7 +60,7 @@ async function handleAIStream(req, res) {
 
     send("done", { finished: true });
   } catch (error) {
-    console.error("Stream Error in Gemini:", error);
+    logger.error({ err: error }, "Gemini stream error");
     send("error", { message: error?.message || "שגיאה לא ידועה" });
   } finally {
     res.end();
@@ -71,7 +70,7 @@ async function handleAIStream(req, res) {
 // ─── ✨ handleSummarizePost: חדש — סיכום פוסט בודד ───────────────────────────
 // מקבל: { title, content, comments[] }
 // מחזיר: { text } — סיכום Markdown
-async function handleSummarizePost(req, res) {
+async function handleSummarizePost(req, res, next) {
   const { title, content, comments } = req.body;
 
   if (!title && !content) {
@@ -105,10 +104,8 @@ ${commentsText}
 
     return res.json({ text: aiText });
   } catch (error) {
-    console.error("Controller Error in summarizePost:", error);
-    return res.status(500).json({
-      error: "שגיאה בסיכום הפוסט: " + (error?.message || error),
-    });
+    logger.error({ err: error }, "Summarize post error");
+    next(error);
   }
 }
 

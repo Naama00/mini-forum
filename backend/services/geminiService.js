@@ -1,5 +1,6 @@
 // backend/services/geminiService.js
 const { GoogleGenAI } = require("@google/genai");
+const logger = require("../config/logger");
 require("dotenv").config();
 
 let genAI = null;
@@ -8,7 +9,7 @@ function getGeminiClient() {
   if (!genAI) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn("WARNING: GEMINI_API_KEY environment variable is not defined.");
+      logger.warn("GEMINI_API_KEY environment variable is not defined");
     }
     genAI = new GoogleGenAI({
       apiKey: apiKey || "",

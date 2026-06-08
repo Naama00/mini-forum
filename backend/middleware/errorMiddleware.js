@@ -20,8 +20,17 @@ function errorMiddleware(err, req, res, next) {
     stack: isDevelopment ? err.stack : undefined
   }, 'Request error');
 
+  // Handle Mongoose-specific errors
+  if (err.name === 'CastError') {
+    status = 400;
+    message = `מזהה לא תקין: ${err.value}`;
+  } else if (err.name === 'ValidationError') {
+    status = 400;
+    const messages = Object.values(err.errors).map(e => e.message);
+    message = messages.join(', ');
+  }
   // Determine status code based on error message
-  if (err.message) {
+  else if (err.message) {
     // 400 - Bad Request (validation errors)
     if (
       err.message.includes('חסר') ||

@@ -168,6 +168,9 @@ export default function CategoryPage() {
                   if (cRes.success) {
                     setCategory(cRes.data);
                   }
+                })
+                .catch((err) => {
+                  console.error('Failed to load category details:', err);
                 });
             }
           } else {

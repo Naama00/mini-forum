@@ -4,14 +4,20 @@ const { addNotificationJob } = require('../queues/notificationQueue');
 
 /**
  * Create a notification (internal helper)
- * Does not send to the same user
+ * Does not send to the same user.
+ * Errors are logged but not re-thrown to avoid failing the parent operation
+ * (e.g. liking an article should not fail just because the notification failed).
  */
 async function createNotification({ recipient, sender, type, refModel, refId, text = '' }) {
   try {
-    if (recipient.toString() === sender.toString()) return; // Don't send to yourself
+    if (!recipient || !sender) {
+      logger.warn({ recipient, sender, type }, 'createNotification called with missing recipient or sender');
+      return;
+    }
+    if (recipient.toString() === sender.toString()) return;
     await addNotificationJob({ recipient, sender, type, refModel, refId, text });
   } catch (err) {
-    logger.error({ err }, 'createNotification error');
+    logger.error({ err, type, refModel, refId }, 'createNotification failed');
   }
 }
 

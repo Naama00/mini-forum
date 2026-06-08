@@ -259,19 +259,27 @@ export default function SearchResults() {
   const query = q || tag;
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchError, setSearchError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     if (!query.trim()) return;
     setLoading(true);
+    setSearchError(null);
     setActiveTab("all");
     const params = new URLSearchParams();
     if (q.trim()) params.set("q", q.trim());
     if (!q.trim() && tag.trim()) params.set("tag", tag.trim());
     fetch(`${API}/search?${params.toString()}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('שגיאה בחיפוש');
+        return r.json();
+      })
       .then((data) => setResults(data.results || {}))
-      .catch((e) => console.error(e))
+      .catch((e) => {
+        console.error(e);
+        setSearchError(e.message || 'שגיאת רשת');
+      })
       .finally(() => setLoading(false));
   }, [query]);
 
@@ -382,8 +390,12 @@ export default function SearchResults() {
             </div>
           )}
 
-          {/* ── מצבים: טעינה / ריק / תוצאות ── */}
-          {loading ? (
+          {/* ── מצבים: שגיאה / טעינה / ריק / תוצאות ── */}
+          {searchError ? (
+            <div style={{ padding: "5rem 0", textAlign: "center", color: "#f87171" }}>
+              <p>{searchError}</p>
+            </div>
+          ) : loading ? (
             <div style={{ padding: "5rem 0", textAlign: "center" }}>
               <div
                 style={{
