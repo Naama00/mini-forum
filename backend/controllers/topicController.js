@@ -1,4 +1,5 @@
 const topicService = require('../services/topicService');
+const likeService = require('../services/likeService');
 
 async function getTopics(req, res, next) {
   try {
@@ -22,7 +23,46 @@ async function createTopic(req, res, next) {
   }
 }
 
+async function deleteTopic(req, res, next) {
+  try {
+    const result = await topicService.deleteTopic(
+      req.params.topicId,
+      req.user.userId,
+      req.user.isAdmin
+    );
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateTopic(req, res, next) {
+  try {
+    const topic = await topicService.updateTopic(
+      req.params.topicId,
+      req.body,
+      req.user.userId,
+      req.user.isAdmin
+    );
+    res.json({ success: true, message: 'הנושא עודכן בהצלחה', data: topic });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function likeTopic(req, res, next) {
+  try {
+    const result = await likeService.likeTopic(req.params.topicId, req.user.userId);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getTopics,
-  createTopic
+  createTopic,
+  deleteTopic,
+  updateTopic,
+  likeTopic,
 };

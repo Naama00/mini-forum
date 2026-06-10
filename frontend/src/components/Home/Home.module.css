@@ -1,8 +1,8 @@
-
-
 .home-hero-title-line {
+  font-family: 'Assistant', 'Space Grotesk', system-ui, sans-serif;
   display: inline-block;
   transition: color 0.25s ease;
+  -webkit-text-stroke: 1.5px currentColor;
 }
 
 html:not(.dark-theme) .home-hero-title-line {
@@ -11,23 +11,52 @@ html:not(.dark-theme) .home-hero-title-line {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+  -webkit-text-stroke: 0px;
+  /* gradient + stroke לא עובדים יחד, gradient מנצח */
 }
 
 .home-gradient-text {
   display: inline-block;
-  background-image: linear-gradient(90deg, #22d3ee, #8b5cf6) !important;
+  font-family: 'Assistant', 'Space Grotesk', system-ui, sans-serif;
+  background-image: linear-gradient(90deg,
+      #22d3ee 0%,
+      #8b5cf6 25%,
+      #ec4899 50%,
+      #8b5cf6 75%,
+      #22d3ee 100%) !important;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent !important;
-  background-size: 200% 200%;
-  background-position: 0 50%;
-  animation: gradientShift 4s ease infinite;
+  background-size: 300% 100%;
+  background-position: 0% 50%;
+  animation: gradientFlow 5s ease-in-out infinite;
 }
 
-/* keep the bottom line colorful in dark theme and custom gradient in light theme */
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 html:not(.dark-theme) .home-gradient-text {
-  background-image: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899) !important;
+  background-image: linear-gradient(90deg,
+      #06b6d4 0%,
+      #8b5cf6 25%,
+      #ec4899 50%,
+      #8b5cf6 75%,
+      #06b6d4 100%) !important;
+  background-size: 300% 100%;
+  animation: gradientFlow 5s ease-in-out infinite;
 }
 
 .home-hero-section {
@@ -116,30 +145,26 @@ html:not(.dark-theme) .home-gradient-text {
   inset: 0;
   opacity: 0.04;
   background-image:
-    linear-gradient(
-      0deg,
+    linear-gradient(0deg,
       transparent 24%,
-      rgba(0,229,255,.08) 25%,
-      rgba(0,229,255,.08) 26%,
+      rgba(0, 229, 255, .08) 25%,
+      rgba(0, 229, 255, .08) 26%,
       transparent 27%,
       transparent 74%,
-      rgba(0,229,255,.08) 75%,
-      rgba(0,229,255,.08) 76%,
+      rgba(0, 229, 255, .08) 75%,
+      rgba(0, 229, 255, .08) 76%,
       transparent 77%,
-      transparent
-    ),
-    linear-gradient(
-      90deg,
+      transparent),
+    linear-gradient(90deg,
       transparent 24%,
-      rgba(0,229,255,.08) 25%,
-      rgba(0,229,255,.08) 26%,
+      rgba(0, 229, 255, .08) 25%,
+      rgba(0, 229, 255, .08) 26%,
       transparent 27%,
       transparent 74%,
-      rgba(0,229,255,.08) 75%,
-      rgba(0,229,255,.08) 76%,
+      rgba(0, 229, 255, .08) 75%,
+      rgba(0, 229, 255, .08) 76%,
       transparent 77%,
-      transparent
-    );
+      transparent);
   background-size: 60px 60px;
 }
 
@@ -175,7 +200,7 @@ html:not(.dark-theme) .home-gradient-text {
   opacity: 0.05;
 }
 
-.home-stat-card > * {
+.home-stat-card>* {
   position: relative;
   z-index: 10;
 }

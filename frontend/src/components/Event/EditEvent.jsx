@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { Save, X } from "lucide-react";
+import Breadcrumb from "../Breadcrumb";
 import MarkdownEditor from "../MarkdownEditor";
-import CyberLayout from "../common/CyberLayout";
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
+import Loading from "../common/Loading";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -26,9 +28,14 @@ export default function EditEvent() {
     fetch(`${API}/events/${id}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.author?._id !== user?.id && data.author !== user?.id) {
+      .then((r) => {
+        if (!r.ok) throw new Error('שגיאה בטעינת האירוע');
+        return r.json();
+      })
+      .then((res) => {
+        const data = res?.data || res;
+        if (!data) throw new Error('לא נמצאו נתונים');
+        if (data.author?._id !== user?.id && data.author?._id !== user?._id && data.author !== user?.id && data.author !== user?._id && !user?.isAdmin) {
           navigate(`/events/${id}`);
           return;
         }
@@ -55,7 +62,7 @@ export default function EditEvent() {
       })
       .catch((err) => {
         console.error(err);
-        setError("שגיאה במשיכת נתוני האירוע משרת הניהול");
+        setError("שגיאה בטעינת האירוע");
         setLoading(false);
       });
   }, [id, navigate, token, user?.id]);
@@ -70,7 +77,7 @@ export default function EditEvent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.date || !form.time) {
-      setError("יש למלא כותרת, תאריך ושעה מדויקים לאירוע קהילה.");
+      setError("יש למלא כותרת, תאריך ושעה.");
       return;
     }
     setSaving(true);
@@ -79,140 +86,150 @@ export default function EditEvent() {
     try {
       const r = await fetch(`${API}/events/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ...form, date: combinedDate.toISOString() })
       });
       const res = await r.json();
       if (res.success || res._id) navigate(`/events/${id}`);
-      else setError(res.message || "עדכון האירוע נכשל במערכת המרכזית");
+      else setError(res.message || "עדכון האירוע נכשל");
     } catch {
-      setError("שגיאת רשת בשילוח מסמך האירוע המעודכן");
+      setError("שגיאת רשת");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <div className="text-center py-32 font-mono text-[#ccff00] animate-pulse text-xs">// SCHEDULING INTERFACE COMPILED...</div>;
+  if (loading) return <Loading text="טוען אירוע..." />;
+
+  if (error && !form.title) return (
+    <div className="page-shell flex items-center justify-center px-6">
+      <div className="max-w-md w-full rounded-3xl border border-red-500/20 bg-slate-900/60 p-10 text-center">
+        <p className="text-red-400 mb-6">{error}</p>
+        <Link to="/events" className="inline-flex px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950 font-bold">
+          חזרה לאירועים
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
-    <CyberLayout>
-      <div className="max-w-6xl mx-auto px-6 pt-24 relative z-10">
+    <div dir="rtl" className="page-shell">
+      <div className="page-bg">
+        <div className="page-bg-blob page-bg-blob--cyan" />
+        <div className="page-bg-blob page-bg-blob--violet" />
+        <div className="page-bg-grid" />
+      </div>
 
-        <div className="cyber-page-header">
-          <div>
-            <p className="cyber-page-eyebrow">// EVENT_SCHEDULER_v2</p>
-            <h1 className="text-2xl font-black text-white">עריכת אירוע ומפגש קהילה</h1>
-          </div>
-          <Link to={`/events/${id}`} className="text-xs font-mono text-slate-500 hover:text-white transition-colors">
-            ← ביטול ועזיבה
-          </Link>
+      <div className="max-w-4xl mx-auto px-6 py-20">
+        <div className="mb-10">
+          <Breadcrumb items={[
+            { label: "אירועים", to: "/events" },
+            { label: form.title, to: `/events/${id}` },
+            { label: "עריכה", active: true },
+          ]} />
         </div>
 
-        {error && <div className="cyber-error">[ERROR]: {error}</div>}
+        <div className="section-card section-card-lg">
+          <h1 className="text-3xl font-black text-white mb-8">עריכת אירוע</h1>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-
-          {/* גוף הטופס הראשי */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="cyber-card p-6 md:p-8 space-y-5">
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">שם המפגש / האירוע</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="וובינר בנושא ארכיטקטורת מערכת..."
-                  className="cyber-input"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">תיאור האירוע ותוכן העניינים</label>
-                <div className="border border-white/5 rounded-xl overflow-hidden bg-black/20 focus-within:border-[#ccff00]/40 transition-all">
-                  <MarkdownEditor
-                    value={form.description}
-                    onChange={val => setForm(prev => ({ ...prev, description: val }))}
-                    placeholder="פרט על המרצים, הלוז, ודרישות קדם למפגש..."
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2">תאריך</label>
-                  <input type="date" value={form.date} onChange={e => setForm(prev => ({ ...prev, date: e.target.value }))} className="cyber-input text-xs" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2">שעת התחלה</label>
-                  <input type="time" value={form.time} onChange={e => setForm(prev => ({ ...prev, time: e.target.value }))} className="cyber-input text-xs" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2">מגבלת מקום (קיבולת)</label>
-                  <input type="number" value={form.capacity} onChange={e => setForm(prev => ({ ...prev, capacity: e.target.value }))} placeholder="השאר ריק ללא הגבלה" className="cyber-input text-xs" />
-                </div>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-3 cursor-pointer text-xs text-slate-300">
-                  <input type="checkbox" checked={form.isOnline} onChange={e => setForm(prev => ({ ...prev, isOnline: e.target.checked }))} className="accent-[#ccff00] h-4 w-4" />
-                  <span>זהו מפגש אונליין וירטואלי (Zoom / Discord / Meet)</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">
-                  {form.isOnline ? "קישור לחדר הוובינר (URL)" : "מיקום פיזי / כתובת אולם"}
-                </label>
-                <input
-                  type="text"
-                  value={form.isOnline ? form.link : form.location}
-                  onChange={e => setForm(prev => ({ ...prev, [form.isOnline ? "link" : "location"]: e.target.value }))}
-                  placeholder={form.isOnline ? "https://..." : "מתחם הבורסה, קומה 14, תל אביב..."}
-                  className="cyber-input"
-                />
-              </div>
-
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
-          </div>
+          )}
 
-          {/* לוח ניהול צידי */}
-          <div className="lg:col-span-1 space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* כותרת */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">שם האירוע</label>
+              <input type="text" value={form.title} onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))} className="form-input w-full" required />
+            </div>
 
-            <div className="cyber-card p-5">
-              <p className="cyber-label mb-3">// Tags_Registry</p>
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {form.tags.map((tag, i) => (
-                  <span key={i} onClick={() => removeTag(i)} className="cyber-tag">#{tag} ×</span>
-                ))}
+            {/* תיאור */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">תיאור האירוע (Markdown נתמך)</label>
+              <MarkdownEditor value={form.description} onChange={val => setForm(prev => ({ ...prev, description: val }))} />
+            </div>
+
+            {/* תאריך + שעה + קיבולת */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">תאריך</label>
+                <input type="date" value={form.date} onChange={e => setForm(prev => ({ ...prev, date: e.target.value }))} className="form-input w-full" required />
               </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">שעת התחלה</label>
+                <input type="time" value={form.time} onChange={e => setForm(prev => ({ ...prev, time: e.target.value }))} className="form-input w-full" required />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">קיבולת (אופציונלי)</label>
+                <input type="number" value={form.capacity} onChange={e => setForm(prev => ({ ...prev, capacity: e.target.value }))} className="form-input w-full" placeholder="ללא הגבלה" />
+              </div>
+            </div>
+
+            {/* אונליין */}
+            <div>
+              <label className="flex items-center gap-3 cursor-pointer text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={form.isOnline}
+                  onChange={e => setForm(prev => ({ ...prev, isOnline: e.target.checked }))}
+                  className="w-4 h-4 accent-cyan-400"
+                />
+                <span>מפגש אונליין (Zoom / Discord / Meet)</span>
+              </label>
+            </div>
+
+            {/* מיקום / קישור */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">
+                {form.isOnline ? "קישור לחדר הוובינר" : "מיקום פיזי"}
+              </label>
               <input
                 type="text"
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTag())}
-                placeholder="הוסף תגית ולחץ Enter..."
-                className="cyber-input text-xs"
+                value={form.isOnline ? form.link : form.location}
+                onChange={e => setForm(prev => ({ ...prev, [form.isOnline ? "link" : "location"]: e.target.value }))}
+                className="form-input w-full"
+                placeholder={form.isOnline ? "https://..." : "כתובת המקום..."}
               />
             </div>
 
-            <div className="cyber-card p-5">
-              <p className="cyber-label mb-3">// Live_Summary</p>
-              <div className="cyber-summary">
-                <div className="cyber-summary-row"><span>📅 Schedule:</span> <span>{form.date || "—"}</span></div>
-                <div className="cyber-summary-row"><span>📍 Type:</span> <span>{form.isOnline ? "Online" : "Physical"}</span></div>
-                <div className="cyber-summary-row"><span>👥 Capacity:</span> <span>{form.capacity ? `${form.capacity} Max` : "Unlimited"}</span></div>
+            {/* תגיות */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">
+                תגיות <span className="text-slate-500 font-normal">(לחץ Enter להוספה)</span>
+              </label>
+              <div className="flex flex-wrap gap-2 bg-slate-950/50 border border-slate-700/40 px-3.5 py-2.5 min-h-12 items-center rounded-3xl">
+                {form.tags.map((tag, i) => (
+                  <span key={i} className="rounded-full border border-slate-700/50 bg-slate-900/70 px-3 py-1 text-xs text-slate-200 flex items-center gap-2">
+                    <span>#{tag}</span>
+                    <button type="button" onClick={() => removeTag(i)} className="text-slate-400 hover:text-cyan-300 transition-colors">×</button>
+                  </span>
+                ))}
+                <input
+                  className="flex-1 bg-transparent text-slate-200 outline-none placeholder:text-slate-500 text-sm min-w-16 py-1"
+                  placeholder="הוסף תגית..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                />
               </div>
             </div>
 
-            <button type="submit" disabled={saving} className="cyber-btn-primary">
-              {saving ? "Commiting Changes..." : "Save_Event_Settings ⚡"}
-            </button>
-
-          </div>
-
-        </form>
+            {/* כפתורים */}
+            <div className="flex items-center gap-3 pt-2">
+              <button type="submit" disabled={saving} className="button-primary flex items-center gap-2">
+                <Save className="w-4 h-4" />
+                {saving ? "שומר..." : "שמור שינויים"}
+              </button>
+              <Link to={`/events/${id}`} className="button-secondary flex items-center gap-2">
+                <X className="w-4 h-4" />
+                ביטול
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
-    </CyberLayout>
+    </div>
   );
 }

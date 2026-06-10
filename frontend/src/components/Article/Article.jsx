@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, Trash2, Pencil } from "lucide-react";
 
 import Breadcrumb from "../Breadcrumb";
 import MarkdownEditor from "../MarkdownEditor";
@@ -36,6 +36,23 @@ export default function ArticlePage() {
   const [submittingComment, setSubmittingComment] = useState(false);
 
   const isLoggedIn = !!user;
+  const isAuthor = article => article?.author?._id === user?._id || article?.author === user?._id;
+  const canManage = (a) => user?.isAdmin || isAuthor(a);
+
+  const handleDelete = async () => {
+    if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את המאמר?')) return;
+    try {
+      const token = getToken();
+      const r = await fetch(`${API}/articles/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) navigate('/articles');
+      else alert('מחיקה נכשלה');
+    } catch {
+      alert('שגיאת שרת');
+    }
+  };
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -142,6 +159,27 @@ export default function ArticlePage() {
               <p className="text-sm text-slate-500 mt-1">
                 {article.author?.role || "Member"}
               </p>
+
+              {canManage(article) && (
+                <div className="mt-5 space-y-2">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/articles/${id}/edit`); }}
+                    className="button-primary w-full flex items-center justify-center gap-2"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    ערוך מאמר
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all text-sm font-semibold"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    מחק מאמר
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Tags */}

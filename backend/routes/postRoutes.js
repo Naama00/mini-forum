@@ -7,5 +7,5 @@ router.post('/', authMiddleware, postController.createPost);
 router.patch('/:postId', authMiddleware, postController.updatePost);
 router.delete('/:postId', authMiddleware, postController.deletePost);
 router.post('/:postId/vote', authMiddleware, postController.votePost);
-
+router.post('/:postId/like', authMiddleware, postController.likePost);
 module.exports = router;

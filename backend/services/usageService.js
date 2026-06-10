@@ -140,7 +140,7 @@ async function getGlobalUsage() {
   const topTopics = allTopics
     .sort((a, b) => (b.posts?.length || 0) - (a.posts?.length || 0))
     .slice(0, 5)
-    .map(t => ({ title: t.title?.slice(0, 30) || 'ללא כותרת', posts: t.posts?.length || 0, views: t.views || 0 }));
+    .map(t => ({ _id: t._id, title: t.title?.slice(0, 30) || 'ללא כותרת', posts: t.posts?.length || 0, views: t.views || 0 }));
 
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const challengeTopicIds = new Set(allTopics.filter(t => (t.tags || []).includes('challenge')).map(t => String(t._id)));

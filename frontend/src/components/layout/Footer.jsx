@@ -103,9 +103,9 @@ export default function Footer() {
             © {year} DEV.HUB — All rights reserved
           </p>
           <p className="text-xs text-slate-600 flex items-center gap-1">
-            Built with
-            <span className="text-rose-500/70">♥</span>
             by Naama
+            <span className="text-rose-500/70">♥</span>
+            Built with
           </p>
         </div>
       </div>

@@ -35,55 +35,55 @@ function AuthForm() {
     setError(null);
   };
 
-const handleSubmit = async (e) => {
-  // עצירת הדפדפן מלבצע רענון דיפולטיבי של הטופס/כפתור שיכול לבטל את הניווט
-  if (e && typeof e.preventDefault === 'function') {
-    e.preventDefault();
-  }
-
-  if (!form.email || !form.password) {
-    setError("נא למלא אימייל וסיסמה");
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-  try {
-    let result;
-    if (mode === "login") {
-      result = await login(form.email, form.password);
-    } else {
-      result = await register({ 
-        firstName: form.firstName, 
-        lastName: form.lastName, 
-        email: form.email, 
-        password: form.password, 
-        city: form.city 
-      });
+  const handleSubmit = async (e) => {
+    // עצירת הדפדפן מלבצע רענון דיפולטיבי של הטופס/כפתור שיכול לבטל את הניווט
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
     }
 
-    console.log("מה חזר מהשרת בפועל?", result);
-
-    // בדיקה קריטית: האם ה-token באמת קיים בתוך LocalStorage עכשיו?
-    const checkToken = localStorage.getItem('token');
-    
-    if (!checkToken) {
-      console.error("השרת החזיר תשובה, אך הטוקן לא נשמר ב-LocalStorage! בדקי את מבנה ה-response.");
-      setError("שגיאה בסנכרון הנתונים מול השרת (הטוקן חסר)");
-      return; // עוצר כאן ולא מנווט
+    if (!form.email || !form.password) {
+      setError("נא למלא אימייל וסיסמה");
+      return;
     }
 
-    // אם הגענו לכאן - הטוקן קיים ב-100% והדפדפן לא יתרענן מעצמו
-    console.log("הטוקן נשמר בהצלחה! מבצע מעבר חלק לעמוד הבית...");
-    navigate("/");
-    
-  } catch (err) {
-    console.error("שגיאה שנתפסה ב-catch:", err);
-    setError(err.message || "אירעה שגיאה פנימית בשרת");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setError(null);
+    try {
+      let result;
+      if (mode === "login") {
+        result = await login(form.email, form.password);
+      } else {
+        result = await register({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          password: form.password,
+          city: form.city
+        });
+      }
+
+      console.log("מה חזר מהשרת בפועל?", result);
+
+      // בדיקה קריטית: האם ה-token באמת קיים בתוך LocalStorage עכשיו?
+      const checkToken = localStorage.getItem('token');
+
+      if (!checkToken) {
+        console.error("השרת החזיר תשובה, אך הטוקן לא נשמר ב-LocalStorage! בדקי את מבנה ה-response.");
+        setError("שגיאה בסנכרון הנתונים מול השרת (הטוקן חסר)");
+        return; // עוצר כאן ולא מנווט
+      }
+
+      // אם הגענו לכאן - הטוקן קיים ב-100% והדפדפן לא יתרענן מעצמו
+      console.log("הטוקן נשמר בהצלחה! מבצע מעבר חלק לעמוד הבית...");
+      navigate("/");
+
+    } catch (err) {
+      console.error("שגיאה שנתפסה ב-catch:", err);
+      setError(err.message || "אירעה שגיאה פנימית בשרת");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
@@ -112,17 +112,14 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 border-b border-white/10">
+      <header className="relative z-10 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
-            <a href="/" className="font-display text-white font-black text-2xl tracking-tighter hover:text-neon-lime transition-colors">
-              DEV<span className="gradient-text">.HUB</span>
-            </a>
             <div className="flex items-center gap-2 text-sm text-slate-400">
               {mode === "login" ? "עדיין אין לך חשבון?" : "כבר יש לך חשבון?"}
               <button
                 onClick={() => switchMode(mode === "login" ? "register" : "login")}
-                className="text-neon-lime font-semibold hover:text-white transition-colors"
+                className="text-neon-cyan font-semibold hover:text-white transition-colors"
               >
                 {mode === "login" ? "הירשם עכשיו" : "התחבר"}
               </button>
@@ -132,8 +129,20 @@ const handleSubmit = async (e) => {
       </header>
 
       {/* תוכן מרכזי */}
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-6 py-16 relative z-10">
-        <div className="w-full max-w-lg">
+      <div className="flex items-center justify-center min-h-[calc(100vh-73px)] px-6 py-16 relative z-10">
+        <div className="w-full max-w-2xl">
+          <div className="mb-8 text-center">
+            <p className="text-sm uppercase tracking-widest text-cyan-400/70">
+              להצטרף לקהילה זה קל ומהיר
+            </p>
+            <h2 className="mt-3 text-3xl font-black text-white">
+              התחברו כדי לראות את כל הדיונים והעדכונים
+            </h2>
+            <p className="mt-3 text-slate-400 leading-relaxed">
+              התחברו או הירשמו עכשיו ותתחילו לפרסם, להגיב ולשתף ברגע.
+            </p>
+          </div>
+
           <div className={`section-card section-card-lg transition-opacity duration-300 ${animating ? "opacity-0" : "opacity-100"}`}>
 
             {/* Toggle כניסה/הרשמה */}
@@ -142,11 +151,10 @@ const handleSubmit = async (e) => {
                 <button
                   key={t.key}
                   onClick={() => switchMode(t.key)}
-                  className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all border ${
-                    mode === t.key
-                      ? "border-neon-lime/50 bg-neon-lime/15 text-neon-lime shadow-glow-lime"
-                      : "border-white/10 bg-dark-900/50 text-dark-400 hover:border-neon-lime/30"
-                  }`}
+                  className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all border ${mode === t.key
+                      ? "border-neon-cyan/50 bg-neon-cyan/15 text-neon-cyan shadow-glow-cyan"
+                      : "border-white/10 bg-dark-900/50 text-dark-400 hover:border-neon-cyan/30"
+                    }`}
                 >
                   {t.label}
                 </button>
@@ -155,19 +163,19 @@ const handleSubmit = async (e) => {
 
             {/* כותרת */}
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-neon-lime/25 bg-neon-lime/10 mb-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-neon-lime live-pulse" />
-                <span className="text-xs text-neon-lime font-mono font-medium uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-neon-cyan/25 bg-neon-cyan/10 mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan live-pulse" />
+                <span className="text-xs text-neon-cyan font-mono font-medium uppercase tracking-wider">
                   {mode === "login" ? "SIGN IN" : "SIGN UP"}
                 </span>
               </div>
-              <h1 className="font-display text-4xl font-black text-white mb-2">
+              <h1 className="font-display text-4xl font-black gradient-text mb-2">
                 {mode === "login" ? "ברוך הבא בחזרה" : "הצטרף לקהילה"}
               </h1>
               <p className="text-slate-400 text-sm">
                 {mode === "login"
                   ? "התחבר לחשבון שלך כדי להמשיך בדיון"
-                  : "צור חשבון חדש והתחיל לקחת חלק בקהילת המפתחים"}
+                  : "צור חשבון חדש והתחל לקחת חלק בקהילת המפתחים"}
               </p>
             </div>
 
@@ -240,7 +248,7 @@ const handleSubmit = async (e) => {
             {/* שכחתי סיסמה */}
             {mode === "login" && (
               <div className="mb-5 text-left">
-                <button className="text-xs text-neon-cyan hover:text-neon-lime transition-colors">שכחתי סיסמה</button>
+                <button className="text-xs text-neon-cyan hover:text-neon-cyan transition-colors">שכחתי סיסמה</button>
               </div>
             )}
 
@@ -258,13 +266,13 @@ const handleSubmit = async (e) => {
           </div>
         </div>
       </div>
-
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 py-6 text-center">
-        <span className="text-slate-600 text-xs font-mono uppercase tracking-widest">
-          © {new Date().getFullYear()} Dev.Hub Israel
-        </span>
-      </footer>
-    </div>
+  <footer className="relative z-10 border-t border-white/5 py-6 text-center">
+    <span className="text-slate-600 text-xs font-mono uppercase tracking-widest">
+      &copy; {new Date().getFullYear()} Dev.Hub Israel
+    </span>
+  </footer>
+    </div >        
   );
 }
+

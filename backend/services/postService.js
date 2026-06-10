@@ -22,7 +22,7 @@ function formatPublicUserData(user) {
 /**
  * Create a new post in a topic
  */
-async function createPost(content, topicId, userId) {
+async function createPost(content, topicId, userId, imageUrl) {
     if (!content?.trim()) {
         throw new Error('תוכן חסר');
     }
@@ -51,7 +51,8 @@ async function createPost(content, topicId, userId) {
         topicId,
         createdAt: new Date(),
         isSolution: false,
-        respondsTo: []
+        respondsTo: [],
+        imageUrl: imageUrl || null
     });
     await post.save();
 
@@ -99,31 +100,21 @@ async function updatePost(postId, updateData, userId) {
 /**
  * Delete a post
  */
-async function deletePost(postId, userId) {
-    const post = await Post.findById(postId);
-    if (!post) {
-        throw new Error('פוסט לא נמצא');
-    }
+async function deletePost(postId, userId, isAdmin = false) {
+  const post = await Post.findById(postId);
+  if (!post) throw new Error('פוסט לא נמצא');
 
-    // Verify authorization - only author can delete
-    if (post.author._id.toString() !== userId) {
-        throw new Error('אין הרשאה');
-    }
+  // ✅ תומך בכל הפורמטים של author
+  const authorId = post.author?._id?.toString() || post.author?.id?.toString() || post.author?.toString();
+  if (!isAdmin && authorId !== userId) throw new Error('אין הרשאה');
 
-    await Post.findByIdAndDelete(postId);
+  await Post.findByIdAndDelete(postId);
+  await Topic.updateMany({}, { $pull: { posts: post._id } });
+  await User.updateMany({}, { $pull: { 'links.posts': post._id } });
+  await cache.del(`user:${authorId}`);
+  if (post.topicId) await cache.del(`topic:${post.topicId.toString()}`);
 
-    // Remove from topic and user links
-    await Topic.updateMany({}, { $pull: { posts: post._id } });
-    await User.updateMany({}, { $pull: { 'links.posts': post._id } });
-    await cache.del(`user:${post.author._id.toString()}`);
-    if (post.topicId) {
-        await cache.del(`topic:${post.topicId.toString()}`);
-    }
-
-    return {
-        success: true,
-        message: 'פוסט נמחק'
-    };
+  return { success: true, message: 'פוסט נמחק' };
 }
 
 /**
@@ -154,11 +145,21 @@ async function votePost(postId, direction, userId) {
         data: post
     };
 }
+const likeService = require('../services/likeService');
+
+async function likePost(req, res, next) {
+  try {
+    const result = await likeService.likePost(req.params.id, req.user.userId);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
 
 module.exports = {
     createPost,
     updatePost,
     deletePost,
     votePost,
-    formatPublicUserData
+    formatPublicUserData,
+    likePost
 };

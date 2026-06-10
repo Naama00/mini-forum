@@ -7,19 +7,10 @@ import { ThemeToggle } from "../common";
 import NotificationBell from "../Notification/Notificationbell";
 import { useAuth } from "../../hooks";
 import Footer from "./Footer";
-// דפים שמציגים סיידבר — כל השאר מלא-רוחב (לוגין, פרופיל וכו')
-const SIDEBAR_ROUTES = [
-  "/", "/category", "/topic", "/articles", "/events", "/jobs",
-  "/notifications", "/search", "/ai-workspace",
-  "/new-topic", "/challenge", "/challenges", "/usage",
-];
-
-function hasSidebar(pathname) {
-  return SIDEBAR_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"))
-    || /^\/(articles|events|jobs|category|topic|challenge|challenges)/.test(pathname);
-}
 
 export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed, setIsCollapsed }) {
+  const hasSidebar = Boolean(sidebar);
+  const isSidebarVisible = hasSidebar && !isCollapsed;
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,8 +18,6 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
   const [profileMenuPosition, setProfileMenuPosition] = useState({ top: 0, left: 0 });
   const userMenuButtonRef = useRef(null);
   const userMenuPanelRef = useRef(null);
-
-  const showSidebar = hasSidebar(location.pathname);
 
   const collapsedNavItems = [
     { to: '/', icon: House, label: 'בית' },
@@ -87,7 +76,7 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
     <div 
       className={`relative min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500/25 transition-all duration-300`}
       style={{
-        paddingRight: isCollapsed ? '5.5rem' : '0rem',
+        paddingRight: hasSidebar && isCollapsed ? '5.5rem' : '0rem',
         transition: 'padding-right 0.3s cubic-bezier(0.23, 1, 0.32, 1)'
       }}
       dir="rtl"
@@ -116,7 +105,7 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
       <header 
         className="sticky top-0 z-50 border-b border-slate-800/50 bg-slate-950/90 backdrop-blur-2xl transition-all duration-300"
         style={{
-          paddingRight: isCollapsed ? '5.5rem' : '0rem',
+          paddingRight: hasSidebar && isCollapsed ? '5.5rem' : '0rem',
           transition: 'padding-right 0.3s cubic-bezier(0.23, 1, 0.32, 1)'
         }}
       >
@@ -177,29 +166,33 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
             </div>
           </div>
 
-          <div className="flex items-center gap-3 justify-end min-w-[260px]">
-            <Link to="/" className="group flex items-center gap-3">
+          <div className="flex items-center justify-end min-w-[260px]">
+            <Link
+              to="/"
+              className="group flex items-center gap-3 w-fit rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm font-semibold text-slate-100 transition-all hover:border-cyan-500/50 hover:bg-slate-900/90"
+            >
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-xl blur opacity-70 animate-pulse" />
-                <div className="relative w-11 h-11 rounded-xl border border-cyan-500/40 bg-slate-950 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-cyan-400" />
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-xl blur opacity-60" />
+                <div className="relative w-9 h-9 rounded-xl border border-cyan-500/40 bg-slate-950 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
                 </div>
               </div>
-              <div className="text-right">
-                <h1 className="text-xl font-black bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
+              <div className="flex flex-col items-end leading-tight">
+                <p className="text-base font-black bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
                   DEV.HUB
-                </h1>
-                <p className="text-[10px] font-mono tracking-[0.25em] text-slate-500 uppercase">
-                  COMMUNITY NETWORK
+                </p>
+                <p className="text-[10px] font-mono tracking-widest text-slate-500 uppercase">
+                  Community Network
                 </p>
               </div>
             </Link>
           </div>
+
         </div>
       </header>
 
       {/* Collapsed vertical toolbar (slim) */}
-      {isCollapsed && setIsCollapsed && (
+      {hasSidebar && isCollapsed && setIsCollapsed && (
         <div
           className="fixed right-0 top-1/2 z-[9999] -translate-y-1/2 transform flex flex-col items-center gap-2 w-14 rounded-l-3xl bg-slate-900/80 border-l border-slate-700/50 p-1 shadow-2xl shadow-cyan-500/10"
           style={{ backdropFilter: 'blur(16px)' }}
@@ -251,10 +244,10 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
       )}
 
       {/* ── Layout: סיידבר + תוכן ── */}
-      <div className={`flex min-h-[calc(100vh-73px)] ${showSidebar ? "" : "justify-center"}`}>
+      <div className={`flex min-h-[calc(100vh-73px)] ${isSidebarVisible ? "" : "justify-center"}`}>
 
         {/* סיידבר — מוצג רק בדפים הרלוונטיים ומוחזק במקום כשהדף גלול */}
-        {showSidebar && !isCollapsed && sidebar && (
+        {isSidebarVisible && sidebar && (
           <aside className="fixed right-0 top-[73px] bottom-0 z-40 border-l border-white/5 bg-slate-900/30 w-[20rem]">
             {sidebar}
           </aside>
@@ -262,8 +255,8 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
 
         {/* תוכן ראשי */}
         <main
-          className={`flex-1 min-w-0 overflow-y-auto ${showSidebar && !isCollapsed ? "" : "max-w-7xl w-full"}`}
-          style={{ marginRight: showSidebar && !isCollapsed ? '20rem' : '0' }}
+          className={`flex-1 min-w-0 overflow-y-auto ${isSidebarVisible ? "" : "max-w-7xl w-full"}`}
+          style={{ marginRight: isSidebarVisible ? '20rem' : '0' }}
         >
           {children}
           <Footer />

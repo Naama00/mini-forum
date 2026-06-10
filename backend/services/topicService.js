@@ -7,7 +7,7 @@ const cache = require('../config/cache');
 /**
  * Create new topic with first post
  */
-async function createTopic({ title, content, type, categoryId, tags }, userId, isAdmin = false) {
+async function createTopic({ title, content, type, categoryId, tags, imageUrl }, userId, isAdmin = false) {
   if (!title?.trim()) throw new Error('כותרת חסרה');
   if (!content?.trim()) throw new Error('תוכן חסר');
   if (!categoryId) throw new Error('קטגוריה חסרה');
@@ -22,14 +22,15 @@ async function createTopic({ title, content, type, categoryId, tags }, userId, i
   const author = await User.findById(userId);
   if (!author) throw new Error('משתמש לא נמצא');
 
-  const firstPost = new Post({
-    content: content.trim(),
-    numberOfVotes: 0,
-    author: author.toObject(),
-    createdAt: new Date(),
-    isSolution: false,
-    respondsTo: []
-  });
+ const firstPost = new Post({
+  content: content.trim(),
+  numberOfVotes: 0,
+  author: author.toObject(),
+  createdAt: new Date(),
+  isSolution: false,
+  respondsTo: [],
+  imageUrl: imageUrl || null, 
+});
   await firstPost.save();
 
   const topic = new Topic({
@@ -93,7 +94,79 @@ async function getTopics({ limit = 12, sort = 'newest', tag }) {
   return topicsWithCounts;
 }
 
+/**
+ * Update an existing topic (Title and Tags)
+ */
+async function updateTopic(topicId, { title, tags }, userId, isAdmin = false) {
+  const topic = await Topic.findById(topicId);
+  if (!topic) throw new Error('נושא לא נמצא');
+
+  // בדיקת הרשאות עריכה (רק המחבר או אדמין)
+  const authorId = topic.author?._id?.toString() || topic.author?.toString();
+  if (!isAdmin && authorId !== userId) throw new Error('אין הרשאה לערוך נושא זה');
+
+  // עדכון שדות במידה ונשלחו
+  if (title && title.trim()) topic.title = title.trim();
+  if (tags && Array.isArray(tags)) {
+    if (tags.map(String).map((tag) => tag.toLowerCase()).includes('challenge') && !isAdmin) {
+      throw new Error('רק מנהל מערכת יכול להוסיף תגית אתגר.');
+    }
+    topic.tags = tags;
+  }
+
+  await topic.save();
+
+  // ניקוי Cache בהתאם לשינוי הנושא
+  await cache.del(`topic:${topicId}`);
+  await cache.del('categories:all');
+  if (topic.category) await cache.del(`category:${topic.category.toString()}`);
+  await cache.invalidate('trending:');
+
+  return topic;
+}
+
+/**
+ * Delete a topic and all its posts
+ */
+async function deleteTopic(topicId, userId, isAdmin = false) {
+  const topic = await Topic.findById(topicId);
+  if (!topic) throw new Error('נושא לא נמצא');
+
+  const authorId = topic.author?._id?.toString() || topic.author?.toString();
+  if (!isAdmin && authorId !== userId) throw new Error('אין הרשאה למחוק נושא זה');
+
+  // מחק את כל הפוסטים של הנושא
+  await Post.deleteMany({ _id: { $in: topic.posts } });
+
+  // הסר מהקטגוריה
+  await Category.findByIdAndUpdate(topic.category, { $pull: { topics: topic._id } });
+
+  // הסר מהמשתמש
+  await User.findByIdAndUpdate(authorId, { $pull: { 'links.topics': topic._id } });
+
+  await Topic.findByIdAndDelete(topicId);
+
+  // נקה cache
+  await cache.del(`topic:${topicId}`);
+  await cache.del('categories:all');
+  if (topic.category) await cache.del(`category:${topic.category.toString()}`);
+  await cache.invalidate('trending:');
+
+  return { success: true, message: 'הנושא נמחק בהצלחה' };
+}
+const likeService = require('../services/likeService');
+
+async function likeTopic(req, res, next) {
+  try {
+    const result = await likeService.likeTopic(req.params.id, req.user.userId);
+    res.json(result);
+  } catch (err) { next(err); }
+}
 module.exports = {
   createTopic,
-  getTopics
-};
+  getTopics,
+  deleteTopic,
+  updateTopic,
+  likeTopic
+};  
+

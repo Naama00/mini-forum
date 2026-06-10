@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Heart, ExternalLink, MapPin, Building, DollarSign, Trash2 } from 'lucide-react';
 import Breadcrumb from '../Breadcrumb';
 import MarkdownRenderer from "../MarkdownRenderer";
 import { useAuth } from "../../hooks";
@@ -12,6 +13,7 @@ const JOB_TYPES = { fulltime: "משרה מלאה", parttime: "משרה חלקי�
 export default function JobsPage() {
   const { user } = useAuth();
   const isLoggedIn = !!user;
+  const userId = user?._id || user?.id || user?.userId;
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -37,6 +39,21 @@ export default function JobsPage() {
   useEffect(() => { fetchJobs(); }, [page, typeFilter]);
 
   const handleSearchSubmit = (e) => { e.preventDefault(); setPage(1); fetchJobs(); };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את המשרה?')) return;
+    try {
+      const token = getToken();
+      const r = await fetch(`${API}/jobs/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) setJobs(prev => prev.filter(j => j._id !== id));
+      else alert('מחיקה נכשלה');
+    } catch {
+      alert('שגיאת שרת');
+    }
+  };
 
   const handleLike = async (id) => {
     const token = getToken();
@@ -138,46 +155,75 @@ export default function JobsPage() {
           <>
             <div className="space-y-4">
               {jobs.map(job => (
-                <div key={job._id} className="group section-card section-card-md section-shadow-hover flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-xs text-cyan-300 font-semibold uppercase tracking-wider">
-                        {JOB_TYPES[job.type] || job.type}
-                      </span>
-                      <span className="text-xs text-slate-500">{timeAgo(job.createdAt)}</span>
-                      {job.salary && <span className="text-xs text-slate-300 font-mono">💰 {job.salary}</span>}
-                    </div>
-
-                    <Link to={`/jobs/${job._id}`}>
-                      <h2 className="text-2xl font-bold text-white group-hover:text-cyan-300 transition-colors leading-snug">
-                        {job.title}
-                      </h2>
-                    </Link>
-
-                    <div className="flex items-center gap-4 text-sm text-slate-400">
-                      <span className="font-semibold text-slate-300">🏢 {job.company}</span>
-                      <span>📍 {job.location}</span>
-                    </div>
-
-                    {job.description && (
-                      <div className="text-slate-400 text-sm leading-relaxed line-clamp-2">
-                        <MarkdownRenderer source={(job.description || "").slice(0, 140) + "..."} />
-                      </div>
-                    )}
+                <div key={job._id} className="group section-card section-card-md section-shadow-hover">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs text-cyan-300 font-semibold uppercase tracking-wider">
+                      {JOB_TYPES[job.type] || job.type}
+                    </span>
+                    <span className="text-xs text-slate-500">{timeAgo(job.createdAt)}</span>
                   </div>
 
-                  <div className="flex md:flex-col items-center gap-3 border-t md:border-t-0 border-slate-800 pt-4 md:pt-0">
-                    {job.applyLink && (
-                      <a href={job.applyLink} target="_blank" rel="noreferrer" className="button-primary text-sm px-5 py-2 no-underline">
-                        הגש מועמדות
-                      </a>
-                    )}
-                    <button
-                      onClick={() => handleLike(job._id)}
-                      className={`flex items-center gap-1 text-slate-400 hover:text-pink-400 transition-colors ${job._liked ? "text-pink-400" : ""}`}
-                    >
-                      ♥ <span>{job.likes?.length || 0}</span>
-                    </button>
+                  <Link to={`/jobs/${job._id}`}>
+                    <h2 className="text-2xl font-bold text-white mb-4 group-hover:text-cyan-300 transition-colors leading-snug">
+                      {job.title}
+                    </h2>
+                  </Link>
+
+                  {job.description && (
+                    <p className="text-slate-400 text-sm leading-relaxed line-clamp-4 mb-8">
+                      <MarkdownRenderer source={(job.description || "").slice(0, 180) + "..."} />
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between pt-5 border-t border-slate-800">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">חברה</p>
+                      <p className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <Building className="w-4 h-4 text-slate-400" />
+                        {job.company}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {job.location && (
+                        <div className="flex items-center gap-2 text-sm text-slate-400">
+                          <MapPin className="w-4 h-4" />
+                          <span>{job.location}</span>
+                        </div>
+                      )}
+
+                      {job.salary && (
+                        <div className="flex items-center gap-2 text-sm text-slate-300 font-mono">
+                          <DollarSign className="w-4 h-4" />
+                          <span>{job.salary}</span>
+                        </div>
+                      )}
+
+                      {job.applyLink && (
+                        <a href={job.applyLink} target="_blank" rel="noreferrer" className="button-primary text-sm px-5 py-2 no-underline flex items-center gap-2">
+                          <ExternalLink className="w-4 h-4" />
+                          הגש מועמדות
+                        </a>
+                      )}
+
+                      <button
+                        onClick={() => handleLike(job._id)}
+                        className={`flex items-center gap-2 text-slate-400 hover:text-pink-400 transition-colors ${job._liked ? "text-pink-400" : ""}`}
+                      >
+                        <Heart className="w-4 h-4" />
+                        <span>{job.likes?.length || 0}</span>
+                      </button>
+
+                      {(user?.isAdmin || (job.author?._id === userId || job.author === userId)) && (
+                        <button
+                          onClick={() => handleDelete(job._id)}
+                          className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
+                          title="מחק משרה"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

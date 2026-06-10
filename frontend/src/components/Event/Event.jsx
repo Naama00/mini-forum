@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import Breadcrumb from '../Breadcrumb';
 import MarkdownRenderer from "../MarkdownRenderer";
 import { useAuth } from "../../hooks";
@@ -79,6 +80,21 @@ export default function EventPage() {
   const currentUserId = user?._id || storedUser?._id || storedUser?.id;
   const isAttending = event.attendees?.some(a => a && (a._id ? a._id.toString() : a.toString()) === currentUserId?.toString());
   const isAuthor = event.author?._id?.toString() === currentUserId?.toString();
+  const canManage = user?.isAdmin || isAuthor;
+
+  const handleDelete = async () => {
+    if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את האירוע?')) return;
+    try {
+      const r = await fetch(`${API}/events/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) navigate('/events');
+      else alert('מחיקה נכשלה');
+    } catch {
+      alert('שגיאת שרת');
+    }
+  };
 
   return (
     <div dir="rtl" className="page-shell">
@@ -128,10 +144,24 @@ export default function EventPage() {
                 </div>
               )}
 
-              {isAuthor && (
-                <Link to={`/events/${id}/edit`} className="block w-full text-center mt-3 py-2.5 button-secondary rounded-2xl text-sm">
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/events/${id}/edit`)}
+                  className="button-primary w-full flex items-center justify-center gap-2 mt-5"
+                >
                   ערוך אירוע
-                </Link>
+                </button>
+              )}
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all text-sm font-semibold"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  מחק אירוע
+                </button>
               )}
             </div>
 

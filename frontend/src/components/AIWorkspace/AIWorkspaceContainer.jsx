@@ -15,8 +15,6 @@ export default function AIWorkspaceContainer() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Debug logging
-  console.log('AIWorkspaceContainer mounted:', { user });
 
   const {
     data: categories,
@@ -55,16 +53,17 @@ export default function AIWorkspaceContainer() {
     },
   });
 
-  const articleMutation = useMutation({
-    mutationFn: async ({ title, content, summary, image, tags, categoryId }) => {
-      const response = await authFetch.post('/articles', {
-        title,
-        content,
-        summary,
-        image,
-        tags,
-        categoryId,
-      });
+ const articleMutation = useMutation({
+  mutationFn: async ({ title, content, summary, image, tags, categoryId, imageUrl }) => {  
+    const response = await authFetch.post('/articles', {
+      title,
+      content,
+      summary,
+      image,
+      tags,
+      categoryId,
+      imageUrl,  
+    });
       if (!response.success) {
         throw new Error(response.message || 'Failed to create article');
       }
@@ -109,8 +108,9 @@ export default function AIWorkspaceContainer() {
         title: articleData.title,
         content: articleData.content,
         summary: articleData.summary || '',
-        image: articleData.image || '',
+        image: articleData.imageUrl || '',
         tags: articleData.tags || [],
+        categoryId: articleData.categoryId || '',
       });
       return article?._id || article?.id || null;
     } catch (err) {

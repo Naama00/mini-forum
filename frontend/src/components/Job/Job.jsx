@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import Breadcrumb from '../Breadcrumb';
 import MarkdownRenderer from "../MarkdownRenderer";
 import { useAuth } from "../../hooks";
@@ -11,6 +12,7 @@ const JOB_TYPES = { fulltime: "משרה מלאה", parttime: "משרה חלקי�
 
 export default function JobPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,24 @@ export default function JobPage() {
     </div>
   );
 
-  const isAuthor = job.author?._id === user?._id || job.author === user?._id;
+  const userId = user?._id || user?.id || user?.userId;
+  const isAuthor = job.author?._id === userId || job.author === userId;
+  const canManage = user?.isAdmin || isAuthor;
+
+  const handleDelete = async () => {
+    if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את המשרה?')) return;
+    try {
+      const token = getToken();
+      const r = await fetch(`${API}/jobs/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) navigate('/jobs');
+      else alert('מחיקה נכשלה');
+    } catch {
+      alert('שגיאת שרת');
+    }
+  };
 
   return (
     <div dir="rtl" className="page-shell">
@@ -92,10 +111,24 @@ export default function JobPage() {
                 </a>
               )}
 
-              {isAuthor && (
-                <Link to={`/jobs/${id}/edit`} className="button-secondary w-full text-center mt-3 block">
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/jobs/${id}/edit`)}
+                  className="button-primary w-full flex items-center justify-center gap-2 mt-5"
+                >
                   ערוך משרה
-                </Link>
+                </button>
+              )}
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all text-sm font-semibold"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  מחק משרה
+                </button>
               )}
             </div>
 

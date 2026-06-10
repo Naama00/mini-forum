@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import Breadcrumb from '../Breadcrumb';
 import MarkdownRenderer from "../MarkdownRenderer";
 import { useAuth } from "../../hooks";
@@ -42,6 +43,21 @@ export default function EventsPage() {
   useEffect(() => { fetchEvents(); }, [page, showUpcoming]);
 
   const handleSearchSubmit = (e) => { e.preventDefault(); setPage(1); fetchEvents(); };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את האירוע?')) return;
+    try {
+      const token = getToken();
+      const r = await fetch(`${API}/events/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) setEvents(prev => prev.filter(e => e._id !== id));
+      else alert('מחיקה נכשלה');
+    } catch {
+      alert('שגיאת שרת');
+    }
+  };
 
   const handleAttend = async (id) => {
     const token = getToken();
@@ -242,6 +258,15 @@ export default function EventsPage() {
                       >
                         ♥ <span>{event.likes?.length || 0}</span>
                       </button>
+                      {(user?.isAdmin || (event.author?._id === currentUserId || event.author === currentUserId)) && (
+                        <button
+                          onClick={() => handleDelete(event._id)}
+                          className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors px-2"
+                          title="מחק אירוע"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

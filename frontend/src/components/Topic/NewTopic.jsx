@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import MarkdownEditor from "../MarkdownEditor";
+import { Plus } from 'lucide-react';
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
 const API_BASE = "http://localhost:5000";
@@ -30,6 +31,7 @@ export default function NewTopic() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { user } = useAuth();
 
@@ -78,6 +80,7 @@ export default function NewTopic() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setImagePreview(URL.createObjectURL(file));
     setUploading(true);
     setError(null);
 
@@ -137,6 +140,7 @@ export default function NewTopic() {
       if (!data.success) throw new Error(data.message || "שגיאה ביצירת הנושא");
 
       const newId = data.data?._id || data.data?.id;
+      setImagePreview(null);
       navigate(`/category?topicId=${newId}`);
     } catch (err) {
       setError(err.message);
@@ -251,9 +255,9 @@ export default function NewTopic() {
                         </svg>
                         <span>מעלה...</span>
                       </>
-                    ) : (
+                      ) : (
                       <>
-                        <span>📎</span>
+                        <Plus className="w-4 h-4" />
                         <span>הוסף תמונה</span>
                       </>
                     )}
@@ -261,6 +265,14 @@ export default function NewTopic() {
                 </div>
                 {/* ─────────────────────── */}
               </div>
+
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="תצוגה מקדימה"
+                  className="mt-2 mb-3 max-h-32 rounded-lg border border-white/10 object-contain"
+                />
+              )}
 
               <div className="bg-slate-950/60 border border-slate-700/40 backdrop-blur-xl p-3 rounded-3xl shadow-[0_30px_80px_-40px_rgba(0,0,0,0.55)]">
               <MarkdownEditor

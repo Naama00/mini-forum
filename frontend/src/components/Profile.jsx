@@ -4,6 +4,7 @@ import { getLoggedInUserFromToken, getToken } from "../utils/storage";
 import { useAuth } from "../hooks";
 import { timeAgo } from "../utils/formatters";
 import CityAutocomplete from "./CityAutocomplete";
+import Loading from "./common/Loading";
 
 const API_BASE = "http://localhost:5000";
 
@@ -67,14 +68,10 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     if (logout) logout();
-    navigate("/");
+    navigate("/auth");
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
-      טוען פרופיל...
-    </div>
-  );
+  if (loading) return <Loading text="טוען פרופיל..." />;
 
   if (error) return (
     <div className="page-shell flex items-center justify-center px-6">

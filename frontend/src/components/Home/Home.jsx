@@ -242,10 +242,11 @@ export default function ForumHome() {
                   const isExpanded = expandedId === id;
 
                   return (
-                    <div
+                    <Link
                       key={id}
+                      to={id ? `/category?categoryId=${id}` : '#'}
                       onClick={(e) => handleCategoryClick(cat, e)}
-                      className={`home-category-card ${isExpanded ? 'expanded' : ''}`}
+                      className={`home-category-card group ${isExpanded ? 'expanded' : ''} hover:bg-slate-900/40 cursor-pointer`}
                     >
                       <div className={styles['home-category-hover-glow']} />
                       <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-cyan-400 via-blue-500 to-violet-500" />
@@ -325,7 +326,7 @@ export default function ForumHome() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -347,18 +348,6 @@ export default function ForumHome() {
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <footer className={styles['home-footer']}>
-          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-lg font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-              DEV.HUB
-            </div>
-            <div className="text-xs text-slate-600 font-mono uppercase tracking-wider">
-              © {new Date().getFullYear()} Tech Community • v3.0
-            </div>
-          </div>
-        </footer>
       </div>
     </>
   );

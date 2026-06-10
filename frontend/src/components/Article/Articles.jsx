@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Heart } from "lucide-react";
+import { Search, Heart, Trash2 } from "lucide-react";
 
 import Breadcrumb from "../Breadcrumb";
 import { useAuth } from "../../hooks";
@@ -55,6 +55,21 @@ export default function ArticlesPage() {
     e.preventDefault();
     setPage(1);
     fetchArticles();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את המאמר?')) return;
+    try {
+      const token = getToken();
+      const r = await fetch(`${API}/articles/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) setArticles(prev => prev.filter(a => (a._id || a.id) !== id));
+      else alert('מחיקה נכשלה');
+    } catch {
+      alert('שגיאת שרת');
+    }
   };
 
   const handleLike = async (id) => {
@@ -201,6 +216,16 @@ export default function ArticlesPage() {
                       >
                         קרא עוד
                       </Link>
+
+                      {(user?.isAdmin || (a.author?._id === user?._id || a.author === user?._id)) && (
+                        <button
+                          onClick={() => handleDelete(a._id || a.id)}
+                          className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors text-sm"
+                          title="מחק מאמר"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

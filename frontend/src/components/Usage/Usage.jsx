@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer, Legend
@@ -321,14 +322,18 @@ function GlobalTab({ data }) {
                     <SectionTitle icon={Trophy} color="#f59e0b">נושאים פעילים ביותר</SectionTitle>
                     <div className="space-y-3">
                         {topTopics.map((t, i) => (
-                            <div key={i} className="flex items-center gap-4 rounded-xl border border-white/5 bg-slate-950/40 px-5 py-4 transition-colors duration-200 hover:bg-slate-950/60">
+                            <Link
+                                key={t._id || t.id || i}
+                                to={`/category?topicId=${t._id || t.id}`}
+                                className="flex items-center gap-4 rounded-xl border border-white/5 bg-slate-950/40 px-5 py-4 transition-colors duration-200 hover:bg-slate-950/60 no-underline"
+                            >
                                 <span className="text-lg font-black font-mono" style={{ color: ['#f59e0b','#94a3b8','#cd7c3a','#00e5ff','#a855f7'][i] || '#64748b' }}>
                                     #{i + 1}
                                 </span>
                                 <span className="flex-1 text-sm font-medium text-slate-200 truncate">{t.title}</span>
                                 <span className="text-xs text-slate-400 bg-slate-900 border border-white/5 px-2.5 py-1 rounded-md font-semibold">{t.posts} פוסטים</span>
                                 <span className="text-xs text-slate-500 font-medium">{t.views} צפיות</span>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>

@@ -1,9 +1,6 @@
 const Job = require('../models/Job');
 const { createNotification } = require('./notificationService');
 
-/**
- * Get all jobs with optional filters
- */
 async function getAllJobs({ tag, search, type, location, page = 1, limit = 10 }) {
   let query = {};
   if (tag) query.tags = tag;
@@ -26,21 +23,14 @@ async function getAllJobs({ tag, search, type, location, page = 1, limit = 10 })
   return { jobs, total, pages: Math.ceil(total / limit) };
 }
 
-/**
- * Get single job by ID
- */
 async function getJobById(id) {
   const job = await Job.findById(id)
     .populate('author', 'username avatar')
     .populate('comments.author', 'firstName lastName icon');
-
   if (!job) throw new Error('משרה לא נמצאה');
   return job;
 }
 
-/**
- * Create new job
- */
 async function createJob({ title, company, location, type, description, requirements, applyLink, salary, tags }, authorId) {
   const job = new Job({
     title, company, location, type, description,
@@ -54,101 +44,64 @@ async function createJob({ title, company, location, type, description, requirem
   return job;
 }
 
-/**
- * Update job
- */
-async function updateJob(id, { title, company, location, type, description, requirements, applyLink, salary, tags }, authorId) {
+// ✅ isAdmin מועבר מה-controller
+async function updateJob(id, { title, company, location, type, description, requirements, applyLink, salary, tags }, authorId, isAdmin = false) {
   const job = await Job.findById(id);
   if (!job) throw new Error('משרה לא נמצאה');
-  if (job.author.toString() !== authorId) throw new Error('אין הרשאה לערוך');
-
+  if (!isAdmin && job.author.toString() !== authorId) {
+    const err = new Error('אין הרשאה לערוך');
+    err.status = 403;
+    throw err;
+  }
   Object.assign(job, { title, company, location, type, description, requirements, applyLink, salary, tags, updatedAt: Date.now() });
   await job.save();
   return job;
 }
 
-/**
- * Delete job
- */
-async function deleteJob(id, authorId) {
+// ✅ isAdmin מועבר מה-controller
+async function deleteJob(id, authorId, isAdmin = false) {
   const job = await Job.findById(id);
   if (!job) throw new Error('משרה לא נמצאה');
-  if (job.author.toString() !== authorId) throw new Error('אין הרשאה למחוק');
-
+  if (!isAdmin && job.author.toString() !== authorId) {
+    const err = new Error('אין הרשאה למחוק');
+    err.status = 403;
+    throw err;
+  }
   await job.deleteOne();
   return { message: 'משרה נמחקה בהצלחה' };
 }
 
-/**
- * Like/unlike job
- */
 async function likeJob(id, userId) {
   const job = await Job.findById(id);
   if (!job) throw new Error('משרה לא נמצאה');
-
   const liked = job.likes.includes(userId);
   liked ? job.likes.pull(userId) : job.likes.push(userId);
   await job.save();
-
   if (!liked) {
-    await createNotification({
-      recipient: job.author,
-      sender: userId,
-      type: 'like',
-      refModel: 'Job',
-      refId: job._id,
-    });
+    await createNotification({ recipient: job.author, sender: userId, type: 'like', refModel: 'Job', refId: job._id });
   }
-
   return { likes: job.likes.length, liked: !liked };
 }
 
-/**
- * Add comment to job
- */
 async function addComment(id, { content }, userId) {
   const job = await Job.findById(id);
   if (!job) throw new Error('משרה לא נמצאה');
-
   job.comments.push({ content, author: userId });
   await job.save();
-
-  await createNotification({
-    recipient: job.author,
-    sender: userId,
-    type: 'comment',
-    refModel: 'Job',
-    refId: job._id,
-    text: content
-  });
-
+  await createNotification({ recipient: job.author, sender: userId, type: 'comment', refModel: 'Job', refId: job._id, text: content });
   await job.populate('comments.author', 'firstName lastName icon');
   return job.comments[job.comments.length - 1];
 }
 
-/**
- * Delete comment from job
- */
 async function deleteComment(id, commentId, userId) {
   const job = await Job.findById(id);
   if (!job) throw new Error('משרה לא נמצאה');
-
   const comment = job.comments.id(commentId);
   if (!comment) throw new Error('תגובה לא נמצאה');
   if (comment.author.toString() !== userId) throw new Error('אין הרשאה למחוק');
-
   comment.deleteOne();
   await job.save();
   return { message: 'תגובה נמחקה' };
 }
 
-module.exports = {
-  getAllJobs,
-  getJobById,
-  createJob,
-  updateJob,
-  deleteJob,
-  likeJob,
-  addComment,
-  deleteComment
-};
+module.exports = { getAllJobs, getJobById, createJob, updateJob, deleteJob, likeJob, addComment, deleteComment };

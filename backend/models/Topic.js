@@ -16,7 +16,9 @@ const topicSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Post'
     }],
-    tags: [{ type: String }]
+    tags: [{ type: String }],
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+
 });
 
 const Topic = mongoose.model('Topic', topicSchema);

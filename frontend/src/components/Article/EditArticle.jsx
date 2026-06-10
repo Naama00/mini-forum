@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { Save, X } from "lucide-react";
+import Breadcrumb from "../Breadcrumb";
 import MarkdownEditor from "../MarkdownEditor";
-import CyberLayout from "../common/CyberLayout";
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
+import Loading from "../common/Loading";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const CATEGORIES = ["AI", "Web", "Mobile", "DevOps", "Security", "Career", "Design", "Other"];
@@ -24,10 +26,14 @@ export default function EditArticle() {
     fetch(`${API}/articles/${id}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('שגיאה בטעינת המאמר');
+        return r.json();
+      })
       .then((res) => {
-        const data = res.data || res;
-        if (data.author?._id !== user?.id && data.author !== user?.id) {
+        const data = res?.data || res;
+        if (!data) throw new Error('לא נמצאו נתונים');
+        if (data.author?._id !== user?.id && data.author?._id !== user?._id && data.author !== user?.id && data.author !== user?._id && !user?.isAdmin) {
           navigate(`/articles/${id}`);
           return;
         }
@@ -42,12 +48,11 @@ export default function EditArticle() {
       })
       .catch((err) => {
         console.error(err);
-        setError("שגיאה במשיכת נתוני המאמר מהשרת המרכזי");
+        setError("שגיאה בטעינת המאמר");
         setLoading(false);
       });
   }, [id, navigate, token, user?.id]);
 
-  const wordCount = form.content ? form.content.trim().split(/\s+/).filter(Boolean).length : 0;
   const removeTag = (idx) => setForm(prev => ({ ...prev, tags: prev.tags.filter((_, i) => i !== idx) }));
   const addTag = () => {
     const clean = tagInput.trim();
@@ -58,7 +63,7 @@ export default function EditArticle() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.content.trim()) {
-      setError("יש למלא כותרת ותוכן מאמר מלאים.");
+      setError("יש למלא כותרת ותוכן מאמר.");
       return;
     }
     setSaving(true);
@@ -66,126 +71,122 @@ export default function EditArticle() {
     try {
       const r = await fetch(`${API}/articles/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(form)
       });
       const res = await r.json();
-      if (res.success) navigate(`/articles/${id}`);
-      else setError(res.message || "נכשל בעדכון ליבת המאמר");
+      // ✅ תוקן: בודק גם res._id כי השרת מחזיר את המאמר עצמו (ללא שדה success)
+      if (res.success || res._id) navigate(`/articles/${id}`);
+      else setError(res.message || res.error || "נכשל בעדכון המאמר");
     } catch {
-      setError("שגיאת רשת בשילוח העדכון למסד הנתונים");
+      setError("שגיאת רשת");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return (
-    <div className="text-center py-32 font-mono text-[#ccff00] animate-pulse tracking-widest text-xs">
-      // ACCESSING SECURE STORAGE & COMPILING DOCUMENT...
+  if (loading) return <Loading text="טוען מאמר..." />;
+
+  if (error && !form.title) return (
+    <div className="page-shell flex items-center justify-center px-6">
+      <div className="max-w-md w-full rounded-3xl border border-red-500/20 bg-slate-900/60 p-10 text-center">
+        <p className="text-red-400 mb-6">{error}</p>
+        <Link to="/articles" className="inline-flex px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-violet-500 text-slate-950 font-bold">
+          חזרה למאמרים
+        </Link>
+      </div>
     </div>
   );
 
   return (
-    <CyberLayout>
-      <div className="max-w-6xl mx-auto px-6 pt-24 relative z-10">
+    <div dir="rtl" className="page-shell">
+      <div className="page-bg">
+        <div className="page-bg-blob page-bg-blob--cyan" />
+        <div className="page-bg-blob page-bg-blob--violet" />
+        <div className="page-bg-grid" />
+      </div>
 
-        <div className="cyber-page-header">
-          <div>
-            <p className="cyber-page-eyebrow">// EDITOR_TERMINAL</p>
-            <h1 className="text-2xl font-black text-white tracking-tight">עריכת מאמר</h1>
-          </div>
-          <Link to={`/articles/${id}`} className="text-xs font-mono text-slate-500 hover:text-white transition-colors">
-            ← ביטול וחזרה למאמר
-          </Link>
+      <div className="max-w-4xl mx-auto px-6 py-20">
+        <div className="mb-10">
+          <Breadcrumb items={[
+            { label: "מאמרים", to: "/articles" },
+            { label: form.title, to: `/articles/${id}` },
+            { label: "עריכה", active: true },
+          ]} />
         </div>
 
-        {error && <div className="cyber-error">[ERROR]: {error}</div>}
+        <div className="section-card section-card-lg">
+          <h1 className="text-3xl font-black text-white mb-8">עריכת מאמר</h1>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-
-          <div className="lg:col-span-3 space-y-6">
-            <div className="cyber-card p-6 md:p-8 space-y-5">
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">כותרת המאמר</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="הזן כותרת טכנולוגית חדה..."
-                  className="cyber-input text-base"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">גוף המאמר (Markdown נתמך)</label>
-                <div className="border border-white/5 rounded-xl overflow-hidden bg-black/20 focus-within:border-[#ccff00]/40 transition-all">
-                  <MarkdownEditor
-                    value={form.content}
-                    onChange={(val) => setForm(prev => ({ ...prev, content: val }))}
-                    placeholder="כתוב את הקוד, הארכיטקטורה והניתוח שלך כאן..."
-                  />
-                </div>
-              </div>
-
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
-          </div>
+          )}
 
-          <div className="lg:col-span-1 space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">כותרת</label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                className="form-input w-full"
+                required
+              />
+            </div>
 
-            <div className="cyber-card p-5">
-              <p className="cyber-label mb-4">ערוץ הפצה</p>
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">קטגוריה</label>
               <select
                 value={form.category}
                 onChange={(e) => setForm(prev => ({ ...prev, category: e.target.value }))}
-                className="cyber-input text-xs"
+                className="form-input w-full"
               >
-                <option value="">בחר קטגוריה מקצועית...</option>
+                <option value="">בחר קטגוריה...</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
-            <div className="cyber-card p-5">
-              <p className="cyber-label mb-4">תגיות מפתח</p>
-              <div className="flex flex-wrap gap-1.5 mb-3">
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">תוכן (Markdown נתמך)</label>
+              <MarkdownEditor value={form.content} onChange={(val) => setForm(prev => ({ ...prev, content: val }))} />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">
+                תגיות <span className="text-slate-500 font-normal">(לחץ Enter להוספה)</span>
+              </label>
+              <div className="flex flex-wrap gap-2 bg-slate-950/50 border border-slate-700/40 px-3.5 py-2.5 min-h-12 items-center rounded-3xl">
                 {form.tags.map((tag, i) => (
-                  <span key={i} onClick={() => removeTag(i)} className="cyber-tag">
-                    #{tag} <span className="text-slate-600 group-hover:text-red-400 ml-0.5">×</span>
+                  <span key={i} className="rounded-full border border-slate-700/50 bg-slate-900/70 px-3 py-1 text-xs text-slate-200 flex items-center gap-2">
+                    <span>{tag}</span>
+                    <button type="button" onClick={() => removeTag(i)} className="rounded-full p-1 text-slate-400 hover:text-cyan-300 transition-colors">×</button>
                   </span>
                 ))}
-              </div>
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-                placeholder="הוסף תגית ולחץ Enter..."
-                className="cyber-input text-xs"
-              />
-            </div>
-
-            <div className="cyber-card p-5">
-              <p className="cyber-label mb-4">סטטיסטיקת קוד</p>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="bg-black/30 p-3 rounded-xl border border-white/[0.02]">
-                  <span className="block font-mono text-xl font-bold text-[#ccff00]">{wordCount}</span>
-                  <span className="text-[10px] text-slate-500 font-mono tracking-wider uppercase">Words_</span>
-                </div>
-                <div className="bg-black/30 p-3 rounded-xl border border-white/[0.02]">
-                  <span className="block font-mono text-xl font-bold text-[#ccff00]">{form.content?.length || 0}</span>
-                  <span className="text-[10px] text-slate-500 font-mono tracking-wider uppercase">Bytes_</span>
-                </div>
+                <input
+                  className="flex-1 bg-transparent text-slate-200 outline-none placeholder:text-slate-500 text-sm min-w-16 py-1"
+                  placeholder="הוסף תגית..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                />
               </div>
             </div>
 
-            <button type="submit" disabled={saving} className="cyber-btn-primary">
-              {saving ? "מזרים נתונים מוצפנים..." : "עדכן והפץ מאמר ⚡"}
-            </button>
-
-          </div>
-
-        </form>
+            <div className="flex items-center gap-3 pt-2">
+              <button type="submit" disabled={saving} className="button-primary flex items-center gap-2">
+                <Save className="w-4 h-4" />
+                {saving ? "שומר..." : "שמור שינויים"}
+              </button>
+              <Link to={`/articles/${id}`} className="button-secondary flex items-center gap-2">
+                <X className="w-4 h-4" />
+                ביטול
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
-    </CyberLayout>
+    </div>
   );
 }

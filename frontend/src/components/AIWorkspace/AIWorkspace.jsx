@@ -13,8 +13,11 @@ import {
   Cpu,
   Clock,
   AlertTriangle,
+  Plus,
 } from 'lucide-react';
 import styles from './AIWorkspace.module.css';
+
+import { uploadImage } from '../../utils/upload';
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -75,9 +78,13 @@ export default function AIWorkspace({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [publishTarget, setPublishTarget] = useState('topic');
   const [successMessage, setSuccessMessage] = useState('');
-
+  const [aiImageUrl, setAiImageUrl] = useState(null);
   const abortControllerRef = useRef(null);
   const workspaceRef = useRef(null);
+  const fileRef = useRef(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [fileToSend, setFileToSend] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('devhub_workspace_action', action);
@@ -131,6 +138,9 @@ export default function AIWorkspace({
     setError('');
     setRateLimitError(null); // ✨ חדש
     setSuccessMessage('');
+    setFileToSend(null);
+    setAiImageUrl(null);
+    setPreviewUrl(null);
     localStorage.removeItem('devhub_workspace_prompt');
     localStorage.removeItem('devhub_workspace_code_context');
     localStorage.removeItem('devhub_workspace_result');
@@ -138,6 +148,7 @@ export default function AIWorkspace({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🔥 handleSubmit called, fileToSend:', fileToSend?.name);
     if (!prompt.trim()) return;
 
     abortControllerRef.current?.abort();
@@ -149,8 +160,12 @@ export default function AIWorkspace({
     setSuccessMessage('');
     setResult('');
 
+    let uploadedImageUrl = null;
+
     try {
-      const response = await fetch(`${API}/gemini/stream`, {
+      // ─── בחר endpoint ו-body בהתאם לנוכחות תמונה ───
+      let endpoint = `${API}/gemini/stream`;
+      let fetchOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +177,42 @@ export default function AIWorkspace({
           extraContext: action === 'optimize' || action === 'explain' ? codeContext : undefined,
         }),
         signal: abortControllerRef.current.signal,
-      });
+      };
+
+      // ─── אם יש תמונה — שלח FormData ל-stream-with-image ───
+      if (fileToSend) {
+        // שלב א: העלאה לCloudinary ושמירת URL
+        const uploadForm = new FormData();
+        uploadForm.append('image', fileToSend);
+        const uploadRes = await fetch(`${API}/gemini/upload-image`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          body: uploadForm,
+        });
+        const uploadData = await uploadRes.json();
+        uploadedImageUrl = uploadData.imageUrl;
+        setAiImageUrl(uploadData.imageUrl);
+        // שלב ב: שליחת הבקשה ל-AI עם URL התמונה
+        endpoint = `${API}/gemini/stream-with-image`;
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('prompt', prompt);
+        if (action === 'optimize' || action === 'explain') {
+          formData.append('extraContext', codeContext);
+        }
+        formData.append('image', fileToSend);
+
+        fetchOptions = {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: formData,
+          signal: abortControllerRef.current.signal,
+        };
+      }
+
+      const response = await fetch(endpoint, fetchOptions);
 
       // ✨ חדש: טיפול בשגיאות rate limit לפני קריאת ה-stream
       if (response.status === 429) {
@@ -180,7 +230,7 @@ export default function AIWorkspace({
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-
+      console.log('starting stream, uploadedImageUrl:', uploadedImageUrl); // ← הוסיפי
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -196,7 +246,7 @@ export default function AIWorkspace({
 
           for (const line of lines) {
             if (line.startsWith('event: ')) eventType = line.slice(7).trim();
-            if (line.startsWith('data: '))  dataLine  = line.slice(6).trim();
+            if (line.startsWith('data: ')) dataLine = line.slice(6).trim();
           }
 
           if (!dataLine) continue;
@@ -213,7 +263,15 @@ export default function AIWorkspace({
           }
         }
       }
+
+      // ─── append image to result + reset ───
+      console.log('uploadedImageUrl after stream:', uploadedImageUrl); // ← הוסיפי
+      if (uploadedImageUrl) {
+        setResult((prev) => `![תמונה](${uploadedImageUrl})\n\n` + prev);
+      }
+      setFileToSend(null);
     } catch (err) {
+      console.log('CATCH ERROR:', err.message, err);
       if (err.name === 'AbortError') return;
       console.error(err);
       setError(err.message || 'חיבור לשרת ה-AI נכשל. ודא שהשרת רץ.');
@@ -243,31 +301,53 @@ export default function AIWorkspace({
         action === 'create-challenge' ||
         (action === 'tech-interview' && publishTarget === 'topic');
 
+      const sharedImageUrl = aiImageUrl || undefined;
+      const contentWithImage = sharedImageUrl
+        ? `![תמונה](${sharedImageUrl})\n\n${result}`
+        : result;
+
       if (isTopicPublish) {
         if (!onAddTopic) throw new Error('פונקציית פרסום פוסט לא זמינה בקומפוננטה זו');
-        const tags = action === 'create-challenge' ? ['challenge'] : action === 'tech-interview' ? ['interview'] : [];
-        const type = action === 'create-challenge' ? 'challenge' : action === 'tech-interview' ? 'interview' : 'question';
 
-        await onAddTopic({ title, content: result, categoryId: selectedCategory, tags, type });
-        const actionLabel = action === 'tech-interview' ? 'ראיון' : action === 'create-challenge' ? 'אתגר' : 'טיוטה';
-        const successText = action === 'create-challenge'
-          ? 'האתגר פורסם בהצלחה באתגרים!'
-          : `ה${actionLabel} פורסם בהצלחה כנושא חדש בפורום!`;
+        const tags =
+          action === 'create-challenge' ? ['challenge'] :
+            action === 'tech-interview' ? ['interview'] :
+              [];
+
+        const type =
+          action === 'create-challenge' ? 'challenge' :
+            action === 'tech-interview' ? 'interview' :
+              'question';
+
+        await onAddTopic({ title, content: contentWithImage, categoryId: selectedCategory, tags, type });
+
+        const successText =
+          action === 'create-challenge' ? 'האתגר פורסם בהצלחה באתגרים!' :
+            action === 'tech-interview' ? 'הראיון פורסם בהצלחה כנושא חדש בפורום!' :
+              'הטיוטה פורסמה בהצלחה כנושא חדש בפורום!';
         setSuccessMessage(successText);
+        setAiImageUrl(null);
+        setPreviewUrl(null);
+
       } else if (action === 'tech-interview' && publishTarget === 'article') {
         if (!onAddArticle) throw new Error('פונקציית שמירת מאמר לא זמינה בקומפוננטה זו');
-        await onAddArticle({ title: `ראיון AI: ${title}`, content: result, tags: ['interview'], categoryId: selectedCategory });
+        await onAddArticle({ title: `ראיון AI: ${title}`, content: contentWithImage, tags: ['interview'], categoryId: selectedCategory });
         setSuccessMessage('הראיון נשמר בהצלחה כמאמר בארכיון!');
+        setAiImageUrl(null);
+        setPreviewUrl(null);
+
       } else {
         if (!onAddArticle) throw new Error('פונקציית שמירת מאמר לא זמינה בקומפוננטה זו');
-        await onAddArticle({ title: `ניתוח AI: ${title}`, content: result, tags: [action], categoryId: selectedCategory });
+        await onAddArticle({ title: `ניתוח AI: ${title}`, content: contentWithImage, tags: [action], categoryId: selectedCategory });
         setSuccessMessage('הניתוח נשמר בהצלחה בארכיון!');
+        setAiImageUrl(null);
+        setPreviewUrl(null);
       }
+
     } catch (err) {
       setError(err.message || 'הפרסום נכשל');
     }
   };
-
   const rateMsg = RATE_LIMIT_MESSAGES[rateLimitError];
 
   return (
@@ -334,10 +414,10 @@ export default function AIWorkspace({
             <div className="flex items-center justify-between mb-4">
               <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-cyan-400" />
-                {action === 'draft'            && 'על מה תרצה שהפוסט ידבר?'}
-                {action === 'optimize'         && 'הנחיות מיוחדות לאופטימיזציה'}
-                {action === 'explain'          && 'מה תרצה שננתח ונבין בקוד?'}
-                {action === 'tech-interview'   && 'לאיזה משרה/תפקיד תרצה להיחקק?'}
+                {action === 'draft' && 'על מה תרצה שהפוסט ידבר?'}
+                {action === 'optimize' && 'הנחיות מיוחדות לאופטימיזציה'}
+                {action === 'explain' && 'מה תרצה שננתח ונבין בקוד?'}
+                {action === 'tech-interview' && 'לאיזה משרה/תפקיד תרצה להיחקק?'}
                 {action === 'create-challenge' && 'אתגר קוד לאילו תחומים?'}
               </label>
               <button type="button" onClick={handleClear} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all" title="נקה הכל">
@@ -345,15 +425,44 @@ export default function AIWorkspace({
               </button>
             </div>
 
+            {/* upload control above the prompt */}
+            <div className="flex items-center justify-start gap-3 mb-2">
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setFileToSend(file);
+                setPreviewUrl(URL.createObjectURL(file));
+                setPrompt((p) => p + `\n[תמונה: ${file.name}]\n`);
+                if (fileRef.current) fileRef.current.value = '';
+              }} />
+              <button type="button" className="flex items-center gap-2 text-sm text-slate-300 hover:text-cyan-300" onClick={() => fileRef.current?.click()} disabled={uploadingImage}>
+                <Plus className="w-4 h-4" />
+                {fileToSend ? `✓ ${fileToSend.name}` : 'הוסף תמונה'}
+              </button>
+              {fileToSend && (
+                <button type="button" className="text-xs text-slate-400 hover:text-rose-400" onClick={() => setFileToSend(null)}>
+                  (הסר)
+                </button>
+              )}
+            </div>
+
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="תצוגה מקדימה"
+                className="mt-2 mb-3 max-h-32 rounded-lg border border-white/10 object-contain"
+              />
+            )}
+
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={
                 action === 'draft' ? 'לדוגמה: כתוב מדריך מעמיק על ניהול סטייט ב-React 19 עם Server Actions...'
-                : action === 'optimize' ? 'לדוגמה: מצא זליגות זיכרון, שפר ביצועי רינדור והפוך את הפונקציות לנקיות יותר...'
-                : action === 'explain' ? 'לדוגמה: הסבר את ארכיטקטורת Microfrontends ומתי להשתמש בה...'
-                : action === 'tech-interview' ? 'לדוגמה: ראיון Fullstack - שאל אותי על React hooks, Node.js ו-SQL...'
-                : 'לדוגמה: בעיה: שרת PostgreSQL מתנעל בשיאי עומס; רמז: עדיפות queries'
+                  : action === 'optimize' ? 'לדוגמה: מצא זליגות זיכרון, שפר ביצועי רינדור והפוך את הפונקציות לנקיות יותר...'
+                    : action === 'explain' ? 'לדוגמה: הסבר את ארכיטקטורת Microfrontends ומתי להשתמש בה...'
+                      : action === 'tech-interview' ? 'לדוגמה: ראיון Fullstack - שאל אותי על React hooks, Node.js ו-SQL...'
+                        : 'לדוגמה: בעיה: שרת PostgreSQL מתנעל בשיאי עומס; רמז: עדיפות queries'
               }
               className="form-input min-h-30 resize-none mb-4"
               required

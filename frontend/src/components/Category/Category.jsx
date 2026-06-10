@@ -4,11 +4,13 @@ import {
   Eye,
   Plus,
   Zap,
+  Trash2,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getToken } from "../../utils/storage";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import MarkdownEditor from "../MarkdownEditor";
+import Loading from '../common/Loading';
 import MarkdownRenderer from "../MarkdownRenderer";
 import PostSummary from "../Topic/PostSummary";
 import { UserAvatar } from "../common/UserAvatar";
@@ -16,6 +18,8 @@ import { useAuth } from "../../hooks";
 import styles from "./Category.module.css";
 
 const API_BASE = "http://localhost:5000";
+
+import { uploadImage } from '../../utils/upload';
 
 /* ─────────────────────────────────────────────
    HELPERS
@@ -121,8 +125,10 @@ export default function CategoryPage() {
 
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [newTopicContent, setNewTopicContent] = useState("");
+  const newTopicFileRef = useRef(null);
 
   const [creatingTopic, setCreatingTopic] = useState(false);
+  const [newTopicUploading, setNewTopicUploading] = useState(false);
 
   /* ───────────────────────────────────────────── */
 
@@ -222,7 +228,7 @@ export default function CategoryPage() {
       const res = await r.json();
 
       if (res.success) {
-        navigate(`/category?topicId=${res.data._id || res.data.id}`);
+        navigate(`/topic/${res.data._id || res.data.id}`);
       } else {
         alert(res.message || "יצירת הנושא נכשלה");
       }
@@ -231,6 +237,24 @@ export default function CategoryPage() {
       alert("שגיאת רשת, נסה שנית מאוחר יותר");
     } finally {
       setCreatingTopic(false);
+    }
+  };
+
+  /* ── New topic image upload */
+  const handleNewTopicImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setNewTopicUploading(true);
+    try {
+      const url = await uploadImage(file);
+      const mdImage = `\n![תמונה](${url})\n`;
+      setNewTopicContent((p) => p + mdImage);
+    } catch (err) {
+      alert(err.message || 'Error uploading image');
+    } finally {
+      setNewTopicUploading(false);
+      if (newTopicFileRef.current) newTopicFileRef.current.value = '';
     }
   };
 
@@ -286,16 +310,7 @@ export default function CategoryPage() {
         </div>
 
         {/* LOADING */}
-
-        {loading && (
-          <div className="py-32 text-center">
-            <Zap className="w-10 h-10 text-cyan-400 animate-pulse mx-auto mb-4" />
-
-            <p className="text-slate-500 uppercase tracking-widest text-sm">
-              Loading...
-            </p>
-          </div>
-        )}
+        {loading && <Loading />}
 
         {/* ERROR */}
 
@@ -383,6 +398,26 @@ export default function CategoryPage() {
                       className="form-input"
                     />
 
+                    {/* upload control above editor */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        ref={newTopicFileRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleNewTopicImage}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => newTopicFileRef.current?.click()}
+                        disabled={newTopicUploading}
+                        className="flex items-center gap-2 text-sm text-slate-300 hover:text-cyan-300"
+                      >
+                        <Plus className="w-4 h-4" />
+                        {newTopicUploading ? 'מעלה...' : 'הוסף תמונה'}
+                      </button>
+                    </div>
+
                     <MarkdownEditor
                       value={newTopicContent}
                       onChange={setNewTopicContent}
@@ -415,60 +450,94 @@ export default function CategoryPage() {
                 <div className="space-y-5">
                   {topics.map((t) => {
                     const tId = t.id || t._id;
+                    const tAuthorId = getAuthorId(t);
+                    const canDelete = user && (
+                      tAuthorId === user._id ||
+                      tAuthorId === user.id ||
+                      user.isAdmin
+                    );
 
                     return (
-                      <Link
-                        key={tId}
-                        to={`/category?topicId=${tId}`}
-                        className="glass-card glass-card-md section-shadow-hover block group"
-                      >
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                          <div className="flex items-start gap-4">
-                            <UserAvatar
-                              firstName={getAuthorData(t)?.firstName || ""}
-                              lastName={getAuthorData(t)?.lastName || ""}
-                              size="md"
-                            />
+                      <div key={tId} className="glass-card glass-card-md section-shadow-hover group flex items-center gap-3">
+                        <Link
+                          to={`/topic/${tId}`}
+                          className="flex-1 min-w-0"
+                        >
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                            <div className="flex items-start gap-4">
+                              <UserAvatar
+                                firstName={getAuthorData(t)?.firstName || ""}
+                                lastName={getAuthorData(t)?.lastName || ""}
+                                size="md"
+                              />
 
-                            <div>
-                              <h2 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors mb-2">
-                                {t.title}
-                              </h2>
+                              <div className="min-w-0">
+                                <h2 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors mb-2 truncate">
+                                  {t.title}
+                                </h2>
 
-                              <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-wider text-slate-500">
-                                <span>
-                                  By{" "}
-                                  {getAuthorName(t)}
-                                </span>
+                                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-wider text-slate-500">
+                                  <span>
+                                    By{" "}
+                                    {getAuthorName(t)}
+                                  </span>
 
-                                <span>•</span>
+                                  <span>•</span>
 
-                                <span>
-                                  {timeAgo(t.createdAt)}
-                                </span>
+                                  <span>
+                                    {timeAgo(t.createdAt)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                              <div className="text-sm text-slate-400 flex items-center gap-2">
+                                <MessageSquare className="w-4 h-4" />
+                                {Math.max(0, (t.posts?.length || 0) - 1)}
+                              </div>
+
+                              <div className="text-sm text-slate-400 flex items-center gap-2">
+                                <Eye className="w-4 h-4" />
+                                {t.views || 0}
+                              </div>
+
+                              <div className="w-10 h-10 rounded-full border border-cyan-500/20 bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:translate-x-1 transition-transform">
+                                <ChevronRight className="w-5 h-5" />
                               </div>
                             </div>
                           </div>
+                        </Link>
 
-                          <div className="flex items-center gap-6">
-                            <div className="text-sm text-slate-400 flex items-center gap-2">
-                              <MessageSquare className="w-4 h-4" />
-
-                              {t.posts?.length || 0}
-                            </div>
-
-                            <div className="text-sm text-slate-400 flex items-center gap-2">
-                              <Eye className="w-4 h-4" />
-
-                              {t.views || 0}
-                            </div>
-
-                            <div className="w-10 h-10 rounded-full border border-cyan-500/20 bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:translate-x-1 transition-transform">
-                              <ChevronRight className="w-5 h-5" />
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
+                        {canDelete && (
+                          <button
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              if (!confirm('האם אתה בטוח שברצונך למחוק את הנושא?')) return;
+                              try {
+                                const token = getToken();
+                                const r = await fetch(`${API_BASE}/api/topics/${tId}`, {
+                                  method: 'DELETE',
+                                  headers: { Authorization: `Bearer ${token}` },
+                                });
+                                const res = await r.json();
+                                if (res.success) {
+                                  setTopics((prev) => prev.filter((x) => (x.id || x._id) !== tId));
+                                } else {
+                                  alert(res.message || 'מחיקה נכשלה');
+                                }
+                              } catch (err) {
+                                console.error(err);
+                                alert('שגיאת רשת');
+                              }
+                            }}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-500/25 bg-red-500/5 text-red-400 hover:bg-red-500/15 hover:border-red-500/40 transition-all text-xs font-semibold"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            מחק
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -693,6 +762,8 @@ function ReplyBox({ topicId, onReplyAdded }) {
 
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyUploading, setReplyUploading] = useState(false);
+  const replyFileRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -755,7 +826,40 @@ function ReplyBox({ topicId, onReplyAdded }) {
         הוסף תגובה
       </h3>
 
-      <div className="space-y-5">
+        <div className="space-y-5">
+        {/* upload control above reply editor */}
+        <div className="flex items-center gap-2">
+          <input
+            ref={replyFileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setReplyUploading(true);
+              try {
+                const url = await uploadImage(file);
+                setContent((p) => p + `\n![תמונה](${url})\n`);
+              } catch (err) {
+                alert(err.message || 'Error uploading image');
+              } finally {
+                setReplyUploading(false);
+                if (replyFileRef.current) replyFileRef.current.value = '';
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => replyFileRef.current?.click()}
+            disabled={replyUploading}
+            className="flex items-center gap-2 text-sm text-slate-300 hover:text-cyan-300"
+          >
+            <Plus className="w-4 h-4" />
+            {replyUploading ? 'מעלה...' : 'הוסף תמונה'}
+          </button>
+        </div>
+
         <MarkdownEditor
           value={content}
           onChange={setContent}
