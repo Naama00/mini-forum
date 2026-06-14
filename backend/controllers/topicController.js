@@ -1,6 +1,14 @@
 const topicService = require('../services/topicService');
 const likeService = require('../services/likeService');
 
+async function getTopic(req, res, next) {
+  try {
+    const topic = await topicService.getTopic(req.params.topicId);
+    res.json({ success: true, data: topic });
+  } catch (error) {
+    next(error);
+  }
+}
 async function getTopics(req, res, next) {
   try {
     const topics = await topicService.getTopics({
@@ -60,9 +68,11 @@ async function likeTopic(req, res, next) {
 }
 
 module.exports = {
+  getTopic,
   getTopics,
   createTopic,
   deleteTopic,
   updateTopic,
   likeTopic,
+  
 };

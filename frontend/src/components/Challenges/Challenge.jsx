@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { MessageCircle, Calendar, User, Tag } from 'lucide-react';
 import Breadcrumb from '../Breadcrumb';
-import MarkdownRenderer from '../MarkdownRenderer';
+import MarkdownRenderer from '../Markdown/MarkdownRenderer';
 import { useAuth } from '../../hooks';
 import { timeAgo } from '../../utils/formatters';
 import Loading from '../common/Loading';
@@ -179,9 +179,9 @@ export default function ChallengePage() {
                 <h1 className="text-3xl font-black text-white mb-3">
                   {getRealTitle(challenge.posts?.[0]?.content) || challenge.title}
                 </h1>
-                <p className="text-sm text-slate-400">
+                {/* <p className="text-sm text-slate-400">
                   קטגוריה: {challenge.category?.name || 'כללי'}
-                </p>
+                </p> */}
               </div>
             </div>
 

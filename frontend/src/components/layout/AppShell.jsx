@@ -177,7 +177,7 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
                   <Sparkles className="w-4 h-4 text-cyan-400" />
                 </div>
               </div>
-              <div className="flex flex-col items-end leading-tight">
+              <div className="flex flex-col items-start leading-tight">
                 <p className="text-base font-black bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
                   DEV.HUB
                 </p>
@@ -248,7 +248,7 @@ export default function AppShell({ children, sidebar, isSidebarOpen, isCollapsed
 
         {/* סיידבר — מוצג רק בדפים הרלוונטיים ומוחזק במקום כשהדף גלול */}
         {isSidebarVisible && sidebar && (
-          <aside className="fixed right-0 top-[73px] bottom-0 z-40 border-l border-white/5 bg-slate-900/30 w-[20rem]">
+          <aside className="fixed right-0 top-[100px] bottom-0 z-40 border-l border-white/5 bg-slate-900/30 w-[20rem]">
             {sidebar}
           </aside>
         )}

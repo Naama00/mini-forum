@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import Breadcrumb from '../Breadcrumb';
-import MarkdownRenderer from "../MarkdownRenderer";
+import MarkdownRenderer from "../Markdown/MarkdownRenderer";
 import { useAuth } from "../../hooks";
 import { getToken, getUser } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";
+import Loading from "../common/Loading";
 
 const API = "http://localhost:5000/api";
 
@@ -62,7 +63,7 @@ export default function EventPage() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">טוען אירוע...</div>;
+  if (loading) return <Loading text="טוען אירוע..." />;
 
   if (error || !event) return (
     <div className="page-shell flex items-center justify-center px-6">

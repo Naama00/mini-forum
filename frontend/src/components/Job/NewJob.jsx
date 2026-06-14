@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
-import MarkdownEditor from "../MarkdownEditor";
+import MarkdownEditor from '../Markdown/MarkdownEditor';
 import { getToken } from "../../utils/storage";
 
 const API = "http://localhost:5000/api";

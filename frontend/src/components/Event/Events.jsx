@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import Breadcrumb from '../Breadcrumb';
-import MarkdownRenderer from "../MarkdownRenderer";
+import MarkdownRenderer from "../Markdown/MarkdownRenderer";
 import { useAuth } from "../../hooks";
 import { getToken, getUser } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";
+import Loading from "../common/Loading";
 
 const API = "http://localhost:5000/api";
 
@@ -198,7 +199,7 @@ export default function EventsPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="text-center py-20 text-slate-400">טוען אירועים...</div>
+          <Loading text="טוען אירועים..." />
         ) : events.length === 0 ? (
           <div className="card-empty">
             <p className="text-slate-400">אין כרגע אירועים זמינים בחתך המבוקש.</p>

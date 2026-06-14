@@ -4,6 +4,15 @@ const { Category } = require('../models/Category');
 const { User } = require('../models/User');
 const cache = require('../config/cache');
 
+async function getTopic(topicId) {
+  const topic = await Topic.findById(topicId)
+    .populate('category', 'name _id')
+    .populate('posts')
+    .lean();
+
+  if (!topic) throw new Error('נושא לא נמצא');
+  return topic;
+}
 /**
  * Create new topic with first post
  */
@@ -151,7 +160,7 @@ async function deleteTopic(topicId, userId, isAdmin = false) {
   await cache.del('categories:all');
   if (topic.category) await cache.del(`category:${topic.category.toString()}`);
   await cache.invalidate('trending:');
-
+console.log('authorId:', authorId, 'userId:', userId, 'match:', authorId === userId);
   return { success: true, message: 'הנושא נמחק בהצלחה' };
 }
 const likeService = require('../services/likeService');
@@ -162,7 +171,9 @@ async function likeTopic(req, res, next) {
     res.json(result);
   } catch (err) { next(err); }
 }
+
 module.exports = {
+  getTopic,
   createTopic,
   getTopics,
   deleteTopic,

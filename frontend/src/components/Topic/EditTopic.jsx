@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Save, X, Plus } from 'lucide-react';
 import Breadcrumb from '../Breadcrumb';
-import MarkdownEditor from '../MarkdownEditor';
+import MarkdownEditor from '../Markdown/MarkdownEditor';
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
 import { uploadImage } from '../../utils/upload';

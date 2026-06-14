@@ -4,7 +4,7 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../hooks";
 import CityAutocomplete from "./CityAutocomplete";
 
-const GOOGLE_CLIENT_ID = "151921932655-85p00136srh9nb2tquam8qkkjtuvfnl5.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function AuthPage() {
   return (

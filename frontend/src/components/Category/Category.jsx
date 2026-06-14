@@ -9,9 +9,9 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { getToken } from "../../utils/storage";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import MarkdownEditor from "../MarkdownEditor";
+import MarkdownRenderer from '../Markdown/MarkdownRenderer';
+import MarkdownEditor from '../Markdown/MarkdownEditor';
 import Loading from '../common/Loading';
-import MarkdownRenderer from "../MarkdownRenderer";
 import PostSummary from "../Topic/PostSummary";
 import { UserAvatar } from "../common/UserAvatar";
 import { useAuth } from "../../hooks";

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, ExternalLink, MapPin, Building, DollarSign, Trash2 } from 'lucide-react';
 import Breadcrumb from '../Breadcrumb';
-import MarkdownRenderer from "../MarkdownRenderer";
+import MarkdownRenderer from "../Markdown/MarkdownRenderer";
 import { useAuth } from "../../hooks";
 import { getToken, getLoggedInUserFromToken } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";

@@ -4,8 +4,11 @@ const { OAuth2Client } = require('google-auth-library');
 const { User } = require('../models/User');
 const logger = require('../config/logger');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'devhub-secret-key-change-in-production';
-const GOOGLE_CLIENT_ID = '151921932655-85p00136srh9nb2tquam8qkkjtuvfnl5.apps.googleusercontent.com';
+const JWT_SECRET = process.env.JWT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+if (!JWT_SECRET || !GOOGLE_CLIENT_ID) {
+    throw new Error('Missing required environment variables: JWT_SECRET, GOOGLE_CLIENT_ID');
+}
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 /**

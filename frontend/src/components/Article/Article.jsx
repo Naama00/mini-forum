@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { MessageCircle, Send, Trash2, Pencil } from "lucide-react";
+import Loading from "../common/Loading";
 
 import Breadcrumb from "../Breadcrumb";
-import MarkdownEditor from "../MarkdownEditor";
-import MarkdownRenderer from "../MarkdownRenderer";
+import MarkdownRenderer from '../Markdown/MarkdownRenderer';
+import MarkdownEditor from '../Markdown/MarkdownEditor';
 
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
@@ -101,13 +102,7 @@ export default function ArticlePage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
-        טוען מאמר...
-      </div>
-    );
-  }
+  if (loading) return <Loading text="טוען מאמר..." />;
 
   if (error || !article) {
     return (

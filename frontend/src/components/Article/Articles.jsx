@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Heart, Trash2 } from "lucide-react";
-
 import Breadcrumb from "../Breadcrumb";
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
+import Loading from "../common/Loading";
 
 const API = "http://localhost:5000/api";
 
@@ -163,7 +163,7 @@ export default function ArticlesPage() {
 
         {/* ─── Content ─────────────────────────────────────────── */}
         {loading ? (
-          <div className="text-center py-20 text-slate-400">טוען מאמרים...</div>
+          <Loading text="טוען מאמרים..." />
         ) : articles.length === 0 ? (
           <div className="card-empty">
             <p className="text-slate-400">לא נמצאו מאמרים התואמים לחיפוש שלך.</p>

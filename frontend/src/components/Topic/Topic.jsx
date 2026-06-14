@@ -3,7 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { MessageCircle, User, Calendar, Plus, Trash2, Heart, Pencil, X, Check } from 'lucide-react';
 import Loading from '../common/Loading';
 import Breadcrumb from '../Breadcrumb';
-import MarkdownRenderer from '../MarkdownRenderer';
+import MarkdownRenderer from '../Markdown/MarkdownRenderer';
+import MarkdownEditor from '../Markdown/MarkdownEditor';
 import PostSummary from './PostSummary';
 import { useAuth } from '../../hooks';
 import { getToken } from '../../utils/storage';
@@ -318,6 +319,7 @@ export default function TopicPage() {
               <Link to={`/category?categoryId=${topic.category?._id || topic.categoryId || ''}`} className="button-secondary w-full text-center mt-3 block">
                 חזרה
               </Link>
+              
             </div>
 
             {topic.tags?.length > 0 && (
@@ -423,11 +425,10 @@ export default function TopicPage() {
                       {/* תוכן — מצב עריכה או תצוגה */}
                       {isEditing ? (
                         <div className="space-y-3">
-                          <textarea
+                          <MarkdownEditor
                             value={editingText}
-                            onChange={(e) => setEditingText(e.target.value)}
-                            className="form-input min-h-[100px] w-full text-sm"
-                            autoFocus
+                            onChange={setEditingText}
+                            rows={4}
                           />
                           <div className="flex gap-2 justify-end">
                             <button
@@ -512,12 +513,11 @@ export default function TopicPage() {
                       {replyUploading ? 'מעלה...' : 'הוסף תמונה'}
                     </button>
                   </div>
-                  <textarea
+                  <MarkdownEditor
                     value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
+                    onChange={setReplyText}
                     placeholder="כתוב את התגובה שלך כאן..."
-                    className="form-input min-h-[120px] mb-2"
-                    required
+                    rows={5}
                   />
                 </div>
                 <button type="submit" disabled={submittingReply} className="button-primary w-full md:w-auto">

@@ -1,7 +1,7 @@
 // frontend/src/components/Topic/PostSummary.jsx
 import { useState } from 'react';
 import { Sparkles, ChevronDown, ChevronUp, AlertTriangle, Clock } from 'lucide-react';
-import MarkdownRenderer from '../MarkdownRenderer';
+import MarkdownRenderer from '../Markdown/MarkdownRenderer';
 import { getToken } from '../../utils/storage';
 
 const API = 'http://localhost:5000/api';

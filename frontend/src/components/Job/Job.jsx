@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import Breadcrumb from '../Breadcrumb';
-import MarkdownRenderer from "../MarkdownRenderer";
+import MarkdownRenderer from '../Markdown/MarkdownRenderer';
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";
 import { timeAgo } from "../../utils/formatters";
+import Loading from "../common/Loading";
 
 const API = "http://localhost:5000/api";
 const JOB_TYPES = { fulltime: "משרה מלאה", parttime: "משרה חלקית", freelance: "פרילנס", internship: "סטאג'", remote: "עבודה מהבית" };
@@ -34,7 +35,7 @@ export default function JobPage() {
     fetchJob();
   }, [id]);
 
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">טוען משרה...</div>;
+  if (loading) return <Loading text="טוען משרה..." />;
 
   if (error || !job) return (
     <div className="page-shell flex items-center justify-center px-6">

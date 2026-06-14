@@ -1,129 +1,86 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import {
-  Sparkles,
-  Zap,
-  Bot,
-  Send,
-  Wand2,
-  Code2,
-  FileText,
-  Rocket,
-  Trash2,
-  Cpu,
-  Clock,
-  AlertTriangle,
-  Plus,
+  Sparkles, Zap, Bot, Send, Wand2, Code2, FileText,
+  Rocket, Trash2, Cpu, Clock, AlertTriangle, Plus,
 } from 'lucide-react';
 import styles from './AIWorkspace.module.css';
-
 import { uploadImage } from '../../utils/upload';
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// ✨ חדש: הודעות rate limit מובנות — זהות ל-PostSummary
 const RATE_LIMIT_MESSAGES = {
   rate_limit_minute: {
     icon: <Clock className="w-5 h-5 text-amber-400 shrink-0" />,
     title: 'המתן רגע',
     text: 'ניסית יותר מדי פעמים בדקה האחרונה. המתן מעט ונסה שנית.',
-    border: 'border-amber-500/20',
-    bg: 'bg-amber-500/5',
-    titleColor: 'text-amber-300',
-    textColor: 'text-amber-400/80',
+    border: 'border-amber-500/20', bg: 'bg-amber-500/5',
+    titleColor: 'text-amber-300', textColor: 'text-amber-400/80',
   },
   rate_limit_day: {
     icon: <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />,
     title: 'המכסה היומית נגמרה',
     text: 'הגעת למכסת בקשות ה-AI היומית שלך. המכסה מתאפסת בחצות — חזור מחר!',
-    border: 'border-rose-500/20',
-    bg: 'bg-rose-500/5',
-    titleColor: 'text-rose-300',
-    textColor: 'text-rose-400/80',
+    border: 'border-rose-500/20', bg: 'bg-rose-500/5',
+    titleColor: 'text-rose-300', textColor: 'text-rose-400/80',
   },
 };
 
-/**
- * AIWorkspace Component
- * שינויים: הוספת טיפול בשגיאות rate limit בלבד.
- * כל שאר הלוגיקה והעיצוב — ללא שינוי.
- */
-export default function AIWorkspace({
-  currentUser,
-  categories = [],
-  onAddTopic,
-  onAddArticle,
-  onNavigate,
-}) {
-  const [action, setAction] = useState(() => {
-    return localStorage.getItem('devhub_workspace_action') || 'draft';
-  });
+const ACTIONS = [
+  { id: 'draft',            label: 'טיוטת פוסט',   icon: FileText, color: 'text-amber-400' },
+  { id: 'optimize',         label: 'קוד אופטימלי',  icon: Code2,    color: 'text-pink-400'  },
+  { id: 'explain',          label: 'ארכיטקטורה',    icon: Wand2,    color: 'text-violet-400'},
+  { id: 'tech-interview',   label: 'ראיון טק',       icon: Zap,      color: 'text-amber-400' },
+  { id: 'create-challenge', label: 'אתגר קוד',       icon: Rocket,   color: 'text-pink-400'  },
+];
 
-  const [prompt, setPrompt] = useState(() => {
-    return localStorage.getItem('devhub_workspace_prompt') || '';
-  });
+const PROMPT_LABEL = {
+  draft:            'על מה תרצה שהפוסט ידבר?',
+  optimize:         'הנחיות מיוחדות לאופטימיזציה',
+  explain:          'מה תרצה שננתח ונבין בקוד?',
+  'tech-interview': 'לאיזה משרה / תפקיד תרצה להתכונן?',
+  'create-challenge':'אתגר קוד — לאילו תחומים?',
+};
 
-  const [codeContext, setCodeContext] = useState(() => {
-    return localStorage.getItem('devhub_workspace_code_context') || '';
-  });
+const PROMPT_PLACEHOLDER = {
+  draft:            'לדוגמה: כתוב מדריך מעמיק על ניהול סטייט ב-React 19 עם Server Actions...',
+  optimize:         'לדוגמה: מצא זליגות זיכרון, שפר ביצועי רינדור והפוך את הפונקציות לנקיות יותר...',
+  explain:          'לדוגמה: הסבר את ארכיטקטורת Microfrontends ומתי להשתמש בה...',
+  'tech-interview': 'לדוגמה: ראיון Fullstack - שאל אותי על React hooks, Node.js ו-SQL...',
+  'create-challenge':'לדוגמה: בעיה: שרת PostgreSQL מתנעל בשיאי עומס; רמז: עדיפות queries',
+};
 
-  const [loading, setLoading] = useState(false);
-
-  const [result, setResult] = useState(() => {
-    return localStorage.getItem('devhub_workspace_result') || '';
-  });
-
-  const [error, setError] = useState('');
-  const [rateLimitError, setRateLimitError] = useState(null); // ✨ חדש
+export default function AIWorkspace({ currentUser, categories = [], onAddTopic, onAddArticle, onNavigate }) {
+  const [action, setAction]               = useState(() => localStorage.getItem('devhub_workspace_action') || 'draft');
+  const [prompt, setPrompt]               = useState(() => localStorage.getItem('devhub_workspace_prompt') || '');
+  const [codeContext, setCodeContext]     = useState(() => localStorage.getItem('devhub_workspace_code_context') || '');
+  const [loading, setLoading]             = useState(false);
+  const [result, setResult]               = useState(() => localStorage.getItem('devhub_workspace_result') || '');
+  const [error, setError]                 = useState('');
+  const [rateLimitError, setRateLimitError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [publishTarget, setPublishTarget] = useState('topic');
   const [successMessage, setSuccessMessage] = useState('');
-  const [aiImageUrl, setAiImageUrl] = useState(null);
-  const abortControllerRef = useRef(null);
-  const workspaceRef = useRef(null);
-  const fileRef = useRef(null);
+  const [aiImageUrl, setAiImageUrl]       = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [fileToSend, setFileToSend] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [fileToSend, setFileToSend]       = useState(null);
+  const [previewUrl, setPreviewUrl]       = useState(null);
 
-  useEffect(() => {
-    localStorage.setItem('devhub_workspace_action', action);
-  }, [action]);
+  const abortControllerRef = useRef(null);
+  const workspaceRef        = useRef(null);
+  const fileRef             = useRef(null);
 
-  useEffect(() => {
-    localStorage.setItem('devhub_workspace_prompt', prompt);
-  }, [prompt]);
-
-  useEffect(() => {
-    localStorage.setItem('devhub_workspace_code_context', codeContext);
-  }, [codeContext]);
-
-  useEffect(() => {
-    localStorage.setItem('devhub_workspace_result', result);
-  }, [result]);
-
-  useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
-      setSelectedCategory(categories[0]._id || categories[0].id || '');
-    }
-  }, [categories, selectedCategory]);
-
-  useEffect(() => {
-    if (action === 'optimize' || action === 'explain') {
-      setPublishTarget('article');
-    } else {
-      setPublishTarget('topic');
-    }
-  }, [action]);
-
-  useEffect(() => {
-    return () => abortControllerRef.current?.abort();
-  }, []);
+  useEffect(() => { localStorage.setItem('devhub_workspace_action', action); }, [action]);
+  useEffect(() => { localStorage.setItem('devhub_workspace_prompt', prompt); }, [prompt]);
+  useEffect(() => { localStorage.setItem('devhub_workspace_code_context', codeContext); }, [codeContext]);
+  useEffect(() => { localStorage.setItem('devhub_workspace_result', result); }, [result]);
+  useEffect(() => { if (categories.length > 0 && !selectedCategory) setSelectedCategory(categories[0]._id || categories[0].id || ''); }, [categories, selectedCategory]);
+  useEffect(() => { setPublishTarget(action === 'optimize' || action === 'explain' ? 'article' : 'topic'); }, [action]);
+  useEffect(() => () => abortControllerRef.current?.abort(), []);
 
   const handleMouseMove = (e) => {
     if (!workspaceRef.current) return;
-    const cards = workspaceRef.current.querySelectorAll(`.${styles.containerWithGlow}`);
-    cards.forEach((card) => {
+    workspaceRef.current.querySelectorAll(`.${styles.containerWithGlow}`).forEach((card) => {
       const rect = card.getBoundingClientRect();
       card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
       card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
@@ -132,15 +89,9 @@ export default function AIWorkspace({
 
   const handleClear = () => {
     abortControllerRef.current?.abort();
-    setPrompt('');
-    setCodeContext('');
-    setResult('');
-    setError('');
-    setRateLimitError(null); // ✨ חדש
-    setSuccessMessage('');
-    setFileToSend(null);
-    setAiImageUrl(null);
-    setPreviewUrl(null);
+    setPrompt(''); setCodeContext(''); setResult(''); setError('');
+    setRateLimitError(null); setSuccessMessage(''); setFileToSend(null);
+    setAiImageUrl(null); setPreviewUrl(null);
     localStorage.removeItem('devhub_workspace_prompt');
     localStorage.removeItem('devhub_workspace_code_context');
     localStorage.removeItem('devhub_workspace_result');
@@ -148,132 +99,61 @@ export default function AIWorkspace({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🔥 handleSubmit called, fileToSend:', fileToSend?.name);
     if (!prompt.trim()) return;
-
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
-
-    setLoading(true);
-    setError('');
-    setRateLimitError(null); // ✨ חדש — מאפס rate limit לפני כל בקשה
-    setSuccessMessage('');
-    setResult('');
-
+    setLoading(true); setError(''); setRateLimitError(null); setSuccessMessage(''); setResult('');
     let uploadedImageUrl = null;
 
     try {
-      // ─── בחר endpoint ו-body בהתאם לנוכחות תמונה ───
       let endpoint = `${API}/gemini/stream`;
       let fetchOptions = {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          action,
-          prompt,
-          extraContext: action === 'optimize' || action === 'explain' ? codeContext : undefined,
-        }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ action, prompt, extraContext: action === 'optimize' || action === 'explain' ? codeContext : undefined }),
         signal: abortControllerRef.current.signal,
       };
 
-      // ─── אם יש תמונה — שלח FormData ל-stream-with-image ───
       if (fileToSend) {
-        // שלב א: העלאה לCloudinary ושמירת URL
         const uploadForm = new FormData();
         uploadForm.append('image', fileToSend);
-        const uploadRes = await fetch(`${API}/gemini/upload-image`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          body: uploadForm,
-        });
+        const uploadRes  = await fetch(`${API}/gemini/upload-image`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: uploadForm });
         const uploadData = await uploadRes.json();
         uploadedImageUrl = uploadData.imageUrl;
         setAiImageUrl(uploadData.imageUrl);
-        // שלב ב: שליחת הבקשה ל-AI עם URL התמונה
         endpoint = `${API}/gemini/stream-with-image`;
         const formData = new FormData();
-        formData.append('action', action);
-        formData.append('prompt', prompt);
-        if (action === 'optimize' || action === 'explain') {
-          formData.append('extraContext', codeContext);
-        }
+        formData.append('action', action); formData.append('prompt', prompt);
+        if (action === 'optimize' || action === 'explain') formData.append('extraContext', codeContext);
         formData.append('image', fileToSend);
-
-        fetchOptions = {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: formData,
-          signal: abortControllerRef.current.signal,
-        };
+        fetchOptions = { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: formData, signal: abortControllerRef.current.signal };
       }
 
       const response = await fetch(endpoint, fetchOptions);
+      if (response.status === 429) { const data = await response.json().catch(() => ({})); setRateLimitError(data.error || 'rate_limit_minute'); return; }
+      if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(data.message || 'שגיאה בייצור התוכן מה-AI'); }
 
-      // ✨ חדש: טיפול בשגיאות rate limit לפני קריאת ה-stream
-      if (response.status === 429) {
-        const data = await response.json().catch(() => ({}));
-        setRateLimitError(data.error || 'rate_limit_minute');
-        return;
-      }
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'שגיאה בייצור התוכן מה-AI');
-      }
-
-      // ── קריאת SSE — ללא שינוי ────────────────────────────────────────────
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      console.log('starting stream, uploadedImageUrl:', uploadedImageUrl); // ← הוסיפי
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split('\n\n');
-        buffer = parts.pop();
-
+        const parts = buffer.split('\n\n'); buffer = parts.pop();
         for (const part of parts) {
-          const lines = part.split('\n');
-          let eventType = 'message';
-          let dataLine = '';
-
-          for (const line of lines) {
-            if (line.startsWith('event: ')) eventType = line.slice(7).trim();
-            if (line.startsWith('data: ')) dataLine = line.slice(6).trim();
-          }
-
+          const lines = part.split('\n'); let eventType = 'message', dataLine = '';
+          for (const line of lines) { if (line.startsWith('event: ')) eventType = line.slice(7).trim(); if (line.startsWith('data: ')) dataLine = line.slice(6).trim(); }
           if (!dataLine) continue;
-
-          let parsed;
-          try { parsed = JSON.parse(dataLine); } catch { continue; }
-
-          if (eventType === 'chunk' && parsed.text) {
-            setResult((prev) => prev + parsed.text);
-          }
-
-          if (eventType === 'error') {
-            throw new Error(parsed.message || 'שגיאה בזרם ה-AI');
-          }
+          let parsed; try { parsed = JSON.parse(dataLine); } catch { continue; }
+          if (eventType === 'chunk' && parsed.text) setResult((prev) => prev + parsed.text);
+          if (eventType === 'error') throw new Error(parsed.message || 'שגיאה בזרם ה-AI');
         }
       }
-
-      // ─── append image to result + reset ───
-      console.log('uploadedImageUrl after stream:', uploadedImageUrl); // ← הוסיפי
-      if (uploadedImageUrl) {
-        setResult((prev) => `![תמונה](${uploadedImageUrl})\n\n` + prev);
-      }
+      if (uploadedImageUrl) setResult((prev) => `![תמונה](${uploadedImageUrl})\n\n` + prev);
       setFileToSend(null);
     } catch (err) {
-      console.log('CATCH ERROR:', err.message, err);
       if (err.name === 'AbortError') return;
-      console.error(err);
       setError(err.message || 'חיבור לשרת ה-AI נכשל. ודא שהשרת רץ.');
     } finally {
       setLoading(false);
@@ -281,238 +161,189 @@ export default function AIWorkspace({
   };
 
   const isAdmin = currentUser?.isAdmin;
+  const rateMsg = RATE_LIMIT_MESSAGES[rateLimitError];
 
   const handlePublish = async () => {
     if (!result) return;
-    setError('');
-    setSuccessMessage('');
-
+    setError(''); setSuccessMessage('');
     try {
-      let title = prompt.slice(0, 50);
-      if (title.length >= 50) title += '...';
-
-      if (action === 'create-challenge' && !isAdmin) {
-        setSuccessMessage('האתגר נשאר בארגז הכלים הפרטי שלך. רק מנהל יכול לפרסם אתגרים רשמיים בפורום.');
-        return;
-      }
-
-      const isTopicPublish =
-        action === 'draft' ||
-        action === 'create-challenge' ||
-        (action === 'tech-interview' && publishTarget === 'topic');
-
-      const sharedImageUrl = aiImageUrl || undefined;
-      const contentWithImage = sharedImageUrl
-        ? `![תמונה](${sharedImageUrl})\n\n${result}`
-        : result;
-
+      let title = prompt.slice(0, 50); if (title.length >= 50) title += '...';
+      if (action === 'create-challenge' && !isAdmin) { setSuccessMessage('האתגר נשאר בארגז הכלים הפרטי שלך. רק מנהל יכול לפרסם אתגרים רשמיים.'); return; }
+      const isTopicPublish = action === 'draft' || action === 'create-challenge' || (action === 'tech-interview' && publishTarget === 'topic');
+      const sharedImageUrl   = aiImageUrl || undefined;
+      const contentWithImage = sharedImageUrl ? `![תמונה](${sharedImageUrl})\n\n${result}` : result;
       if (isTopicPublish) {
-        if (!onAddTopic) throw new Error('פונקציית פרסום פוסט לא זמינה בקומפוננטה זו');
-
-        const tags =
-          action === 'create-challenge' ? ['challenge'] :
-            action === 'tech-interview' ? ['interview'] :
-              [];
-
-        const type =
-          action === 'create-challenge' ? 'challenge' :
-            action === 'tech-interview' ? 'interview' :
-              'question';
-
+        if (!onAddTopic) throw new Error('פונקציית פרסום פוסט לא זמינה');
+        const tags = action === 'create-challenge' ? ['challenge'] : action === 'tech-interview' ? ['interview'] : [];
+        const type = action === 'create-challenge' ? 'challenge' : action === 'tech-interview' ? 'interview' : 'question';
         await onAddTopic({ title, content: contentWithImage, categoryId: selectedCategory, tags, type });
-
-        const successText =
-          action === 'create-challenge' ? 'האתגר פורסם בהצלחה באתגרים!' :
-            action === 'tech-interview' ? 'הראיון פורסם בהצלחה כנושא חדש בפורום!' :
-              'הטיוטה פורסמה בהצלחה כנושא חדש בפורום!';
-        setSuccessMessage(successText);
-        setAiImageUrl(null);
-        setPreviewUrl(null);
-
-      } else if (action === 'tech-interview' && publishTarget === 'article') {
-        if (!onAddArticle) throw new Error('פונקציית שמירת מאמר לא זמינה בקומפוננטה זו');
-        await onAddArticle({ title: `ראיון AI: ${title}`, content: contentWithImage, tags: ['interview'], categoryId: selectedCategory });
-        setSuccessMessage('הראיון נשמר בהצלחה כמאמר בארכיון!');
-        setAiImageUrl(null);
-        setPreviewUrl(null);
-
+        setSuccessMessage(action === 'create-challenge' ? 'האתגר פורסם!' : action === 'tech-interview' ? 'הראיון פורסם כנושא!' : 'הטיוטה פורסמה בהצלחה!');
       } else {
-        if (!onAddArticle) throw new Error('פונקציית שמירת מאמר לא זמינה בקומפוננטה זו');
+        if (!onAddArticle) throw new Error('פונקציית שמירת מאמר לא זמינה');
         await onAddArticle({ title: `ניתוח AI: ${title}`, content: contentWithImage, tags: [action], categoryId: selectedCategory });
-        setSuccessMessage('הניתוח נשמר בהצלחה בארכיון!');
-        setAiImageUrl(null);
-        setPreviewUrl(null);
+        setSuccessMessage('הניתוח נשמר בארכיון!');
       }
-
-    } catch (err) {
-      setError(err.message || 'הפרסום נכשל');
-    }
+      setAiImageUrl(null); setPreviewUrl(null);
+    } catch (err) { setError(err.message || 'הפרסום נכשל'); }
   };
-  const rateMsg = RATE_LIMIT_MESSAGES[rateLimitError];
 
   return (
-    <div ref={workspaceRef} onMouseMove={handleMouseMove} className={styles.workspaceContainer}>
+    <div ref={workspaceRef} onMouseMove={handleMouseMove} className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
 
-      {/* ── AI WORKSPACE HERO ── */}
-      <div className="glass-card-futuristic section-card-lg">
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr] items-start">
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.25em] text-cyan-200/80 font-semibold">
-              <Sparkles className="w-4 h-4" /> DevHub AI Workspace
-            </div>
-            <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl font-black text-white leading-tight">
-                הפעל את ה-AI שלך כדי ליצור, לחדד ולפרסם תוכן טכנולוגי במהירות.
-              </h1>
-              <p className="max-w-2xl text-slate-300 leading-7">
-                בחר סגנון עבודה, הזן הנחיה ותן למנוע לכתוב עבורך קוד, הסברים, מאמרים ואתגרים בהתאמה אישית.
-                כל מסך בנוי כדי להיות נקי, מזמין ובעל זרימת עבודה ברורה.
-              </p>
-            </div>
+      {/* ── HERO ── */}
+      <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-slate-900/90 p-8 backdrop-blur-xl shadow-2xl shadow-black/40">
+        {/* רקע גלואי */}
+        <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-violet-500/10 blur-3xl" />
 
+        <div className="relative grid gap-8 lg:grid-cols-[1.4fr_0.9fr] items-center">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-cyan-400/70 font-bold">
+              <Sparkles className={`w-3.5 h-3.5 ${styles.pulseIcon}`} />
+              DevHub AI Workspace
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tight">
+              הפעל את ה-AI שלך כדי{' '}
+              <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                ליצור, לחדד ולפרסם
+              </span>{' '}
+              תוכן טכנולוגי במהירות.
+            </h1>
+            <p className="text-slate-400 leading-7 max-w-xl text-sm">
+              בחר סגנון עבודה, הזן הנחיה ותן למנוע לכתוב עבורך קוד, הסברים, מאמרים ואתגרים.
+              כל מסך בנוי להיות נקי, מזמין ועם זרימת עבודה ברורה.
+            </p>
           </div>
 
-          <div className="grid gap-4">
-            <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 text-sm text-slate-300 leading-relaxed">
-              <strong className="text-white">טיפ מהיר:</strong> החלף בין מצבי הפעולה כדי לשנות את הזרימה מהר ולהתאים את התוצאה לסוג התוכן הרצוי.
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 text-sm text-slate-300 leading-relaxed">
-              <strong className="text-white">שדה Prompt:</strong> כתוב כאן את הרעיון או הקוד, והצד הימני יציג את התוצאה מיידית עם חוויית קריאה נוחה.
-            </div>
+          <div className="flex flex-col gap-3">
+            {[
+              { title: 'טיפ מהיר', text: 'החלף בין מצבי הפעולה כדי לשנות את הזרימה ולהתאים את התוצאה לסוג התוכן.' },
+              { title: 'שדה Prompt', text: 'כתוב כאן את הרעיון או הקוד — התוצאה תופיע מיידית עם חוויית קריאה נוחה.' },
+            ].map(({ title, text }) => (
+              <div key={title} className="rounded-2xl border border-white/8 bg-white/4 p-4 text-sm text-slate-400 leading-relaxed backdrop-blur-sm">
+                <strong className="text-slate-200 font-semibold">{title}: </strong>{text}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-5">
-        <div className={styles.tabsWrap}>
-          <button onClick={() => setAction('draft')} className={`${styles.actionButton} ${action === 'draft' ? styles.actionButtonActive : ''}`}>
-            <FileText className="w-4 h-4 text-amber-400" /> טיוטת פוסט
+      {/* ── TABS ── */}
+      <div className={styles.tabsWrap}>
+        {ACTIONS.map(({ id, label, icon: Icon, color }) => (
+          <button key={id} onClick={() => setAction(id)} className={`${styles.actionButton} ${action === id ? styles.actionButtonActive : ''}`}>
+            <Icon className={`w-4 h-4 ${color}`} /> {label}
           </button>
-          <button onClick={() => setAction('optimize')} className={`${styles.actionButton} ${action === 'optimize' ? styles.actionButtonActive : ''}`}>
-            <Code2 className="w-4 h-4 text-pink-400" /> קוד אופטימלי
-          </button>
-          <button onClick={() => setAction('explain')} className={`${styles.actionButton} ${action === 'explain' ? styles.actionButtonActive : ''}`}>
-            <Wand2 className="w-4 h-4 text-violet-400" /> ארכיטקטורה
-          </button>
-          <button onClick={() => setAction('tech-interview')} className={`${styles.actionButton} ${action === 'tech-interview' ? styles.actionButtonActive : ''}`}>
-            <Zap className="w-4 h-4 text-amber-400" /> ראיון טק
-          </button>
-          <button onClick={() => setAction('create-challenge')} className={`${styles.actionButton} ${action === 'create-challenge' ? styles.actionButtonActive : ''}`}>
-            <Rocket className="w-4 h-4 text-pink-400" /> אתגר קוד
-          </button>
-        </div>
+        ))}
       </div>
 
-      {/* ── MAIN WORKSPACE CONTENT — ללא שינוי ── */}
+      {/* ── MAIN GRID ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-        {/* LEFT COLUMN: INPUT FORM — ללא שינוי */}
-        <form onSubmit={handleSubmit} className="lg:col-span-5 space-y-5">
-          <div className={`glass-card section-card-lg ${styles.containerWithGlow} relative overflow-hidden`}>
+        {/* ── LEFT: INPUT ── */}
+        <form onSubmit={handleSubmit} className="lg:col-span-5 flex flex-col gap-4">
+
+          {/* Input card */}
+          <div className={`relative overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 p-6 backdrop-blur-xl shadow-xl shadow-black/20 ${styles.containerWithGlow}`}>
             <div className={styles.glowOverlay} />
+            <div className="relative z-10 flex flex-col gap-4">
 
-            <div className="flex items-center justify-between mb-4">
-              <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                {action === 'draft' && 'על מה תרצה שהפוסט ידבר?'}
-                {action === 'optimize' && 'הנחיות מיוחדות לאופטימיזציה'}
-                {action === 'explain' && 'מה תרצה שננתח ונבין בקוד?'}
-                {action === 'tech-interview' && 'לאיזה משרה/תפקיד תרצה להיחקק?'}
-                {action === 'create-challenge' && 'אתגר קוד לאילו תחומים?'}
-              </label>
-              <button type="button" onClick={handleClear} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all" title="נקה הכל">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* upload control above the prompt */}
-            <div className="flex items-center justify-start gap-3 mb-2">
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setFileToSend(file);
-                setPreviewUrl(URL.createObjectURL(file));
-                setPrompt((p) => p + `\n[תמונה: ${file.name}]\n`);
-                if (fileRef.current) fileRef.current.value = '';
-              }} />
-              <button type="button" className="flex items-center gap-2 text-sm text-slate-300 hover:text-cyan-300" onClick={() => fileRef.current?.click()} disabled={uploadingImage}>
-                <Plus className="w-4 h-4" />
-                {fileToSend ? `✓ ${fileToSend.name}` : 'הוסף תמונה'}
-              </button>
-              {fileToSend && (
-                <button type="button" className="text-xs text-slate-400 hover:text-rose-400" onClick={() => setFileToSend(null)}>
-                  (הסר)
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  {PROMPT_LABEL[action]}
+                </label>
+                <button type="button" onClick={handleClear} title="נקה הכל"
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                  <Trash2 className="w-4 h-4" />
                 </button>
-              )}
-            </div>
-
-            {previewUrl && (
-              <img
-                src={previewUrl}
-                alt="תצוגה מקדימה"
-                className="mt-2 mb-3 max-h-32 rounded-lg border border-white/10 object-contain"
-              />
-            )}
-
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={
-                action === 'draft' ? 'לדוגמה: כתוב מדריך מעמיק על ניהול סטייט ב-React 19 עם Server Actions...'
-                  : action === 'optimize' ? 'לדוגמה: מצא זליגות זיכרון, שפר ביצועי רינדור והפוך את הפונקציות לנקיות יותר...'
-                    : action === 'explain' ? 'לדוגמה: הסבר את ארכיטקטורת Microfrontends ומתי להשתמש בה...'
-                      : action === 'tech-interview' ? 'לדוגמה: ראיון Fullstack - שאל אותי על React hooks, Node.js ו-SQL...'
-                        : 'לדוגמה: בעיה: שרת PostgreSQL מתנעל בשיאי עומס; רמז: עדיפות queries'
-              }
-              className="form-input min-h-30 resize-none mb-4"
-              required
-            />
-
-            {(action === 'optimize' || action === 'explain') && (
-              <div className="space-y-2 mt-4">
-                <label className="text-xs font-semibold text-slate-400 block">הדבק את קוד המקור כאן (Context):</label>
-                <textarea
-                  value={codeContext}
-                  onChange={(e) => setCodeContext(e.target.value)}
-                  placeholder="// Paste your component, hook or functions here..."
-                  className="form-input min-h-45 font-mono text-xs text-cyan-300 bg-slate-950/80 resize-none"
-                  required
-                />
               </div>
-            )}
 
-            <div className="flex items-center justify-between gap-4 mt-5 pt-4 border-t border-white/5">
-              <span className="text-xs text-slate-500 flex items-center gap-1.5">
-                <Bot className="w-3.5 h-3.5" /> DevHub AI Model v4.0
-              </span>
-              {loading ? (
-                <button type="button" onClick={() => abortControllerRef.current?.abort()} className="px-5 py-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-sm hover:bg-rose-500/30 transition-all flex items-center gap-2 cursor-pointer">
-                  <span className="w-3 h-3 rounded-sm bg-rose-400 inline-block" /> עצור
+              {/* Image upload */}
+              <div className="flex items-center gap-3">
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0]; if (!file) return;
+                  setFileToSend(file); setPreviewUrl(URL.createObjectURL(file));
+                  setPrompt((p) => p + `\n[תמונה: ${file.name}]\n`);
+                  if (fileRef.current) fileRef.current.value = '';
+                }} />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploadingImage}
+                  className="flex items-center gap-2 text-xs text-slate-400 hover:text-cyan-300 border border-white/10 hover:border-cyan-500/30 rounded-lg px-3 py-1.5 transition-all">
+                  <Plus className="w-3.5 h-3.5" />
+                  {fileToSend ? `✓ ${fileToSend.name}` : 'הוסף תמונה'}
                 </button>
-              ) : (
-                <button type="submit" disabled={!prompt.trim()} className="px-5 py-2.5 rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-sm hover:shadow-lg hover:shadow-cyan-500/20 disabled:opacity-40 disabled:hover:shadow-none transition-all duration-300 flex items-center gap-2 cursor-pointer">
-                  <Send className="w-4 h-4" /> שגר ל-AI
-                </button>
+                {fileToSend && (
+                  <button type="button" onClick={() => setFileToSend(null)}
+                    className="text-xs text-slate-500 hover:text-rose-400 transition-colors">(הסר)</button>
+                )}
+              </div>
+
+              {previewUrl && (
+                <img src={previewUrl} alt="תצוגה מקדימה"
+                  className="max-h-32 rounded-xl border border-white/10 object-contain" />
               )}
+
+              <textarea
+                value={prompt} onChange={(e) => setPrompt(e.target.value)}
+                placeholder={PROMPT_PLACEHOLDER[action]}
+                className="w-full min-h-[120px] resize-none rounded-xl border border-white/8 bg-slate-950/60 px-4 py-3 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                required
+              />
+
+              {(action === 'optimize' || action === 'explain') && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">קוד מקור (Context):</label>
+                  <textarea
+                    value={codeContext} onChange={(e) => setCodeContext(e.target.value)}
+                    placeholder="// הדבק כאן את הקומפוננטה, הוק או הפונקציות..."
+                    className="w-full min-h-[180px] resize-none rounded-xl border border-white/8 bg-slate-950/80 px-4 py-3 font-mono text-xs text-cyan-300 placeholder-slate-700 outline-none focus:border-violet-500/40 transition-all"
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                <span className="text-[11px] text-slate-600 font-mono flex items-center gap-1.5">
+                  <Bot className="w-3.5 h-3.5" /> DevHub AI v4.0
+                </span>
+                {loading ? (
+                  <button type="button" onClick={() => abortControllerRef.current?.abort()}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-400 text-sm font-bold hover:bg-rose-500/25 transition-all">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-rose-400 inline-block animate-pulse" /> עצור
+                  </button>
+                ) : (
+                  <button type="submit" disabled={!prompt.trim()} className={styles.submitBtn}>
+                    <Send className="w-4 h-4" /> שגר ל-AI
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Quick Action Presets — ללא שינוי */}
-          <div className="glass-card section-card-md">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">קיצורי דרך מהירים</h4>
-            <div className="space-y-2">
-              <button type="button" onClick={() => { setAction('optimize'); setPrompt('תקן שגיאות אבטחה פוטנציאליות ובצע אופטימיזציית ביצועים קשיחה לקוד המצורף.'); }} className="w-full text-right text-xs text-slate-400 hover:text-cyan-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all">🛠️ ניתוח אבטחה ואופטימיזציה</button>
-              <button type="button" onClick={() => { setAction('draft'); setPrompt('כתוב פוסט טכנולוגי עמוק ומקיף על ארכיטקטורת Microfrontends באמצעות Module Federation.'); }} className="w-full text-right text-xs text-slate-400 hover:text-cyan-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all">📝 Microfrontends ארכיטקטורה</button>
-              <button type="button" onClick={() => { setAction('tech-interview'); setPrompt('ראיון Fullstack Developer — שאל אותי שאלות טכניות קשות על React, Node.js, Databases ו-Deployment.'); }} className="w-full text-right text-xs text-slate-400 hover:text-amber-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all">🎤 ראיון Fullstack קשה</button>
-              <button type="button" onClick={() => { setAction('create-challenge'); setPrompt('יצר אתגר קוד שבועי עבור הקהילה: בעיה אלגוריתמית מסובכת או דיזיין סיסטם עם טוויסט פעלתי.'); }} className="w-full text-right text-xs text-slate-400 hover:text-pink-300 p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all">🚀 אתגר קוד שבועי</button>
+          {/* Quick presets */}
+          <div className="rounded-2xl border border-white/8 bg-slate-900/40 p-5 backdrop-blur-xl">
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">קיצורי דרך מהירים</h4>
+            <div className="flex flex-col gap-1">
+              {[
+                { action: 'optimize', prompt: 'תקן שגיאות אבטחה פוטנציאליות ובצע אופטימיזציה לקוד המצורף.', emoji: '🛠️', label: 'ניתוח אבטחה ואופטימיזציה', hover: 'hover:text-cyan-300' },
+                { action: 'draft',    prompt: 'כתוב פוסט טכנולוגי עמוק על ארכיטקטורת Microfrontends.', emoji: '📝', label: 'Microfrontends ארכיטקטורה', hover: 'hover:text-violet-300' },
+                { action: 'tech-interview', prompt: 'ראיון Fullstack Developer — שאל אותי שאלות קשות על React, Node.js ו-Databases.', emoji: '🎤', label: 'ראיון Fullstack קשה', hover: 'hover:text-amber-300' },
+                { action: 'create-challenge', prompt: 'יצר אתגר קוד שבועי עבור הקהילה: בעיה אלגוריתמית מסובכת.', emoji: '🚀', label: 'אתגר קוד שבועי', hover: 'hover:text-pink-300' },
+              ].map(({ action: a, prompt: p, emoji, label, hover }) => (
+                <button key={label} type="button"
+                  onClick={() => { setAction(a); setPrompt(p); }}
+                  className={`w-full text-right text-xs text-slate-500 ${hover} px-3 py-2.5 rounded-xl hover:bg-white/4 border border-transparent hover:border-white/8 transition-all`}>
+                  {emoji} {label}
+                </button>
+              ))}
             </div>
           </div>
         </form>
 
-        {/* RIGHT COLUMN: AI OUTPUT */}
-        <div className="lg:col-span-7 space-y-4">
+        {/* ── RIGHT: OUTPUT ── */}
+        <div className="lg:col-span-7 flex flex-col gap-4">
 
-          {/* ✨ חדש: הודעת Rate Limit — מוצגת במקום שגיאה רגילה */}
+          {/* Rate limit */}
           {rateLimitError && rateMsg && (
             <div className={`flex items-start gap-3 rounded-xl p-4 border ${rateMsg.border} ${rateMsg.bg}`}>
               {rateMsg.icon}
@@ -523,106 +354,112 @@ export default function AIWorkspace({
             </div>
           )}
 
-          {/* שגיאה רגילה — ללא שינוי */}
+          {/* Error */}
           {error && (
-            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
-              {error}
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-rose-500/8 border border-rose-500/20 text-rose-400 text-sm">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" /> {error}
             </div>
           )}
 
+          {/* Success */}
           {successMessage && (
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              {successMessage}
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/8 border border-emerald-500/20 text-emerald-400 text-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" /> {successMessage}
             </div>
           )}
 
-          {/* תיבת תוצאה — ללא שינוי */}
-          <div className={`glass-card section-card-lg ${styles.containerWithGlow} relative overflow-hidden min-h-90 flex flex-col`}>
+          {/* Terminal output card */}
+          <div className={`relative overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 p-6 backdrop-blur-xl shadow-xl shadow-black/20 min-h-[420px] flex flex-col ${styles.containerWithGlow} ${styles.terminalCard} ${loading ? styles.terminalCardActive : ''}`}>
             <div className={styles.glowOverlay} />
 
-            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
-              <div className="flex items-center gap-2">
+            {/* Terminal header */}
+            <div className="relative z-10 flex items-center justify-between border-b border-white/5 pb-4 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-rose-500/60" />
+                  <span className="w-3 h-3 rounded-full bg-amber-500/60" />
+                  <span className="w-3 h-3 rounded-full bg-emerald-500/60" />
+                </div>
                 <div className={`w-2 h-2 rounded-full ${loading ? 'bg-cyan-400 animate-ping' : result ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">
                   {loading ? 'AI Streaming...' : result ? 'AI Generated Response' : 'AI Engine Idle'}
                 </span>
                 {loading && result && (
-                  <span className="text-xs text-slate-500 font-mono">{result.length} תווים</span>
+                  <span className="text-[10px] text-slate-600 font-mono">{result.length} תווים</span>
                 )}
               </div>
 
               {result && !loading && (
-                <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {action !== 'create-challenge' && categories.length > 0 && (
-                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="bg-slate-900 border border-white/10 rounded-lg text-xs px-2 py-1 text-slate-300 outline-none focus:border-cyan-500">
+                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="bg-slate-800 border border-white/10 rounded-lg text-xs px-2 py-1.5 text-slate-300 outline-none focus:border-cyan-500">
                       {categories.map((cat) => (
-                        <option key={cat._id || cat.id} value={cat._id || cat.id}>קטגוריה: {cat.name}</option>
+                        <option key={cat._id || cat.id} value={cat._id || cat.id}>
+                          {cat.name}
+                        </option>
                       ))}
                     </select>
                   )}
 
                   {action === 'tech-interview' && (
-                    <div className="flex flex-row flex-wrap items-center gap-2 text-xs text-slate-300">
-                      <span className="whitespace-nowrap">שמור בתור:</span>
-                      <button type="button" onClick={() => setPublishTarget('topic')} className={`px-2 py-1 rounded-lg ${publishTarget === 'topic' ? 'bg-cyan-500 text-slate-950' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>
-                        נושא
-                      </button>
-                      <button type="button" onClick={() => setPublishTarget('article')} className={`px-2 py-1 rounded-lg ${publishTarget === 'article' ? 'bg-cyan-500 text-slate-950' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>
-                        מאמר
-                      </button>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <span>שמור כ:</span>
+                      {['topic', 'article'].map((t) => (
+                        <button key={t} type="button" onClick={() => setPublishTarget(t)}
+                          className={`px-2.5 py-1 rounded-lg transition-all ${publishTarget === t ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-slate-700'}`}>
+                          {t === 'topic' ? 'נושא' : 'מאמר'}
+                        </button>
+                      ))}
                     </div>
                   )}
 
                   {action === 'create-challenge' && !isAdmin ? (
-                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-200 px-4 py-3 text-sm">
-                      אתגר זה נשמר כטיוטה אישית ב-Workspace. רק מנהל יכול לפרסם אתגרים רשמיים בפורום.
-                    </div>
+                    <span className="text-xs text-amber-400/80 border border-amber-500/20 bg-amber-500/5 rounded-lg px-3 py-1.5">
+                      רק מנהל יכול לפרסם אתגרים
+                    </span>
                   ) : (
-                    <button onClick={handlePublish} className="button-outline text-xs py-1 px-3 rounded-lg flex items-center gap-1 text-cyan-400 border-cyan-500/20 hover:bg-cyan-500/10">
-                      <Rocket className="w-3 h-3" />
-                      {action === 'draft'
-                        ? 'פרסם בפורום'
-                        : action === 'create-challenge'
-                          ? 'פרסם אתגר רשמי'
-                          : action === 'tech-interview' && publishTarget === 'article'
-                            ? 'שמור כמאמר'
-                            : 'שמור בארכיון'}
+                    <button onClick={handlePublish}
+                      className="flex items-center gap-1.5 text-xs font-bold text-cyan-400 border border-cyan-500/25 bg-cyan-500/8 hover:bg-cyan-500/15 hover:border-cyan-500/40 rounded-lg px-3 py-1.5 transition-all">
+                      <Rocket className="w-3.5 h-3.5" />
+                      {action === 'draft' ? 'פרסם בפורום'
+                        : action === 'create-challenge' ? 'פרסם אתגר'
+                        : action === 'tech-interview' && publishTarget === 'article' ? 'שמור כמאמר'
+                        : 'שמור בארכיון'}
                     </button>
                   )}
                 </div>
               )}
             </div>
 
-            {result ? (
-              <div className={`flex-1 overflow-y-auto max-h-125 pr-1 ${styles.resultMarkdown}`}>
-                <Markdown>{result}</Markdown>
-                {loading && (
-                  <span style={{ display: 'inline-block', width: '2px', height: '1.1em', background: 'var(--accent-cyan, #00e5ff)', verticalAlign: 'text-bottom', marginRight: '2px', animation: 'blink 0.8s step-end infinite' }} />
-                )}
-              </div>
-            ) : loading ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-500 py-12">
-                <Zap className="w-8 h-8 text-cyan-500/40 animate-bounce" />
-                <p className="text-sm">ה-Core של DevHub מעבד כעת את הנתונים...</p>
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-500 py-12 text-center">
-                <Bot className="w-10 h-10 text-slate-700 mb-1" />
-                <h3 className="text-sm font-bold text-slate-400">הטרמינל ריק</h3>
-                <p className="text-xs max-w-xs px-4 text-slate-500">הזן הנחיה או קוד בטופס משמאל ולחץ "שגר ל-AI" כדי לראות פתרונות, ניתוחים וארכיטקטורות קוד כאן.</p>
-              </div>
-            )}
+            {/* Body */}
+            <div className="relative z-10 flex-1 flex flex-col">
+              {result ? (
+                <div className={`flex-1 overflow-y-auto max-h-[500px] pl-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent ${styles.resultMarkdown}`}>
+                  <Markdown>{result}</Markdown>
+                  {loading && <span className={styles.streamCursor} />}
+                </div>
+              ) : loading ? (
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 py-16">
+                  <div className={styles.spinner} />
+                  <p className={styles.spinnerLabel}>מעבד בקשה...</p>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-center">
+                  <Bot className={`w-12 h-12 text-slate-700 ${styles.pulseIcon}`} />
+                  <h3 className="text-sm font-bold text-slate-500">הטרמינל ריק</h3>
+                  <p className="text-xs text-slate-600 max-w-xs leading-relaxed">
+                    הזן הנחיה או קוד בטופס משמאל ולחץ "שגר ל-AI" כדי לראות פתרונות, ניתוחים וארכיטקטורות קוד.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0; }
-        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
       `}</style>
     </div>
   );

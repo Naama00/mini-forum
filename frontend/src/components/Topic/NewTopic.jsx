@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import MarkdownEditor from "../MarkdownEditor";
+import MarkdownEditor from '../Markdown/MarkdownEditor';
 import { Plus } from 'lucide-react';
 import { useAuth } from "../../hooks";
 import { getToken } from "../../utils/storage";

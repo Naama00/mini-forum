@@ -83,10 +83,10 @@ export default function Challenges() {
                   </div>
 
                 <div className="mt-4 text-xs text-slate-400 space-y-2">
-                  <div>
-                    <span className="font-semibold text-slate-200">קטגוריה:</span>{' '}
-                    {topic.category?.name || 'כללי'}
-                  </div>
+                  {/* <div> */}
+                    {/* <span className="font-semibold text-slate-200">קטגוריה:</span>{' '} */}
+                    {/* {topic.category?.name || 'כללי'} */}
+                  {/* </div> */}
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-200">פורסם על ידי:</span>
                     <div className="flex items-center gap-2">
