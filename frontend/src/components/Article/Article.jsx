@@ -200,7 +200,7 @@ export default function ArticlePage() {
             {/* Article */}
             <article className="rounded-[32px] border border-slate-800 bg-slate-900/50 p-8 md:p-12">
               <div className="flex items-center gap-3 text-sm text-cyan-300 mb-5">
-                <span>{article.category || "Article"}</span>
+                <span>{article.category?.name || "Article"}</span>
                 <span className="text-slate-600">•</span>
                 <span className="text-slate-500">{timeAgo(article.createdAt)}</span>
               </div>

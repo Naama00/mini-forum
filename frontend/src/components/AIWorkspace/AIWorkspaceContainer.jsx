@@ -54,23 +54,27 @@ export default function AIWorkspaceContainer() {
   });
 
  const articleMutation = useMutation({
-  mutationFn: async ({ title, content, summary, image, tags, categoryId, imageUrl }) => {  
-    const response = await authFetch.post('/articles', {
-      title,
-      content,
-      summary,
-      image,
-      tags,
-      categoryId,
-      imageUrl,  
-    });
-      if (!response.success) {
+    mutationFn: async ({ title, content, summary, image, tags, categoryId, imageUrl }) => {
+      const response = await authFetch.post('/articles', {
+        title,
+        content,
+        summary,
+        image,
+        tags,
+        categoryId,
+        imageUrl,
+      });
+      
+      // התיקון הבטוח: אם השרת מחזיר שגיאה מפורשת (success: false) או שלא חזר כלום
+      if (response && response.success === false) {
         throw new Error(response.message || 'Failed to create article');
       }
-      return response.data;
+      
+      // אם הגענו לכאן, הבקשה הצליחה (השרת החזיר את המאמר או אובייקט הצלחה)
+      return response.data || response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['articles']);
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
     },
   });
 

@@ -5,9 +5,7 @@ import {
   Rocket, Trash2, Cpu, Clock, AlertTriangle, Plus,
 } from 'lucide-react';
 import styles from './AIWorkspace.module.css';
-import { uploadImage } from '../../utils/upload';
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { useGemini } from '../../hooks/useGemini'; // ייבוא ההוק החדש
 
 const RATE_LIMIT_MESSAGES = {
   rate_limit_minute: {
@@ -54,29 +52,43 @@ export default function AIWorkspace({ currentUser, categories = [], onAddTopic, 
   const [action, setAction]               = useState(() => localStorage.getItem('devhub_workspace_action') || 'draft');
   const [prompt, setPrompt]               = useState(() => localStorage.getItem('devhub_workspace_prompt') || '');
   const [codeContext, setCodeContext]     = useState(() => localStorage.getItem('devhub_workspace_code_context') || '');
-  const [loading, setLoading]             = useState(false);
-  const [result, setResult]               = useState(() => localStorage.getItem('devhub_workspace_result') || '');
-  const [error, setError]                 = useState('');
-  const [rateLimitError, setRateLimitError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [publishTarget, setPublishTarget] = useState('topic');
   const [successMessage, setSuccessMessage] = useState('');
   const [aiImageUrl, setAiImageUrl]       = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [fileToSend, setFileToSend]       = useState(null);
   const [previewUrl, setPreviewUrl]       = useState(null);
 
-  const abortControllerRef = useRef(null);
+  // שימוש בהוק המרכזי
+  const { 
+    loading, 
+    error, 
+    rateLimitError, 
+    result, 
+    setResult,
+    setError,
+    setRateLimitError,
+    stream, 
+    clearState,
+    abortControllerRef 
+  } = useGemini();
+
   const workspaceRef        = useRef(null);
   const fileRef             = useRef(null);
+
+  // טעינה ראשונית של התוצאה הקודמת מהלוקאל סטורג' להוק
+  useEffect(() => {
+    const savedResult = localStorage.getItem('devhub_workspace_result');
+    if (savedResult) setResult(savedResult);
+  }, [setResult]);
 
   useEffect(() => { localStorage.setItem('devhub_workspace_action', action); }, [action]);
   useEffect(() => { localStorage.setItem('devhub_workspace_prompt', prompt); }, [prompt]);
   useEffect(() => { localStorage.setItem('devhub_workspace_code_context', codeContext); }, [codeContext]);
-  useEffect(() => { localStorage.setItem('devhub_workspace_result', result); }, [result]);
+  useEffect(() => { if (result) localStorage.setItem('devhub_workspace_result', result); }, [result]);
+  
   useEffect(() => { if (categories.length > 0 && !selectedCategory) setSelectedCategory(categories[0]._id || categories[0].id || ''); }, [categories, selectedCategory]);
   useEffect(() => { setPublishTarget(action === 'optimize' || action === 'explain' ? 'article' : 'topic'); }, [action]);
-  useEffect(() => () => abortControllerRef.current?.abort(), []);
 
   const handleMouseMove = (e) => {
     if (!workspaceRef.current) return;
@@ -88,9 +100,8 @@ export default function AIWorkspace({ currentUser, categories = [], onAddTopic, 
   };
 
   const handleClear = () => {
-    abortControllerRef.current?.abort();
-    setPrompt(''); setCodeContext(''); setResult(''); setError('');
-    setRateLimitError(null); setSuccessMessage(''); setFileToSend(null);
+    clearState();
+    setPrompt(''); setCodeContext(''); setSuccessMessage(''); setFileToSend(null);
     setAiImageUrl(null); setPreviewUrl(null);
     localStorage.removeItem('devhub_workspace_prompt');
     localStorage.removeItem('devhub_workspace_code_context');
@@ -100,63 +111,15 @@ export default function AIWorkspace({ currentUser, categories = [], onAddTopic, 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-    setLoading(true); setError(''); setRateLimitError(null); setSuccessMessage(''); setResult('');
-    let uploadedImageUrl = null;
+    setSuccessMessage('');
 
-    try {
-      let endpoint = `${API}/gemini/stream`;
-      let fetchOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ action, prompt, extraContext: action === 'optimize' || action === 'explain' ? codeContext : undefined }),
-        signal: abortControllerRef.current.signal,
-      };
-
-      if (fileToSend) {
-        const uploadForm = new FormData();
-        uploadForm.append('image', fileToSend);
-        const uploadRes  = await fetch(`${API}/gemini/upload-image`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: uploadForm });
-        const uploadData = await uploadRes.json();
-        uploadedImageUrl = uploadData.imageUrl;
-        setAiImageUrl(uploadData.imageUrl);
-        endpoint = `${API}/gemini/stream-with-image`;
-        const formData = new FormData();
-        formData.append('action', action); formData.append('prompt', prompt);
-        if (action === 'optimize' || action === 'explain') formData.append('extraContext', codeContext);
-        formData.append('image', fileToSend);
-        fetchOptions = { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: formData, signal: abortControllerRef.current.signal };
+    const streamResult = await stream({ action, prompt, codeContext, fileToSend });
+    
+    if (streamResult && streamResult.success) {
+      if (streamResult.uploadedImageUrl) {
+        setAiImageUrl(streamResult.uploadedImageUrl);
       }
-
-      const response = await fetch(endpoint, fetchOptions);
-      if (response.status === 429) { const data = await response.json().catch(() => ({})); setRateLimitError(data.error || 'rate_limit_minute'); return; }
-      if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(data.message || 'שגיאה בייצור התוכן מה-AI'); }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split('\n\n'); buffer = parts.pop();
-        for (const part of parts) {
-          const lines = part.split('\n'); let eventType = 'message', dataLine = '';
-          for (const line of lines) { if (line.startsWith('event: ')) eventType = line.slice(7).trim(); if (line.startsWith('data: ')) dataLine = line.slice(6).trim(); }
-          if (!dataLine) continue;
-          let parsed; try { parsed = JSON.parse(dataLine); } catch { continue; }
-          if (eventType === 'chunk' && parsed.text) setResult((prev) => prev + parsed.text);
-          if (eventType === 'error') throw new Error(parsed.message || 'שגיאה בזרם ה-AI');
-        }
-      }
-      if (uploadedImageUrl) setResult((prev) => `![תמונה](${uploadedImageUrl})\n\n` + prev);
       setFileToSend(null);
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      setError(err.message || 'חיבור לשרת ה-AI נכשל. ודא שהשרת רץ.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -192,7 +155,6 @@ export default function AIWorkspace({ currentUser, categories = [], onAddTopic, 
 
       {/* ── HERO ── */}
       <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-slate-900/90 p-8 backdrop-blur-xl shadow-2xl shadow-black/40">
-        {/* רקע גלואי */}
         <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-violet-500/10 blur-3xl" />
 
@@ -243,7 +205,6 @@ export default function AIWorkspace({ currentUser, categories = [], onAddTopic, 
         {/* ── LEFT: INPUT ── */}
         <form onSubmit={handleSubmit} className="lg:col-span-5 flex flex-col gap-4">
 
-          {/* Input card */}
           <div className={`relative overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 p-6 backdrop-blur-xl shadow-xl shadow-black/20 ${styles.containerWithGlow}`}>
             <div className={styles.glowOverlay} />
             <div className="relative z-10 flex flex-col gap-4">
@@ -267,7 +228,7 @@ export default function AIWorkspace({ currentUser, categories = [], onAddTopic, 
                   setPrompt((p) => p + `\n[תמונה: ${file.name}]\n`);
                   if (fileRef.current) fileRef.current.value = '';
                 }} />
-                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploadingImage}
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={loading}
                   className="flex items-center gap-2 text-xs text-slate-400 hover:text-cyan-300 border border-white/10 hover:border-cyan-500/30 rounded-lg px-3 py-1.5 transition-all">
                   <Plus className="w-3.5 h-3.5" />
                   {fileToSend ? `✓ ${fileToSend.name}` : 'הוסף תמונה'}

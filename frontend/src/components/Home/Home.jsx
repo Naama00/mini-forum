@@ -179,12 +179,10 @@ export default function ForumHome() {
 
               <h2 className="font-display text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-[-0.03em] max-w-4xl mx-auto">
                 <span className={`${styles['home-hero-title-line']} block`}>Where Developers</span>
-                <span className={`${styles['home-gradient-text']} block`}>
-                  Build The Future
-                </span>
+                <span className={`${styles['home-gradient-text']} block`}>Build The Future</span>
               </h2>
 
-              <p className="text-lg text-slate-400 max-w-2xl mb-8 leading-relaxed">
+              <p className="text-lg text-slate-400 max-w-2xl mx-auto text-center mb-8 leading-relaxed">
                 Join the next generation tech community. Explore advanced
                 discussions, architecture, AI, web systems and innovation.
               </p>

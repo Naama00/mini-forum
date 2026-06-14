@@ -81,12 +81,12 @@ export default function ArticlesPage() {
       prev.map((a) =>
         a._id === id
           ? {
-              ...a,
-              _liked: !a._liked,
-              likes: a._liked
-                ? (a.likes || []).slice(0, -1)
-                : [...(a.likes || []), "me"],
-            }
+            ...a,
+            _liked: !a._liked,
+            likes: a._liked
+              ? (a.likes || []).slice(0, -1)
+              : [...(a.likes || []), "me"],
+          }
           : a
       )
     );
@@ -178,7 +178,7 @@ export default function ArticlesPage() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs text-cyan-300 font-semibold uppercase tracking-wider">
-                      {a.category || "General"}
+                      {a.category?.name || "General"}
                     </span>
                     <span className="text-xs text-slate-500">{timeAgo(a.createdAt)}</span>
                   </div>
@@ -239,11 +239,10 @@ export default function ArticlesPage() {
                   <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className={`w-11 h-11 rounded-2xl border transition-all ${
-                      page === i + 1
+                    className={`w-11 h-11 rounded-2xl border transition-all ${page === i + 1
                         ? "border-cyan-400 bg-cyan-500/20 text-cyan-300"
                         : "border-slate-700 bg-slate-900/50 text-slate-400 hover:border-cyan-500/50"
-                    }`}
+                      }`}
                   >
                     {i + 1}
                   </button>
