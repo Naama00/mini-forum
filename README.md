@@ -1,134 +1,565 @@
-# Mini-Forum Project 💬
+<div align="center">
 
-A modern, full-stack, and responsive Mini-Forum application designed for managing discussions, posts, and user interactions. Built with a robust **Node.js/Express** backend and a dynamic **React** frontend, following clean architecture principles, secure authentication, and scalable database separation.
+# 🚀 Mini Forum
 
----
+### Full-Stack Community Platform with Real-Time Features, AI Integration & Scalable Architecture
 
-## 🚀 Features
+[![React](https://img.shields.io/badge/React-19-blue?logo=react)]()
+[![Node.js](https://img.shields.io/badge/Node.js-Backend-green?logo=node.js)]()
+[![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)]()
+[![Redis](https://img.shields.io/badge/Redis-Cache-red?logo=redis)]()
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-Realtime-black?logo=socketdotio)]()
+[![Gemini AI](https://img.shields.io/badge/Gemini-AI-orange)]()
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-Media-blue)]()
+[![BullMQ](https://img.shields.io/badge/BullMQ-Queues-yellow)]()
 
-### 👤 User Management & Security
-* **Authentication & Authorization:** Secure registration and login using **JWT (JSON Web Tokens)** and HTTP-Only cookies/headers.
-* **Role-Based Access Control (RBAC):** Distinction between standard users and Administrators (Admins have special privileges such as post deletion).
-* **Data Protection:** Password hashing using `bcrypt` and input sanitation to prevent XSS and SQL Injection/NoSQL Injection.
+A modern full-stack community platform that combines discussion forums, articles, events, job postings, AI-powered assistance, real-time notifications, and scalable backend architecture.
 
-### 📝 Forum Engine
-* **Threads & Posts:** Create, read, update, and delete (CRUD) forum discussion threads.
-* **Interactive Comments:** Users can reply to existing posts, facilitating multi-threaded community engagement.
-* **Ownership Guardrails:** Strict server-side checks ensure users can only modify or delete *their own* posts or comments.
-
-### 💻 User Experience (UI/UX)
-* **Responsive Design:** Fully optimized for Mobile, Tablet, and Desktop screens.
-* **Dynamic UI Feedback:** Informative loading indicators, success/error toast alerts, and smooth client-side routing using `React Router`.
+</div>
 
 ---
 
-## 🛠 Tech Stack
+# 📸 Screenshots
 
-**Frontend:**
-* React (Functional Components & Hooks)
-* React Router DOM (Client-side Routing)
-* State Management: React Context API / Redux (Optional)
-* Styling: CSS Modules / Tailwind CSS / Material-UI
+## Home Page
 
-**Backend:**
-* Node.js & Express.js (RESTful API Architecture)
-* Database: MongoDB with Mongoose ORM *[or PostgreSQL/MySQL with Sequelize - change as needed]*
-* Security: JWT, bcrypt, cors, helmet
+![Home Page](docs/screenshots/home.png)
+
+## Topic Discussion
+
+
+![Topics Page](docs/screenshots/topics.png)
+
+
+## AI Assistant
+
+![AI Workspace - Prompt Builder](docs/screenshots/AI-1.png)
+![AI Workspace - Generated Result](docs/screenshots/AI-2.png)
+
 
 ---
 
-## 📂 Project Structure
+# ✨ Features
 
-The project maintains a strict **Separation of Concerns (SoC)** to ensure long-term maintenance and clear layer boundaries.
+## 🔐 Authentication
+
+- JWT Authentication
+- Secure password hashing with bcrypt
+- Google OAuth Login
+- Protected Routes
+- User Profiles
+
+---
+
+## 💬 Forum System
+
+- Categories
+- Topics
+- Posts
+- Replies
+- Likes
+- Views Counter
+- Pinned Topics
+- Closed Topics
+
+---
+
+## 📰 Articles
+
+- Create Articles
+- Categories
+- Tags
+- Comments
+- Likes
+- View Tracking
+
+---
+
+## 📅 Events
+
+- Publish Community Events
+- Attendance Tracking
+- Event Likes
+- Event Comments
+
+---
+
+## 💼 Jobs Board
+
+- Job Listings
+- Employment Types
+- Company Information
+- Apply Links
+- Comments & Likes
+
+---
+
+## 🤖 AI Integration
+
+Powered by Google Gemini.
+
+Features:
+
+- AI Requests
+- Usage Tracking
+- Rate Limiting
+- Dedicated AI Endpoints
+
+---
+
+## 🔔 Real-Time Notifications
+
+Socket.IO based notifications.
+
+Supports:
+
+- Likes
+- Comments
+- Event Attendance
+- Direct Notification Delivery
+
+---
+
+## ☁️ File Uploads
+
+Cloudinary Integration
+
+Supports:
+
+- Image Upload
+- Storage Metadata
+- Upload Tracking
+
+---
+
+## 🔍 Search
+
+Global search across:
+
+- Topics
+- Articles
+- Events
+- Jobs
+
+Rate-limited for security.
+
+---
+
+## ⚡ Performance
+
+- Redis Caching
+- BullMQ Background Jobs
+- Indexed MongoDB Queries
+- Optimized API Design
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+| Technology | Purpose |
+|------------|----------|
+| React 19 | UI |
+| Vite | Build Tool |
+| React Router | Routing |
+| React Query | Data Fetching |
+| Axios | HTTP Requests |
+| Socket.IO Client | Realtime |
+| Recharts | Analytics |
+
+---
+
+## Backend
+
+| Technology | Purpose |
+|------------|----------|
+| Node.js | Runtime |
+| Express | API |
+| MongoDB | Database |
+| Mongoose | ODM |
+| Redis | Cache |
+| BullMQ | Queues |
+| Socket.IO | Realtime |
+| JWT | Authentication |
+| Google OAuth | Login |
+| Cloudinary | Storage |
+| Gemini API | AI |
+
+---
+
+# 🏗 Architecture
+
+```mermaid
+flowchart LR
+
+A[React Client]
+
+B[Express API]
+
+C[(MongoDB)]
+
+D[(Redis)]
+
+E[Socket.IO]
+
+F[BullMQ]
+
+G[Cloudinary]
+
+H[Gemini AI]
+
+A --> B
+
+B --> C
+B --> D
+B --> G
+B --> H
+
+B --> E
+E --> A
+
+B --> F
+F --> D
+```
+
+---
+
+# 🗄 Database ERD
+
+```mermaid
+erDiagram
+
+USER ||--o{ TOPIC : creates
+USER ||--o{ POST : writes
+USER ||--o{ ARTICLE : publishes
+USER ||--o{ EVENT : creates
+USER ||--o{ JOB : posts
+USER ||--o{ NOTIFICATION : receives
+
+CATEGORY ||--o{ TOPIC : contains
+
+TOPIC ||--o{ POST : contains
+
+USER {
+ string email
+ string firstName
+ string lastName
+ boolean isAdmin
+}
+
+TOPIC {
+ string title
+ string type
+ number views
+}
+
+POST {
+ string content
+ number votes
+}
+
+ARTICLE {
+ string title
+ string content
+}
+
+EVENT {
+ string title
+ date eventDate
+}
+
+JOB {
+ string title
+ string company
+}
+
+NOTIFICATION {
+ string type
+ boolean read
+}
+```
+
+---
+
+# 🔄 Notification Flow
+
+```mermaid
+sequenceDiagram
+
+User A->>API: Like / Comment
+API->>MongoDB: Save Action
+
+API->>BullMQ: Queue Notification
+
+BullMQ->>MongoDB: Create Notification
+
+MongoDB->>Socket.IO: Emit Event
+
+Socket.IO->>User B: Real-Time Notification
+```
+
+---
+
+# 🔐 Authentication Flow
+
+```mermaid
+flowchart TD
+
+A[Register/Login]
+
+B[Backend Validation]
+
+C[JWT Generation]
+
+D[Client Storage]
+
+E[Protected Route]
+
+A --> B
+B --> C
+C --> D
+D --> E
+```
+
+---
+
+# 📂 Project Structure
 
 ```text
-mini-forum/
-├── backend/
-│   ├── config/             # DB connection, environment variables setup
-│   ├── controllers/        # Express route handlers (Request validation & HTTP responses)
-│   ├── models/             # Database Schemas (User, Post, Comment)
-│   ├── routes/             # API Endpoint routing definitions
-│   ├── services/           # Core business logic layer (Isolated calculations/operations)
-│   ├── middlewares/        # Authentication, Error handling, and Role validation
-│   └── server.js           # App entry point
+mini-forum
 │
-├── frontend/
-│   ├── public/             # Static assets
-│   ├── src/
-│   │   ├── components/     # Reusable UI components (Navbar, Button, Card, Spinner)
-│   │   ├── context/        # Auth and global state contexts
-│   │   ├── pages/          # Page view components (Home, Login, Register, ThreadDetails)
-│   │   ├── services/       # API abstraction layer (Axios fetch configurations)
-│   │   ├── App.jsx         # Root component & Routing configuration
-│   │   └── main.jsx        # App entry point
+├── backend
+│   ├── config
+│   ├── controllers
+│   ├── middleware
+│   ├── models
+│   ├── queues
+│   ├── routes
+│   ├── services
+│   ├── utils
+│   └── app.js
+│
+├── frontend
+│   ├── src
+│   │   ├── components
+│   │   ├── pages
+│   │   ├── hooks
+│   │   ├── contexts
+│   │   ├── services
+│   │   └── assets
+│
 └── README.md
-🏁 Getting Started
-Follow these instructions to set up and run the project locally.
+```
 
-Prerequisites
-Node.js installed (v16.x or higher recommended)
+---
 
-MongoDB account/local community instance (or SQL alternative)
+# 🚀 Installation
 
-1. Clone the Repository
-Bash
-git clone [https://github.com/your-username/mini-forum.git](https://github.com/your-username/mini-forum.git)
+## Clone
+
+```bash
+git clone https://github.com/Naama00/mini-forum.git
 cd mini-forum
-2. Backend Setup
-Navigate to the backend directory:
+```
 
-Bash
-cd backend
-Install dependencies:
+---
 
-Bash
+## Install Dependencies
+
+```bash
 npm install
-Create a .env file in the root of the backend folder and populate it with your environment configurations:
 
-קטע קוד
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_jwt_key
-NODE_ENV=development
-Start the backend server:
-
-Bash
-# Production / standard start
-npm start
-
-# Development mode (with nodemon auto-restart)
-npm run dev
-The server will start running on http://localhost:5000.
-
-3. Frontend Setup
-Open a new terminal window and navigate to the frontend directory:
-
-Bash
 cd frontend
-Install dependencies:
-
-Bash
 npm install
-Start the Vite/React development server:
+```
 
-Bash
+---
+
+## Environment Variables
+
+Create:
+
+```env
+PORT=5000
+
+JWT_SECRET=
+
+GOOGLE_CLIENT_ID=
+
+GEMINI_API_KEY=
+
+REDIS_URL=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+---
+
+## Run
+
+Backend:
+
+```bash
 npm run dev
-The frontend application will boot up, usually accessible at http://localhost:5173 or http://localhost:3000.
+```
 
-🔌 API Endpoints (Core)
-Method	Endpoint	Description	Auth Required
-POST	/api/auth/register	Register a new user account	❌ No
-POST	/api/auth/login	Log in and receive JWT	❌ No
-GET	/api/posts	Fetch all forum posts	❌ No
-GET	/api/posts/:id	Fetch details of a single post + comments	❌ No
-POST	/api/posts	Create a new discussion thread	🔒 Yes (User)
-DELETE	/api/posts/:id	Delete a post	🔒 Yes (Author/Admin)
-POST	/api/posts/:id/comments	Add a comment to a specific post	🔒 Yes (User)
-🛡️ Error Handling & Clean Code Standards
-Global Error Handling: Implemented a centralized Express Error Middleware that gracefully catches runtime errors and responds with standard JSON payloads, preventing raw server stack traces from being exposed.
+Frontend:
 
-DRY Principle: Core functionalities are broken down into services to avoid duplication across multiple controllers.
+```bash
+cd frontend
+npm run dev
+```
 
-Git Hygiene: The project strictly ignores build files, dependency catalogs (node_modules), and secrets using an optimized .gitignore configuration.
+---
 
+# 📡 API Modules
 
+### Authentication
+
+```http
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/google
+```
+
+### Forum
+
+```http
+GET /api/topics
+POST /api/topics
+
+GET /api/posts
+POST /api/posts
+```
+
+### Articles
+
+```http
+GET /api/articles
+POST /api/articles
+```
+
+### Events
+
+```http
+GET /api/events
+POST /api/events
+```
+
+### Jobs
+
+```http
+GET /api/jobs
+POST /api/jobs
+```
+
+### AI
+
+```http
+POST /api/gemini
+GET /api/usage
+```
+
+### Uploads
+
+```http
+POST /api/uploads
+```
+
+---
+
+# 🧠 Challenges & Solutions
+
+## Challenge 1: Real-Time Notifications
+
+### Problem
+
+Users needed immediate feedback when receiving likes, comments, or event interactions.
+
+### Solution
+
+Implemented:
+
+- Socket.IO
+- Notification Queue
+- Redis-backed processing
+- User-specific channels
+
+Result:
+
+- Near-instant notification delivery
+- Reduced API polling
+
+---
+
+## Challenge 2: AI Abuse Prevention
+
+### Problem
+
+AI endpoints can be expensive and vulnerable to abuse.
+
+### Solution
+
+Implemented:
+
+- AI-specific Rate Limiter
+- Usage Tracking
+- Dedicated Gemini middleware
+
+Result:
+
+- Controlled API costs
+- Improved reliability
+
+---
+
+## Challenge 3: Scalability
+
+### Problem
+
+Frequent database reads can become expensive.
+
+### Solution
+
+Integrated:
+
+- Redis caching
+- MongoDB indexes
+- Background processing with BullMQ
+
+Result:
+
+- Faster response times
+- Reduced database load
+
+---
+
+# 🔮 Future Improvements
+
+- Private Messaging
+- Advanced Moderation Dashboard
+- User Reputation System
+- Bookmarking
+- Recommendation Engine
+- Full Analytics Dashboard
+- Email Notifications
+
+---
+
+# 👩‍💻 Author
+
+**Naama**
+
+Full-Stack Developer
+
+GitHub:
+https://github.com/Naama00
+
+---
+
+# 📄 License
+
+This project was created for educational, portfolio, and learning purposes.
